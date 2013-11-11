@@ -86,10 +86,15 @@ Installation
   - NVidia: https://developer.nvidia.com/cuda-downloads
 
 * Download target organism's chromosome FASTA files. You can find one in below link:
+
   http://hgdownload.soe.ucsc.edu/downloads.html (UCSC genome sequences library)
+  
+  or http://ensembl.org/info/data/ftp/index.html (Ensembl sequence library)
+  
   Untar and ungzip them in a directory.
 
-* Download Cas-OFFinder binary, or compile its source code to have its binary.
+* Download Cas-OFFinder binary, or compile (below section) its source code to have its binary.
+
   Check 'Usage' section above to continue!
 
 Compile

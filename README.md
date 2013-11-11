@@ -1,19 +1,21 @@
-RGENOS (RGEN off-target searcher)
+Cas-OFFinder
 ==================================
 
-RGENOS is OpenCL based, fast and dedicated tool for searching RGEN off-target sites.
-It has no limitation on searching patterns and mismatch numbers!
+Cas-OFFinder is OpenCL based, fast and dedicated tool for searching
+CRISPR/Cas-derived RNA-guided endonucleases (RGEN) off-target sites.
+
+Cas-OFFinder has no limitation on searching patterns and numbers of mismatched bases!
 
 Requires any OpenCL library exist to compile and run.
 
-RGENOS is distributed under new BSD license.
+Cas-OFFinder is distributed under new BSD license.
 
 Usage
 -------
 
-RGENOS can run with:
+Cas-OFFinder can run with:
   
-    rgenos {input_file} {G|C} {output_file}
+    cas-offinder {input_file} {G|C} {output_file}
 
 G stands for using all available GPU devices, and C stands for using all CPUs.
 
@@ -29,10 +31,10 @@ A short example:
       drwxrwxr-x. 12 user group 38318080 2013-11-05 16:54 .
       drwx------. 36 user group     4096 2013-10-30 22:08 ..
       drwxrwxr-x. 13 user group     4096 2013-10-23 14:07 human_hg19
-      -rwxrwxr-x.  1 user group    74133 2013-10-28 13:49 rgenos
+      -rwxrwxr-x.  1 user group    74133 2013-10-28 13:49 cas-offinder
       -rw-rw-r--.  1 user group      123 2013-10-28 13:49 input.txt
 
-    $> ./rgenos input.txt G out.txt
+    $> ./cas-offinder input.txt G out.txt
       ...
 
 input.txt:
@@ -87,12 +89,12 @@ Installation
   http://hgdownload.soe.ucsc.edu/downloads.html (UCSC genome sequences library)
   Untar and ungzip them in a directory.
 
-* Download RGENOS binary, or compile its source code to have its binary.
+* Download Cas-OFFinder binary, or compile its source code to have its binary.
   Check 'Usage' section above to continue!
 
 Compile
 ----------------
-* After install OpenCL library, now you can run or compile RGENOS.
+* After install OpenCL library, now you can run or compile Cas-OFFinder.
   For POSIX environments, make sure c++ compiler and libraries (such as g++) is installed.
   (For Ubuntu linux, you can install g++ package. For OSX, install Xcode)
   
@@ -100,11 +102,11 @@ Compile
 
     $> make
 
-  and the 'rgenos' binary will be built.
+  and the 'cas-offinder' binary will be built.
   
   For Windows environment, you can compile it via Visual Studio.
   Create an empty project, add all of the files, and compile.
-  Or you can choose MinGW for compile RGENOS.
+  Or you can choose MinGW for compile Cas-OFFinder.
 
 Module reference
 ----------------
@@ -119,11 +121,11 @@ Download & Source
 --------
 The binaries and the source code can be downloaded from
 
-https://github.com/pjb7687/rgenos
+https://github.com/snugel/cas-offinder
 
 License
 -------
-RGENOS is licensed under the new BSD licence.
+Cas-OFFinder is licensed under the new BSD licence.
 
 Copyright (c) 2013, Jeongbin Park and Sangsu Bae
 All rights reserved.

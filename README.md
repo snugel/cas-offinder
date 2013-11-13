@@ -118,7 +118,7 @@ Installation
 * Cas-OFFinder requires OpenCL device to run properly.
 
   OpenCL is supported on varoius platforms, including recent Intel/AMD CPUs and NVidia/AMD graphic cards!
-  Before installing Cas-OFFinder, please check whether your device is supported on the vendor's website.
+  Before installing Cas-OFFinder, please check the vendor's website to know whether your device is supported.
   
   Now, download OpenCL SDK. If you know your device's vendor name, it is enough that to install only your vendor's one.
   - AMD: http://developer.amd.com/tools-and-sdks/heterogeneous-computing/amd-accelerated-parallel-processing-app-sdk/downloads/
@@ -141,7 +141,7 @@ Compile
   Checkout the source code of Cas-OFFinder with Git client,
   or download it manually on github website.
   
-  Now, type the following to build Cas-OFFinder.
+  Now, type the following in termnal (on windows, press windows_key+r and type cmd) to build Cas-OFFinder.
 
   In POSIX environment (g++ should be pre-installed):
   
@@ -159,7 +159,8 @@ Module reference
 ----------------
 
 * For reading/parsing FASTA files, the kseq.h library (developed by Heng Li) is used.
-  The kseq.h library is distributed under MIT licence.
+
+  The library is distributed under MIT licence.
 
   More informations on:
   http://lh3lh3.users.sourceforge.net/parsefastq.shtml
@@ -179,6 +180,8 @@ https://github.com/snugel/cas-offinder
 License
 -------
 Cas-OFFinder is licensed under the new BSD licence.
+
+(Except kseq.h and dirent.h)
 
 Copyright (c) 2013, Jeongbin Park and Sangsu Bae
 All rights reserved.

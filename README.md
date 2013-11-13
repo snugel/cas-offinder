@@ -21,13 +21,12 @@ G stands for using all available GPU devices, and C stands for using all CPUs.
 
 A short example may be helpful!
 
-First, download any target organism's chromosome FASTA files. You can find one in below link:
+First, download any target organism's chromosome FASTA files. You can find one in below links:
 
-http://hgdownload.soe.ucsc.edu/downloads.html (UCSC genome sequences library)
+- http://hgdownload.soe.ucsc.edu/downloads.html (UCSC genome sequences library)
+- http://ensembl.org/info/data/ftp/index.html (Ensembl sequence library)
 
-or http://ensembl.org/info/data/ftp/index.html (Ensembl sequence library)
-  
-Untar and ungzip them in a directory.
+Extract all FASTA files in a directory.
 
 For example (human chromosomes, in POSIX environment):
     

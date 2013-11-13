@@ -129,7 +129,7 @@ Installation
 
 Compile
 ----------------
-* After install OpenCL library, now you can compile Cas-OFFinder.
+* OpenCL library is required to compile Cas-OFFinder.
   
   To support cross-platform compilation on various operating systems,
   CMake build system is used (more informations on http://www.cmake.org).

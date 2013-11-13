@@ -200,7 +200,7 @@ https://github.com/snugel/cas-offinder
 
 License
 -------
-Cas-OFFinder (Except kseq.h and dirent.h) is licensed under the new BSD licence.
+Cas-OFFinder (except kseq.h and dirent.h) is licensed under the new BSD licence.
 
 Copyright (c) 2013, Jeongbin Park and Sangsu Bae
 All rights reserved.

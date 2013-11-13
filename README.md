@@ -136,7 +136,7 @@ Installation
 
 * Download Cas-OFFinder binary, or compile it from its source code (below section).
 
-Compile
+Compilation
 ----------------
 * OpenCL library is required to compile Cas-OFFinder.
   

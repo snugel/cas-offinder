@@ -1,0 +1,13 @@
+#cmakedefine HAVE_DIRENT_H
+#cmakedefine BUILD_FOR_SNUCL
+
+#ifdef BUILD_FOR_SNUCL
+#define CL_USE_DEPRECATED_OPENCL_1_1_APIS
+#define CL_USE_DEPRECATED_OPENCL_1_0_APIS
+#endif
+
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#else
+#include "ext/dirent.h"
+#endif

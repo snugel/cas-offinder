@@ -70,7 +70,7 @@ Now the input file should be created.
 - ...and following lines are the query sequences and maximum mistmatch numbers, seperated by spaces.
 (The length of PAM site and the query sequences should be the same!)
 
-For writing seqeucnes, following codes (including wildcards) are supported:
+For writing sequences, following codes (including wildcards) are supported:
 
    A   |    C   |   G   |   T   
 :-----:|:------:|:-----:|:-----:

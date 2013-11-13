@@ -66,7 +66,7 @@ Now the input file should be created.
 - ...and following lines are the query sequences and maximum mistmatch numbers, seperated by spaces.
 (The length of PAM site and the query sequences should be the same!)
 
-For all seqeucnes, following codes including wildcards are supported:
+For all seqeucnes, following codes (including wildcards) are supported:
 - A: Adenine
 - C: Cytosine
 - G: Guanine

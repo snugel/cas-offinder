@@ -130,7 +130,7 @@ Installation
 
 * Cas-OFFinder requires OpenCL device and corresponding SDK to run properly.
 
-  OpenCL is supported on varoius platforms, including recent Intel/AMD CPUs and NVidia/AMD graphic cards!
+  OpenCL is supported on various platforms, including recent Intel/AMD CPUs and NVidia/AMD graphic cards!
   Before installing Cas-OFFinder, please check the vendor's website to know whether your device is supported.
   
   Now, download OpenCL SDK. If you know your device's vendor name, it is enough that to install only your vendor's one.

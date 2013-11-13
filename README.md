@@ -44,7 +44,11 @@ For example (human chromosomes, in POSIX environment):
       -rw-rw-r--.  1 user group 109496538 2009-03-21 01:01 chr14.fa
       ...
 
-Now, download Cas-OFFinder binary to any directory you want.
+Now, download Cas-OFFinder binary here,
+
+https://sourceforge.net/projects/cas-offinder/files/Binaries
+
+and save it to any directory you want.
 
 And just run it for a short help:
 
@@ -134,7 +138,11 @@ Installation
   - Intel: http://software.intel.com/en-us/vcsource/tools/opencl-sdk
   - NVidia: https://developer.nvidia.com/cuda-downloads
 
-* Download Cas-OFFinder binary, or compile it from its source code (below section).
+* Download Cas-OFFinder binary here,
+
+  https://sourceforge.net/projects/cas-offinder/files/Binaries
+
+  or compile it from its source code (below section).
 
 Compilation
 ----------------
@@ -182,7 +190,11 @@ Module reference
 
 Download & Source
 --------
-The binaries and the source code can be downloaded from
+The binaries can be downloaded from
+
+https://sourceforge.net/projects/cas-offinder/files/Binaries
+
+And the source code is distributed from
 
 https://github.com/snugel/cas-offinder
 

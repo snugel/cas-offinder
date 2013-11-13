@@ -19,27 +19,55 @@ Cas-OFFinder can run with:
 
 G stands for using all available GPU devices, and C stands for using all CPUs.
 
-The first line of the input file gives directory path containing chromosomes FASTA files,
-the second line indicates the PAM site,
-and following lines are the query sequences and maximum mistmatch numbers, seperated by spaces.
+A short example may be helpful!
 
-The length of PAM site and the query sequences should be the same.
+First, download any target organism's chromosome FASTA files. You can find one in below link:
 
-A short example:
+http://hgdownload.soe.ucsc.edu/downloads.html (UCSC genome sequences library)
 
-    $> ls -al
-      drwxrwxr-x. 12 user group 38318080 2013-11-05 16:54 .
-      drwx------. 36 user group     4096 2013-10-30 22:08 ..
-      drwxrwxr-x. 13 user group     4096 2013-10-23 14:07 human_hg19
-      -rwxrwxr-x.  1 user group    74133 2013-10-28 13:49 cas-offinder
-      -rw-rw-r--.  1 user group      123 2013-10-28 13:49 input.txt
+or http://ensembl.org/info/data/ftp/index.html (Ensembl sequence library)
+  
+Untar and ungzip them in a directory.
 
-    $> ./cas-offinder input.txt G out.txt
+For example (human chromosomes, in POSIX environment):
+    
+    $> wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz
+    $> mkdir -p /var/chromosome/human_hg19
+    $> tar zxvf chromFa.tar.gz -C /var/chromosome/human_hg19
+    $> ls -al /var/chromosome/human_hg19
+      drwxrwxr-x.  2 user group      4096 2013-10-18 11:49 .
+      drwxrwxr-x. 16 user group      4096 2013-11-12 12:44 ..
+      -rw-rw-r--.  1 user group 254235640 2009-03-21 00:58 chr1.fa
+      -rw-rw-r--.  1 user group 138245449 2009-03-21 01:00 chr10.fa
+      -rw-rw-r--.  1 user group 137706654 2009-03-21 01:00 chr11.fa
+      -rw-rw-r--.  1 user group 136528940 2009-03-21 01:01 chr12.fa
+      -rw-rw-r--.  1 user group 117473283 2009-03-21 01:01 chr13.fa
+      -rw-rw-r--.  1 user group 109496538 2009-03-21 01:01 chr14.fa
       ...
 
-input.txt:
+Now, download Cas-OFFinder to any folder you want.
 
-    human_hg19
+And run it for a short help:
+
+    $> ./cas-offinder
+        Cas-OFFinder v1.0 (2013-11-03)
+        
+        Copyright 2013 Jeongbin Park and Sangsu Bae
+        Website: http://github.com/snugel/cas-offinder
+        
+        Usage: cas-offinder {input_file} {C|G} {output_file}
+        (C: using CPU, G: using GPU)
+
+Now the input file should be created.
+
+- The first line of the input file gives directory path containing chromosomes FASTA files,
+- The second line indicates the PAM site,
+- ...and following lines are the query sequences and maximum mistmatch numbers, seperated by spaces.
+(The length of PAM site and the query sequences should be the same!)
+
+For example, like this:
+
+    /var/chromosomes/human_hg19
     NNNNNNNNNNNNNNNNNNNNNGG
     GGCCGACCTGTCGCTGACGCNNN 5
     CGCCAGCGTCAGCGACAGGTNNN 5
@@ -47,7 +75,11 @@ input.txt:
     GTCGCTGACGCTGGCGCCGTNNN 5
     ...
 
-
+Now you can run Cas-OFFinder as following:
+ 
+    $> ./cas-offinder input.txt G out.txt
+    ...
+ 
 Then the output file will be generated :
 - The first column of the output file indicates the given query sequence,
 - The second column is the FASTA file name (usually chromosome name),
@@ -84,14 +116,6 @@ Installation
   - AMD: http://developer.amd.com/tools-and-sdks/heterogeneous-computing/amd-accelerated-parallel-processing-app-sdk/downloads/
   - Intel: http://software.intel.com/en-us/vcsource/tools/opencl-sdk
   - NVidia: https://developer.nvidia.com/cuda-downloads
-
-* Download target organism's chromosome FASTA files. You can find one in below link:
-
-  http://hgdownload.soe.ucsc.edu/downloads.html (UCSC genome sequences library)
-  
-  or http://ensembl.org/info/data/ftp/index.html (Ensembl sequence library)
-  
-  Untar and ungzip them in a directory.
 
 * Download Cas-OFFinder binary, or compile (below section) its source code to have its binary.
 

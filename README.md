@@ -67,7 +67,7 @@ Now the input file should be created.
 - ...and following lines are the query sequences and maximum mistmatch numbers, seperated by spaces.
 (The length of PAM site and the query sequences should be the same!)
 
-For example, like this:
+For example, write like this:
 
     /var/chromosomes/human_hg19
     NNNNNNNNNNNNNNNNNNNNNGG
@@ -179,9 +179,7 @@ https://github.com/snugel/cas-offinder
 
 License
 -------
-Cas-OFFinder is licensed under the new BSD licence.
-
-(Except kseq.h and dirent.h)
+Cas-OFFinder (Except kseq.h and dirent.h) is licensed under the new BSD licence.
 
 Copyright (c) 2013, Jeongbin Park and Sangsu Bae
 All rights reserved.

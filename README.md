@@ -33,7 +33,7 @@ For example (human chromosomes, in POSIX environment):
     
     $> wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz
     $> mkdir -p /var/chromosome/human_hg19
-    $> tar zxvf chromFa.tar.gz -C /var/chromosome/human_hg19
+    $> tar zxf chromFa.tar.gz -C /var/chromosome/human_hg19
     $> ls -al /var/chromosome/human_hg19
       drwxrwxr-x.  2 user group      4096 2013-10-18 11:49 .
       drwxrwxr-x. 16 user group      4096 2013-11-12 12:44 ..
@@ -45,9 +45,9 @@ For example (human chromosomes, in POSIX environment):
       -rw-rw-r--.  1 user group 109496538 2009-03-21 01:01 chr14.fa
       ...
 
-Now, download Cas-OFFinder to any folder you want.
+Now, download Cas-OFFinder binary to any directory you want.
 
-And run it for a short help:
+And just run it for a short help:
 
     $> ./cas-offinder
         Cas-OFFinder v1.0 (2013-11-03)
@@ -58,6 +58,8 @@ And run it for a short help:
         Usage: cas-offinder {input_file} {C|G} {output_file}
         (C: using CPU, G: using GPU)
 
+        ...
+        
 Now the input file should be created.
 
 - The first line of the input file gives directory path containing chromosomes FASTA files,
@@ -75,6 +77,8 @@ For example, like this:
     GTCGCTGACGCTGGCGCCGTNNN 5
     ...
 
+Save it as 'input.txt'.
+
 Now you can run Cas-OFFinder as following:
  
     $> ./cas-offinder input.txt G out.txt
@@ -86,7 +90,7 @@ Then the output file will be generated :
 - The third column is the position of the off-target site,
 - The forth column shows the actual sequence at the position
 with indicating mismatched bases in lowercase letters,
-- The fifth column is the direction of the found sequence,
+- The fifth column is the direction of the found sequence (same convention with bowtie),
 - ... and the last line is the number of the mismatched bases.
 
 out.txt:
@@ -111,40 +115,60 @@ out.txt:
 Installation
 ----------------
 
-* First, download OpenCL library/driver for your device.
-  If you know your device's vendor name, it is enough that to install only your vendor's one.
+* Cas-OFFinder requires OpenCL device to run properly.
+
+  OpenCL is supported on varoius platforms, including recent Intel/AMD CPUs and NVidia/AMD graphic cards!
+  Before installing Cas-OFFinder, please check whether your device is supported on the vendor's website.
+  
+  Now, download OpenCL SDK. If you know your device's vendor name, it is enough that to install only your vendor's one.
   - AMD: http://developer.amd.com/tools-and-sdks/heterogeneous-computing/amd-accelerated-parallel-processing-app-sdk/downloads/
   - Intel: http://software.intel.com/en-us/vcsource/tools/opencl-sdk
   - NVidia: https://developer.nvidia.com/cuda-downloads
 
-* Download Cas-OFFinder binary, or compile (below section) its source code to have its binary.
-
-  Check 'Usage' section above to continue!
+* Download Cas-OFFinder binary, or compile it from its source code (below section).
 
 Compile
 ----------------
-* After install OpenCL library, now you can run or compile Cas-OFFinder.
-  For POSIX environments, make sure c++ compiler and libraries (such as g++) is installed.
-  (For Ubuntu linux, you can install g++ package. For OSX, install Xcode)
+* After install OpenCL library, now you can compile Cas-OFFinder.
   
-  Then, type
-
-    $> make
-
-  and the 'cas-offinder' binary will be built.
+  To support cross-platform compilation on various operating systems,
+  CMake build system is used (more informations on http://www.cmake.org).
   
-  For Windows environment, you can compile it via Visual Studio.
-  Create an empty project, add all of the files, and compile.
-  Or you can choose MinGW for compile Cas-OFFinder.
+  First, download CMake here (http://www.cmake.org/cmake/resources/software.html).
+  If you use Ubuntu linux, you can also install it via apt-get.
+  (apt-get install cmake)
+  
+  Checkout the source code of Cas-OFFinder with Git client,
+  or download it manually on github website.
+  
+  Now, type the following to build Cas-OFFinder.
+
+  In POSIX environment (g++ should be pre-installed):
+  
+      cmake -G "Unix Makefiles"
+      make
+      
+  On Windows (Visual Studio should be pre-installed):
+  
+      cmake -G "NMake Makefiles"
+      nmake
+  
+  Then cas-offinder binary will be generated. Copy it wherever you want.
 
 Module reference
 ----------------
 
-For reading/parsing FASTA files, the kseq.h library (developed by Heng Li) is used.
-The kseq.h library is distributed under MIT licence.
+* For reading/parsing FASTA files, the kseq.h library (developed by Heng Li) is used.
+  The kseq.h library is distributed under MIT licence.
 
-More informations on:
-http://lh3lh3.users.sourceforge.net/parsefastq.shtml
+  More informations on:
+  http://lh3lh3.users.sourceforge.net/parsefastq.shtml
+
+* For supporting Dirent API on Windows environment,
+  Dirent API for Microsoft Visual Studio is used.
+
+  More informations on:
+  http://softagalleria.net/dirent.php
 
 Download & Source
 --------

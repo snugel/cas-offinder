@@ -67,21 +67,18 @@ Now the input file should be created.
 (The length of PAM site and the query sequences should be the same!)
 
 For all seqeucnes, following codes (including wildcards) are supported:
-- A: Adenine
-- C: Cytosine
-- G: Guanine
-- T: Thymine
-- R: A or G
-- Y: C or T
-- S: G or C
-- W: A or T
-- K: G or T
-- M: A or C
-- B: C or G or T
-- D: A or G or T
-- H: A or C or T
-- V: A or C or G
-- N: any base
+
+   A   |    C   |   G   |   T   
+:-----:|:------:|:-----:|:-----:
+Adenine|Cytosine|Guanine|Thymine
+
+   R  |   Y  |   S  |   W  |   K  |   M  
+:----:|:----:|:----:|:----:|:----:|:----:
+A or G|C or T|G or C|A or T|G or T|A or C
+
+     B     |     D     |     H     |     V     |   N
+:---------:|:---------:|:---------:|:---------:|:------:
+C or G or T|A or G or T|A or C or T|A or C or G|any base
 
 For example, write like this:
 

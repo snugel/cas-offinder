@@ -1,14 +1,33 @@
 Cas-OFFinder
 ==================================
 
-Cas-OFFinder is OpenCL based, fast and dedicated tool for searching
-CRISPR/Cas-derived RNA-guided endonucleases (RGEN) off-target sites.
+Cas-OFFinder is OpenCL based, ultrafast and versatile program
+that searches for potential off-target sites of CRISPR/Cas-derived RNA-guided endonucleases (RGEN).
 
-Cas-OFFinder has no limitation on searching patterns and numbers of mismatched bases!
+Cas-OFFinder is not limited by the number of mismatches and allows variations in protospacer-adjacent motif (PAM) sequences recognized by Cas9, the essential protein com-ponent in RGENs.
 
-Requires any OpenCL library exist to compile and run.
+Requires pre-installed OpenCL library to compile and run.
 
 Cas-OFFinder is distributed under new BSD license.
+
+
+CRISPR/Cas-derived RNA-guided endonucleases (RGEN)
+-------
+
+RGENs use complementary base pairing to recognize target sites.
+
+RGENs consist of,
+* Guide RNA
+  - Dual RNA components comprising sequence-invariant tracrRNA and sequence-variable guide RNA termed crRNA
+  - ...or single-chain guide RNA (sgRNA) constructed by linking essential portions of tracrRNA and crRNA
+* Cas9 Protein
+  - A fixed protein component that recognizes the protospacer adjacent motif (PAM) downstream of target 
+    DNA sequences corresponding to guide RNA.
+
+PAM sites:
+* __SpCas9__ from *Streptococcus pyogenes*: 5’-NGG-3’ (to a lesser extent, 5’-NAG-3’)
+* __StCas9__ from *Streptococcus thermophilus*: 5’-NNAGAAW-3’ (W = A or T)
+* __NmCas9__ from *Neisseria meningitidis*:5’-NNNNGMTT-3’ (M = A or C)
 
 Usage
 -------
@@ -66,11 +85,16 @@ And just run it for a short help:
 Now the input file should be created.
 
 - The first line of the input file gives directory path containing chromosomes FASTA files,
-- The second line indicates the PAM site,
+- The second line indicates the desired pattern including PAM site,
 - ...and following lines are the query sequences and maximum mistmatch numbers, seperated by spaces.
-(The length of PAM site and the query sequences should be the same!)
+(The length of the desired pattern and the query sequences should be the same!)
 
-For writing sequences, following codes (including wildcards) are supported:
+For the pattern and the query sequences,
+mixed bases are allowed to account for the degeneracy in PAM sequences.
+
+Also, the number of mismatched bases is not limited!
+
+Following codes are supported:
 
    A   |    C   |   G   |   T   
 :-----:|:------:|:-----:|:-----:
@@ -84,7 +108,7 @@ A or G|C or T|G or C|A or T|G or T|A or C
 :---------:|:---------:|:---------:|:---------:|:------:
 C or G or T|A or G or T|A or C or T|A or C or G|any base
 
-For example, write like this:
+An example of input file:
 
     /var/chromosomes/human_hg19
     NNNNNNNNNNNNNNNNNNNNNRG
@@ -97,17 +121,16 @@ For example, write like this:
 Save it as 'input.txt'.
 
 Now you can run Cas-OFFinder as following:
- 
+
     $> ./cas-offinder input.txt G out.txt
     ...
  
-Then the output file will be generated :
+Then output file will be generated :
 - The first column of the output file indicates the given query sequence,
-- The second column is the FASTA title (if you downloaded it from UCSC or Ensembl, it is usually chromosome name),
-- The third column is the position of the off-target site,
-- The forth column shows the actual sequence at the position
-with indicating mismatched bases in lowercase letters,
-- The fifth column is the direction of the found sequence (same convention with bowtie),
+- The second column is the FASTA title (if you downloaded it from UCSC or Ensembl, it is usually a chromosome name),
+- The third column is the position of the off-target site (same convention with Bowtie),
+- The forth column shows the actual sequence from the position (mismatched bases noted in lowercase letters),
+- The fifth column indicates forward strand(+) or reverse strand(-) of the found sequence,
 - ... and the last column is the number of the mismatched bases.
 
 out.txt:
@@ -144,7 +167,7 @@ Installation
 
   or compile it from its source code (below section).
 
-Compilation
+Compile
 ----------------
   OpenCL library is required to compile Cas-OFFinder.
   

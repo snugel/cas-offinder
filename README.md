@@ -17,7 +17,7 @@ Cas-OFFinder can run with:
   
     cas-offinder {input_file} {G|C} {output_file}
 
-G stands for using all available GPU devices, and C stands for using all CPUs.
+G stands for using all available GPU devices, and C for using all CPUs.
 
 A short example may be helpful!
 
@@ -103,25 +103,25 @@ Now you can run Cas-OFFinder as following:
  
 Then the output file will be generated :
 - The first column of the output file indicates the given query sequence,
-- The second column is the FASTA file name (usually chromosome name),
+- The second column is the FASTA title (if you downloaded it from UCSC or Ensembl, it is usually chromosome name),
 - The third column is the position of the off-target site,
 - The forth column shows the actual sequence at the position
 with indicating mismatched bases in lowercase letters,
 - The fifth column is the direction of the found sequence (same convention with bowtie),
-- ... and the last line is the number of the mismatched bases.
+- ... and the last column is the number of the mismatched bases.
 
 out.txt:
 
-    GGCCGACCTGTCGCTGACGCNNN chr8    49679   GGgCatCCTGTCGCaGACaCAGG +       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    517739  GcCCtgCaTGTgGCTGACGCAGG +       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    599935  tGCCGtCtTcTCcCTGACGCCAG -       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    5308348 GGCaGgCCTGgCttTGACGCAGG -       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    9525579 GGCCcAgCTGTtGCTGAtGaAAG +       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    12657177        GGCCcACCTGTgGCTGcCcaTAG -       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    12808911        GGCCGACCaGgtGCTccCGCCGG +       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    21351922        GGCCcACCTGaCtCTGAgGaCAG -       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    21965064        GGCCGtCCTGcgGCTGctGCAGG -       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    22409058        GcCCGACCccTCcCcGACGCCAG +       5
+    GGCCGACCTGTCGCTGACGCNNN chr8    49679        GGgCatCCTGTCGCaGACaCAGG +       5
+    GGCCGACCTGTCGCTGACGCNNN chr8    517739       GcCCtgCaTGTgGCTGACGCAGG +       5
+    GGCCGACCTGTCGCTGACGCNNN chr8    599935       tGCCGtCtTcTCcCTGACGCCAG -       5
+    GGCCGACCTGTCGCTGACGCNNN chr8    5308348      GGCaGgCCTGgCttTGACGCAGG -       5
+    GGCCGACCTGTCGCTGACGCNNN chr8    9525579      GGCCcAgCTGTtGCTGAtGaAAG +       5
+    GGCCGACCTGTCGCTGACGCNNN chr8    12657177     GGCCcACCTGTgGCTGcCcaTAG -       5
+    GGCCGACCTGTCGCTGACGCNNN chr8    12808911     GGCCGACCaGgtGCTccCGCCGG +       5
+    GGCCGACCTGTCGCTGACGCNNN chr8    21351922     GGCCcACCTGaCtCTGAgGaCAG -       5
+    GGCCGACCTGTCGCTGACGCNNN chr8    21965064     GGCCGtCCTGcgGCTGctGCAGG -       5
+    GGCCGACCTGTCGCTGACGCNNN chr8    22409058     GcCCGACCccTCcCcGACGCCAG +       5
     ...
 
 
@@ -158,7 +158,7 @@ Compilation
   Checkout the source code of Cas-OFFinder with Git client,
   or download it manually on github website.
   
-  Now, type the following in termnal (on windows, press windows_key+r and type cmd) to build Cas-OFFinder.
+  Now, type the following in terminal (on Windows, press `[Windows key]+r` and enter `cmd`) to build Cas-OFFinder.
 
   In POSIX environment (g++ should be pre-installed):
   

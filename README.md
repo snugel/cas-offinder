@@ -158,7 +158,8 @@ Compilation
   Checkout the source code of Cas-OFFinder with Git client,
   or download it manually on github website.
   
-  Now, type the following in terminal (on Windows, press `[Windows key]+r` and enter `cmd`) to build Cas-OFFinder.
+  Now, launch terminal (on Windows, press `[Windows key]+r` and enter `cmd`) and
+  type the following to build Cas-OFFinder.
 
   In POSIX environment (g++ should be pre-installed):
   

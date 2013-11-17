@@ -69,7 +69,7 @@ https://sourceforge.net/projects/cas-offinder/files/Binaries
 
 and save it to any directory you want.
 
-And just run it for a short help:
+And just try running it for a short help:
 
     $> ./cas-offinder
         Cas-OFFinder v1.0 (2013-11-03)
@@ -82,7 +82,7 @@ And just run it for a short help:
 
         ...
         
-Now the input file should be created.
+Now you should create an input file:
 
 - The first line of the input file gives directory path containing chromosomes FASTA files,
 - The second line indicates the desired pattern including PAM site,
@@ -151,12 +151,17 @@ out.txt:
 Installation
 ----------------
 
-* Cas-OFFinder requires OpenCL device and corresponding SDK to run properly.
-
+* Cas-OFFinder requires an OpenCL-enabled device and corresponding runtime API pre-installed to run properly.
   OpenCL is supported on various platforms, including recent Intel/AMD CPUs and NVidia/AMD graphic cards!
   Before installing Cas-OFFinder, please check the vendor's website to know whether your device is supported.
+
+  Recently, the OpenCL runtime binaries are already shipped with the device drivers in many cases -
+  so you don't have to install anything to run Cas-OFFinder.
   
-  Now, download OpenCL SDK. If you know your device's vendor name, it is enough that to install only your vendor's one.
+  But if it wasn't, you should download and install a proper OpenCL SDK to install runtime APIs.
+  In that case, download an OpenCL SDK among the links below.
+  If you know your device's vendor name, it is enough to install only your vendor's one.
+    
   - AMD: http://developer.amd.com/tools-and-sdks/heterogeneous-computing/amd-accelerated-parallel-processing-app-sdk/downloads/
   - Intel: http://software.intel.com/en-us/vcsource/tools/opencl-sdk
   - NVidia: https://developer.nvidia.com/cuda-downloads

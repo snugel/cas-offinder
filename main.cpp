@@ -132,7 +132,10 @@ private:
 			}
 		}
 		m_devnum = devices.size();
-
+		if (m_devnum == 0) {
+			cout << "No OpenCL devices found." << endl;
+			exit(1);
+		}
 		char* program_src = 
 			"__kernel void finder(__global char* chr,"
 			"                     __global char* pat, __global int* pat_index, unsigned int patternlen,"
@@ -293,7 +296,7 @@ public:
 					((m_chrdatasize / m_devnum) + ((m_chrdatasize%m_devnum == 0)?0:1))
 				)
 			); // No more than maximum allocation per device
-			cout << "Dicesize: " << m_dicesizes[dev_index] << endl;
+			// cout << "Dicesize: " << m_dicesizes[dev_index] << endl;
 			m_chrdatabufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char) * (m_dicesizes[dev_index] + m_patternlen - 1)));
 			m_patternbufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char) * m_patternlen * 2));
 			m_patternindexbufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_int) * m_patternlen * 2));
@@ -323,13 +326,13 @@ public:
 				m_queues[dev_index].enqueueWriteBuffer(m_chrdatabufs[dev_index], CL_FALSE, 0, sizeof(cl_char) * (tailsize + m_patternlen - 1), m_chrdata + m_totalanalyzedsize, NULL);
 				m_totalanalyzedsize += tailsize;
 				m_worksizes.push_back(tailsize);
-				cout << "Worksize: " <<  m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
+				// cout << "Worksize: " <<  m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
 				break;
 			} else {
 				m_queues[dev_index].enqueueWriteBuffer(m_chrdatabufs[dev_index], CL_FALSE, 0, sizeof(cl_char) * (m_dicesizes[dev_index] + m_patternlen - 1), m_chrdata + m_totalanalyzedsize, NULL);
 				m_totalanalyzedsize += m_dicesizes[dev_index];
 				m_worksizes.push_back(m_dicesizes[dev_index]);
-				cout << "Worksize: " <<  m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
+				// cout << "Worksize: " <<  m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
 			}
 		}
 		cout << m_activedevnum << " devices selected to analyze..." << endl;
@@ -510,19 +513,28 @@ int main(int argc, char *argv[]) {
 	string fastapath, chrname, pattern, tmpstr, chrdir, outfilename;
 	DIR* dir;
 	dirent *ent;
-	int i, l, tmpint;
+	int i, j, l, tmpint;
 	
 	FILE *f_fasta;
 	kseq_t *seq;
 
+	vector<cl::Platform> platforms;
+
+	cl::Platform::get(&platforms);
+	int number_of_platforms = platforms.size();
+	if(number_of_platforms==0) {
+		cout << "No OpenCL platforms found. Check OpenCL installation!" << endl;
+		exit(1);
+	}
+	
     if (argc < 4) { // Not all option specified
-        cout << "Cas-OFFinder v1.0 (2013-11-03)" << endl <<
+        cout << "Cas-OFFinder v1.1 (2013-11-18)" << endl <<
                 endl <<
                 "Copyright (c) 2013 Jeongbin Park and Sangsu Bae" << endl <<
                 "Website: http://github.com/snugel/cas-offinder" << endl <<
                 endl <<
                 "Usage: cas-offinder {input_file} {C|G} {output_file}" << endl <<
-                "(C: using CPU, G: using GPU)" << endl <<
+                "(C: using CPUs, G: using GPUs)" << endl <<
                 endl <<
                 "Example input file:" << endl <<
                 "/var/chromosomes/human_hg19" << endl <<
@@ -530,18 +542,33 @@ int main(int argc, char *argv[]) {
                 "GGCCGACCTGTCGCTGACGCNNN 5" << endl <<
                 "CGCCAGCGTCAGCGACAGGTNNN 5" << endl <<
                 "ACGGCGCCAGCGTCAGCGACNNN 5" << endl <<
-                "GTCGCTGACGCTGGCGCCGTNNN 5" << endl;
+                "GTCGCTGACGCTGGCGCCGTNNN 5" << endl <<
+                endl <<
+                "Available device list:" << endl;
+		vector<cl::Device> devices_per_platform;
+		for(i=0; i < number_of_platforms; i++) {
+			devices_per_platform.clear();
+			platforms[i].getDevices(CL_DEVICE_TYPE_CPU, &devices_per_platform);
+			for (j=0; j<devices_per_platform.size(); j++) {
+				cout << "Type: CPU, '" << devices_per_platform[j].getInfo<CL_DEVICE_NAME>() << "'" << endl;
+			}
+			devices_per_platform.clear();
+			platforms[i].getDevices(CL_DEVICE_TYPE_GPU, &devices_per_platform);
+			for (j=0; j<devices_per_platform.size(); j++) {
+				cout << "Type: GPU, " << devices_per_platform[j].getInfo<CL_DEVICE_NAME>() << "'" << endl;
+			}
+		}
         exit(0);
     }
 
-	cl_device_type devtype = CL_DEVICE_TYPE_ALL;
+	cl_device_type devtype;
     if (argv[2][0] == 'C') {
         devtype = CL_DEVICE_TYPE_CPU;
     } else if (argv[2][0] == 'G') {
         devtype = CL_DEVICE_TYPE_GPU;
     } else {
         cout << "Unknown option: " << argv[2] << endl;
-        exit(0);
+        exit(-1);
     }
 	Genos s(devtype);
 
@@ -578,7 +605,10 @@ int main(int argc, char *argv[]) {
     remove(outfilename.c_str());
 
 	int cnum = 0, pnum = 0;
-	if ((dir = opendir(chrdir.c_str())) != NULL) {
+	if ((dir = opendir(chrdir.c_str())) == NULL) {
+		cout << "No such directory: " << chrdir << endl;
+		exit(1);
+	} else {
 		while ((ent = readdir(dir)) != NULL) {
 			if (ent->d_type == DT_REG) {
 				fastapath = ent->d_name;
@@ -592,7 +622,7 @@ int main(int argc, char *argv[]) {
 					StrUpr(seq->seq.s);
 					cout << "Sending data to devices..." << endl;
 					s.setChrData(seq->name.s, seq->seq.s, seq->seq.l);
-					cout << "Set pattern to devices..." << endl;
+					cout << "Setting pattern to devices..." << endl;
 					s.setPattern(pattern.c_str());
 					cout << "Chunk load started." << endl;
 					while (s.loadNextChunk()) {

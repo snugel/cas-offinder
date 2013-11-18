@@ -555,7 +555,7 @@ int main(int argc, char *argv[]) {
 			devices_per_platform.clear();
 			platforms[i].getDevices(CL_DEVICE_TYPE_GPU, &devices_per_platform);
 			for (j=0; j<devices_per_platform.size(); j++) {
-				cout << "Type: GPU, " << devices_per_platform[j].getInfo<CL_DEVICE_NAME>() << "'" << endl;
+				cout << "Type: GPU, '" << devices_per_platform[j].getInfo<CL_DEVICE_NAME>() << "'" << endl;
 			}
 		}
         exit(0);

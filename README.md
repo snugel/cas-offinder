@@ -90,7 +90,7 @@ And just try running it for a short help:
       
       Available device list:
       Type: CPU, 'Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz'
-      Type: GPU, Pitcairn'
+      Type: GPU, 'Pitcairn'
 
 Also it provides a list of all available OpenCL devices!
 

@@ -72,16 +72,28 @@ and save it to any directory you want.
 And just try running it for a short help:
 
     $> ./cas-offinder
-        Cas-OFFinder v1.0 (2013-11-03)
-        
-        Copyright 2013 Jeongbin Park and Sangsu Bae
-        Website: http://github.com/snugel/cas-offinder
-        
-        Usage: cas-offinder {input_file} {C|G} {output_file}
-        (C: using CPU, G: using GPU)
+      Cas-OFFinder v1.1 (2013-11-18)
+      
+      Copyright (c) 2013 Jeongbin Park and Sangsu Bae
+      Website: http://github.com/snugel/cas-offinder
+      
+      Usage: cas-offinder {input_file} {C|G} {output_file}
+      (C: using CPUs, G: using GPUs)
+      
+      Example input file:
+      /var/chromosomes/human_hg19
+      NNNNNNNNNNNNNNNNNNNNNRG
+      GGCCGACCTGTCGCTGACGCNNN 5
+      CGCCAGCGTCAGCGACAGGTNNN 5
+      ACGGCGCCAGCGTCAGCGACNNN 5
+      GTCGCTGACGCTGGCGCCGTNNN 5
+      
+      Available device list:
+      Type: CPU, 'Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz'
+      Type: GPU, Pitcairn'
 
-        ...
-        
+Also it provides a list of all available OpenCL devices!
+
 Now you should create an input file:
 
 - The first line of the input file gives directory path containing chromosomes FASTA files,
@@ -226,6 +238,16 @@ https://sourceforge.net/projects/cas-offinder/files/Binaries
 And the source code is distributed from
 
 https://github.com/snugel/cas-offinder
+
+Changelog
+-------
+
+* 1.1
+  - When Cas-OFFinder is launched without parameters, now it display available device list.
+  - If the given chromosomes directory is not exist, now it returns an error message.
+  - Corrected bug (when Cas-OFFinder couldn't find any OpenCL device it would hang).
+* 1.0
+  - Initial release.
 
 License
 -------

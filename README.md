@@ -6,7 +6,7 @@ that searches for potential off-target sites of CRISPR/Cas-derived RNA-guided en
 
 Cas-OFFinder is not limited by the number of mismatches and allows variations in protospacer-adjacent motif (PAM) sequences recognized by Cas9, the essential protein com-ponent in RGENs.
 
-Requires pre-installed OpenCL library to compile and run.
+Requires pre-installed OpenCL library to compile.
 
 Cas-OFFinder is distributed under new BSD license.
 

@@ -16,7 +16,7 @@ CRISPR/Cas-derived RNA-guided endonucleases (RGEN)
 
 RGENs use complementary base pairing to recognize target sites.
 
-RGENs consist of,
+RGENs consist of two parts.
 * Guide RNA
   - Dual RNA components comprising sequence-invariant tracrRNA and sequence-variable guide RNA termed crRNA
   - ...or single-chain guide RNA (sgRNA) constructed by linking essential portions of tracrRNA and crRNA
@@ -164,8 +164,13 @@ Installation
 ----------------
 
 * Cas-OFFinder requires an OpenCL-enabled device and corresponding runtime API pre-installed to run properly.
-  OpenCL is supported on various platforms, including recent Intel/AMD CPUs and NVidia/AMD graphic cards!
-  Before installing Cas-OFFinder, please check the vendor's website to know whether your device is supported.
+
+  OpenCL is supported on various platforms, including many Intel/AMD CPUs and NVidia/AMD graphic cards!
+  Before installing Cas-OFFinder, please check whether your device is an OpenCL-supported one.
+  
+  Khronos group provides an extensive list of supported devices here:
+  
+  http://www.khronos.org/conformance/adopters/conformant-products/#opencl
 
   Cas-OFFinder usually runs faster on GPUs than CPUs.
   If you want to purchase a new graphic card for fast analyzing speed,

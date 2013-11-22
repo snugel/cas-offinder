@@ -170,9 +170,9 @@ Installation
   Cas-OFFinder usually runs faster on GPUs than CPUs.
   If you want to purchase a new graphic card for fast analyzing speed,
   please check GPU benchmark results below as a reference:
-
-  https://compubench.com/result.jsp
-  http://www.luxrender.net/luxmark/top/top20/Room/GPU/1
+  
+  - https://compubench.com/result.jsp
+  - http://www.luxrender.net/luxmark/top/top20/Room/GPU/1
 
   Recently, the OpenCL runtime binaries are already shipped with the device drivers in many cases -
   so you don't have to install anything to run Cas-OFFinder.

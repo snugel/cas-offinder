@@ -6,9 +6,9 @@ that searches for potential off-target sites of CRISPR/Cas-derived RNA-guided en
 
 Cas-OFFinder is not limited by the number of mismatches and allows variations in protospacer-adjacent motif (PAM) sequences recognized by Cas9, the essential protein com-ponent in RGENs.
 
-Requires pre-installed OpenCL library to compile.
+Requires an OpenCL device to run properly.
 
-Cas-OFFinder is distributed under new BSD license.
+Cas-OFFinder is distributed under new BSD license (3-clauses).
 
 
 CRISPR/Cas-derived RNA-guided endonucleases (RGEN)
@@ -166,6 +166,13 @@ Installation
 * Cas-OFFinder requires an OpenCL-enabled device and corresponding runtime API pre-installed to run properly.
   OpenCL is supported on various platforms, including recent Intel/AMD CPUs and NVidia/AMD graphic cards!
   Before installing Cas-OFFinder, please check the vendor's website to know whether your device is supported.
+
+  Cas-OFFinder usually runs faster on GPUs than CPUs.
+  If you want to purchase a new graphic card for fast analyzing speed,
+  please check GPU benchmark results below as a reference:
+
+  https://compubench.com/result.jsp
+  http://www.luxrender.net/luxmark/top/top20/Room/GPU/1
 
   Recently, the OpenCL runtime binaries are already shipped with the device drivers in many cases -
   so you don't have to install anything to run Cas-OFFinder.

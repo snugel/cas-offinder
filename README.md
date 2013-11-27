@@ -206,21 +206,21 @@ Compile
   First, download CMake here (http://www.cmake.org/cmake/resources/software.html).
   If you use Ubuntu linux, you can also install it via apt-get.
   (apt-get install cmake)
-  
+
   Checkout the source code of Cas-OFFinder with Git client,
   or download it manually on github website.
   
-  Now, launch terminal (on Windows, press `[Windows key]+r` and enter `cmd`) and
-  type the following to build Cas-OFFinder.
-
-  In POSIX environment (g++ should be pre-installed):
   
+  In POSIX environment (g++ should be pre-installed), launch terminal and type the following to build Cas-OFFinder:
+
       cmake -G "Unix Makefiles"
       make
       
-  On Windows (Visual Studio should be pre-installed):
+  On Windows (Visual Studio should be pre-installed), launch 'Visual Studio Command Prompt',
+  (You can find it under 'Start menu' - 'Microsoft Visual Studio xxxx' - 'Visual Studio Tools')
+  and type the following. (Assuming that cmake binary is installed in 'C:\Program Files (x86)\CMake 2.8\bin'):
   
-      cmake -G "NMake Makefiles"
+      "C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -G "NMake Makefiles"
       nmake
   
   Then cas-offinder binary will be generated. Copy it wherever you want.

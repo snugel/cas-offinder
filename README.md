@@ -218,7 +218,7 @@ Compile
       
   On Windows (Visual Studio should be pre-installed), launch 'Visual Studio Command Prompt',
   (You can find it under 'Start menu' - 'Microsoft Visual Studio xxxx' - 'Visual Studio Tools')
-  and type the following. (Assuming that cmake binary is installed in 'C:\Program Files (x86)\CMake 2.8\bin'):
+  and type the following. (Assuming that the CMake binary is installed in 'C:\Program Files (x86)\CMake 2.8\bin'):
   
       "C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -G "NMake Makefiles"
       nmake

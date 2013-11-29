@@ -10,7 +10,7 @@ check_include_files (CL/cl.hpp HAVE_CL_HPP)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 if (APPLE)
-	find_library(OPENCL_LIBRARY_DIR OpenCL)
+	find_library(OPENCL_LIBRARY OpenCL)
 else (APPLE)
 	find_package (OpenCL REQUIRED)
 	include_directories ("${OPENCL_INCLUDE_DIR}")

@@ -13,7 +13,7 @@ Cas-OFFinder is distributed under new BSD license (3-clauses).
 Cas-OFFinder has been tested on the platforms below:
 - Microsoft Windows (7 and 8)
 - GNU/Linux (CentOS, Ubuntu and Elementary OS)
-- Mac OS X (Mavericks)
+- (NEW!) Mac OS X (Mavericks)
 
 CRISPR/Cas-derived RNA-guided endonucleases (RGEN)
 -------

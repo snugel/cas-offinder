@@ -10,6 +10,10 @@ Requires an OpenCL device to run properly.
 
 Cas-OFFinder is distributed under new BSD license (3-clauses).
 
+Cas-OFFinder has been tested on the platforms below:
+- Microsoft Windows (7 and 8)
+- GNU/Linux (CentOS, Ubuntu and Elementary OS)
+- Mac OS X (Mavericks)
 
 CRISPR/Cas-derived RNA-guided endonucleases (RGEN)
 -------
@@ -256,7 +260,7 @@ Changelog
 
 * 1.1
   - When Cas-OFFinder is launched without parameters, now it display available device list.
-  - If the given chromosomes directory is not exist, now it returns an error message.
+  - If the given chromosomes directory does not exist, now it returns an error message.
   - Corrected bug (when Cas-OFFinder couldn't find any OpenCL device it would hang).
 * 1.0
   - Initial release.

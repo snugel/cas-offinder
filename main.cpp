@@ -8,7 +8,6 @@
 #include <cassert>
 #include <ctime>
 #include <climits>
-#include <CL/cl.hpp>
 #include "kseq.h"
 #define myread(a,b,c) fread(b, 1, c, a)
 KSEQ_INIT(FILE*, myread)

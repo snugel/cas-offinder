@@ -6,11 +6,15 @@ set (CAS-OFFinderr_VERSION_MINOR 0)
 
 include (CheckIncludeFiles)
 check_include_files (dirent.h HAVE_DIRENT_H)
+check_include_files (CL/cl.hpp HAVE_CL_HPP)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
-find_package (OpenCL REQUIRED)
-
-include_directories ("${OPENCL_INCLUDE_DIR}")
+if (APPLE)
+	find_library(OPENCL_LIBRARY_DIR OpenCL)
+else (APPLE)
+	find_package (OpenCL REQUIRED)
+	include_directories ("${OPENCL_INCLUDE_DIR}")
+endif (APPLE)
 include_directories ("${PROJECT_BINARY_DIR}")
 if (NOT HAVE_DIRENT_H)
 	message ("Could not find dirent.h on your system.")

@@ -259,7 +259,7 @@ Changelog
 -------
 
 * 1.2
-  - Using atomic operation, reduced computing load on CPU.
+  - Using atomic operation, reduced computing load on CPU. In our benchmark, the total computation speed increased as twice as before.
   - When lowercase sequences are given, convert them uppercase sequences before computation.
   - Corrected a bug (mixed bases were shown as lowercases letters, even they had been matched with normal bases).
   - Now supports 'Accelators', with 'a' option.

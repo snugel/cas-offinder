@@ -1,8 +1,10 @@
 cmake_minimum_required (VERSION 2.6)
 project (CAS-OFFinder)
 
-set (CAS-OFFinderr_VERSION_MAJOR 1)
-set (CAS-OFFinderr_VERSION_MINOR 0)
+set (CAS-OFFinderr_VERSION_MAJOR 2)
+set (CAS-OFFinderr_VERSION_MINOR 1)
+
+set(CMAKE_BUILD_TYPE Release)
 
 include (CheckIncludeFiles)
 check_include_files (dirent.h HAVE_DIRENT_H)

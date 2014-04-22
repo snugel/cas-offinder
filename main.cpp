@@ -581,8 +581,8 @@ int main(int argc, char *argv[]) {
 			"Copyright (c) 2013 Jeongbin Park and Sangsu Bae" << endl <<
 			"Website: http://github.com/snugel/cas-offinder" << endl <<
 			endl <<
-			"Usage: cas-offinder {input_file} {C|G} {output_file}" << endl <<
-			"(C: using CPUs, G: using GPUs)" << endl <<
+			"Usage: cas-offinder {input_file} {C|G|A} {output_file}" << endl <<
+			"(C: using CPUs, G: using GPUs, A: using accelerators)" << endl <<
 			endl <<
 			"Example input file:" << endl <<
 			"/var/chromosomes/human_hg19" << endl <<

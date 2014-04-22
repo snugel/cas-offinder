@@ -38,9 +38,9 @@ Usage
 
 Cas-OFFinder can run with:
   
-    cas-offinder {input_file} {G|C} {output_file}
+    cas-offinder {input_file} {G|C|A} {output_file}
 
-G stands for using all available GPU devices, and C for using all CPUs.
+G stands for using all available GPU devices, C for using all CPUs, and A for using all accelerators.
 
 A short example may be helpful!
 
@@ -136,7 +136,7 @@ An example of input file:
 
 Save it as 'input.txt'.
 
-Now you can run Cas-OFFinder as following:
+Now you can run Cas-OFFinder as following (using GPUs):
 
     $> ./cas-offinder input.txt G out.txt
     ...
@@ -287,14 +287,14 @@ are permitted provided that the following conditions are met:
   list of conditions and the following disclaimer in the documentation and/or
   other materials provided with the distribution.
 
-* Neither the name of the organization nor the names of its
+* Neither the name of the Seoul National University nor the names of its
   contributors may be used to endorse or promote products derived from
   this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNERS OR CONTRIBUTORS BE LIABLE FOR
 ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON

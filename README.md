@@ -76,13 +76,13 @@ and save it to any directory you want.
 And just try running it for a short help:
 
     $> ./cas-offinder
-      Cas-OFFinder v1.1 (2013-11-18)
+      Cas-OFFinder v2.1 (2014-03-23)
       
       Copyright (c) 2013 Jeongbin Park and Sangsu Bae
       Website: http://github.com/snugel/cas-offinder
       
-      Usage: cas-offinder {input_file} {C|G} {output_file}
-      (C: using CPUs, G: using GPUs)
+      Usage: cas-offinder {input_file} {C|G|A} {output_file}
+      (C: using CPUs, G: using GPUs, A: using accelerators)
       
       Example input file:
       /var/chromosomes/human_hg19

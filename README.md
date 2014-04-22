@@ -262,7 +262,7 @@ Changelog
   - Using atomic operation, reduced computing load on CPU. In our benchmark, the total computation speed increased about twice as fast as before.
   - When lowercase sequences are given, convert them uppercase sequences before computation.
   - Corrected a bug (mixed bases were shown as lowercases letters, even they had been matched with normal bases).
-  - Now supports 'Accelators', with 'a' option.
+  - Now supports 'accelerators', with 'A' option.
 * 1.1
   - When Cas-OFFinder is launched without parameters, now it display available device list.
   - If the given chromosomes directory does not exist, now it returns an error message.

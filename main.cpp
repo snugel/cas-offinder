@@ -133,7 +133,7 @@ private:
 			cout << "No OpenCL devices found." << endl;
 			exit(1);
 		}
-		char* program_src =
+		const char* program_src =
 			"#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable\n"
 			"#pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable\n"
 			"#pragma OPENCL EXTENSION cl_khr_global_int32_extended_atomics : enable\n"

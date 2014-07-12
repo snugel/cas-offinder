@@ -11,7 +11,7 @@
 #include <algorithm>
 #include "kseq.h"
 
-#define myread(a,b,c) fread(b, c, 1, a)
+#define myread(a,b,c) fread(b, 1, c, a)
 KSEQ_INIT(FILE*, myread)
 
 #ifndef min

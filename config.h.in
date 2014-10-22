@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #cmakedefine HAVE_DIRENT_H
 #cmakedefine HAVE_CL_HPP
 #cmakedefine BUILD_FOR_SNUCL

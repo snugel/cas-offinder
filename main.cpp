@@ -657,7 +657,7 @@ int main(int argc, char *argv[]) {
 				fastapath = chrdir + "/" + fastapath;
 				cout << "Reading " << fastapath << "..." << endl;
 				cnum = 0;
-				input = ifstream(fastapath);
+				input.open(fastapath.c_str());
 				cnt = 0;
 				chrnames.clear();
 				content.clear();

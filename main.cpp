@@ -9,10 +9,6 @@
 #include <ctime>
 #include <climits>
 #include <algorithm>
-#include "kseq.h"
-
-#define myread(a,b,c) fread(b, 1, c, a)
-KSEQ_INIT(FILE*, myread)
 
 #ifndef min
 #define min(a,b) ( ((a)<(b))?(a):(b) )
@@ -20,16 +16,17 @@ KSEQ_INIT(FILE*, myread)
 
 using namespace std;
 
-class Genos {
+class Cas_OFFinder {
 
 private:
 	vector<cl::CommandQueue> m_queues;
 	vector<cl::Context> m_contexts;
 	vector<cl_ulong> MAX_ALLOC_MEMORY; // on device, in bytes
 
-	size_t m_chrdatasize;
-	cl_char* m_chrdata;
-	cl_char* m_chrname;
+	unsigned long long m_chrdatasize;
+	vector<string> m_chrnames;
+	vector<unsigned long long> m_chrpos;
+	string m_chrdata;
 	cl_char* m_pattern;
 
 	cl_uint m_threshold;
@@ -61,16 +58,16 @@ private:
 	vector <cl_char *> m_directions;
 	vector <cl_uint *> m_mmlocis;
 
-	vector<unsigned int> m_dicesizes;
-	unsigned int m_totalanalyzedsize;
-	unsigned int m_lasttotalanalyzedsize;
-	vector<unsigned int> m_worksizes;
-	unsigned int m_devnum;
+	vector<size_t> m_dicesizes;
+	unsigned long long m_totalanalyzedsize;
+	unsigned long long m_lasttotalanalyzedsize;
+	vector<unsigned long long> m_worksizes;
+	size_t m_devnum;
 	unsigned int m_activedevnum;
-	unsigned int m_lastloci;
+	unsigned long long m_lastloci;
 
-	unsigned int m_linenum;
-	unsigned int m_filenum;
+	unsigned long long m_linenum;
+	unsigned long long m_filenum;
 
 	void set_complementary_sequence(cl_char* seq)
 	{
@@ -112,13 +109,13 @@ private:
 	}
 
 	void initOpenCL(cl_device_type devtype) {
-		int i, j;
+		unsigned int i, j;
 
 		vector<cl::Platform> platforms;
 		vector<cl::Device> devices;
 
 		cl::Platform::get(&platforms);
-		int number_of_platforms = platforms.size();
+		size_t number_of_platforms = platforms.size();
 
 		vector<cl::Device> devices_per_platform;
 		for (i = 0; i < number_of_platforms; i++) {
@@ -164,7 +161,7 @@ private:
 			"		     (pat[k] == 'A' && (chr[i+k] != 'A')) ||"
 			"		     (pat[k] == 'G' && (chr[i+k] != 'G')) ||"
 			"		     (pat[k] == 'C' && (chr[i+k] != 'C')) ||"
-			"		     (pat[k] == 'T' && (chr[i+k] != 'T')))"
+			"		     (pat[k] == 'T' && (chr[i+k] != 'T')) )"
 			"			localflag |= 2;"
 			"		k = pat_index[patternlen + j];"
 			"		if ( (pat[k + patternlen] == 'R' && (chr[i+k] == 'C' || chr[i+k] == 'T')) ||"
@@ -180,12 +177,14 @@ private:
 			"		     (pat[k + patternlen] == 'A' && (chr[i+k] != 'A')) ||"
 			"		     (pat[k + patternlen] == 'G' && (chr[i+k] != 'G')) ||"
 			"		     (pat[k + patternlen] == 'C' && (chr[i+k] != 'C')) ||"
-			"		     (pat[k + patternlen] == 'T' && (chr[i+k] != 'T')))"
+			"		     (pat[k + patternlen] == 'T' && (chr[i+k] != 'T')) )"
 			"			localflag |= 1;"
 			"		if (localflag == 3)"
 			"			break;"
 			"	}"
 			"	if (localflag != 3) {"
+			"		for (j=0; j<patternlen; j++)"
+			"			if (chr[i+j] == ';') return;"
 			"		old = atomic_inc(entrycount);"
 			"		loci[old] = i;"
 			"		flag[old] = localflag;"
@@ -278,23 +277,24 @@ private:
 	}
 
 public:
-	Genos(cl_device_type devtype) {
+	Cas_OFFinder(cl_device_type devtype) {
 		initOpenCL(devtype);
 	}
 
-	void setChrData(char *chrname, char *chrdata, size_t chrdatasize) {
-		m_chrname = (cl_char *)chrname;
-		m_chrdata = (cl_char *)chrdata;
-		m_chrdatasize = chrdatasize;
+	void setChrData(vector<string> chrnames, string chrdata, vector<unsigned long long> chrpos) {
+		m_chrnames = chrnames;
+		m_chrpos = chrpos;
+		m_chrdata = chrdata;
+		m_chrdatasize = chrdata.size();
 		m_totalanalyzedsize = 0;
 		m_lasttotalanalyzedsize = 0;
 		m_lastloci = 0;
 	}
 
 	void setPattern(const char* pattern) {
-		int dev_index;
+		unsigned int dev_index;
 		m_pattern = (cl_char*)pattern;
-		m_patternlen = strlen(pattern);
+		m_patternlen = (cl_uint)strlen(pattern);
 
 		m_dicesizes.clear();
 		m_chrdatabufs.clear();
@@ -306,7 +306,7 @@ public:
 
 		for (dev_index = 0; dev_index < m_devnum; dev_index++) {
 			m_dicesizes.push_back(
-				min(
+				(size_t)min(
 				(MAX_ALLOC_MEMORY[dev_index] - sizeof(cl_char)* (3 * m_patternlen - 1) - sizeof(cl_uint)* (2 * m_patternlen + 3) - sizeof(cl_ushort)) / (4 * sizeof(cl_char)+3 * sizeof(cl_uint)+2 * sizeof(cl_ushort)),
 				((m_chrdatasize / m_devnum) + ((m_chrdatasize%m_devnum == 0) ? 0 : 1))
 				)
@@ -325,8 +325,8 @@ public:
 		if (m_totalanalyzedsize == m_chrdatasize)
 			return false;
 
-		int dev_index;
-		int tailsize;
+		unsigned int dev_index;
+		unsigned long long tailsize;
 
 		cl_char *c_pattern = (cl_char *)malloc(sizeof(cl_char)* (m_patternlen + 1)); c_pattern[m_patternlen] = 0; memcpy(c_pattern, m_pattern, m_patternlen); set_complementary_sequence(c_pattern);
 		int *c_pattern_index = (cl_int *)malloc(sizeof(cl_int)* m_patternlen); set_pattern_index(c_pattern_index, c_pattern);
@@ -340,14 +340,14 @@ public:
 			tailsize = m_chrdatasize - m_totalanalyzedsize;
 			m_activedevnum++;
 			if (tailsize <= m_dicesizes[dev_index]) {
-				m_queues[dev_index].enqueueWriteBuffer(m_chrdatabufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* (tailsize + m_patternlen - 1), m_chrdata + m_totalanalyzedsize, NULL);
+				m_queues[dev_index].enqueueWriteBuffer(m_chrdatabufs[dev_index], CL_FALSE, 0, (size_t)(sizeof(cl_char)* (tailsize + m_patternlen - 1)), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, NULL);
 				m_totalanalyzedsize += tailsize;
 				m_worksizes.push_back(tailsize);
 				// cout << "Worksize: " <<  m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
 				break;
 			}
 			else {
-				m_queues[dev_index].enqueueWriteBuffer(m_chrdatabufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), m_chrdata + m_totalanalyzedsize, NULL);
+				m_queues[dev_index].enqueueWriteBuffer(m_chrdatabufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, NULL);
 				m_totalanalyzedsize += m_dicesizes[dev_index];
 				m_worksizes.push_back(m_dicesizes[dev_index]);
 				// cout << "Worksize: " <<  m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
@@ -381,12 +381,12 @@ public:
 	}
 
 	void findPattern() {
-		int dev_index, i;
+		unsigned int dev_index;
 
 		m_finderevts.clear();
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
 			m_finderevts.push_back(cl::Event());
-			m_queues[dev_index].enqueueNDRangeKernel(m_finderkernels[dev_index], cl::NullRange, cl::NDRange(m_worksizes[dev_index]), cl::NullRange, NULL, &m_finderevts[dev_index]);
+			m_queues[dev_index].enqueueNDRangeKernel(m_finderkernels[dev_index], cl::NullRange, cl::NDRange((size_t)m_worksizes[dev_index]), cl::NullRange, NULL, &m_finderevts[dev_index]);
 		}
 
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
@@ -412,7 +412,7 @@ public:
 	}
 
 	void releaseLociinfo() {
-		int dev_index;
+		unsigned int dev_index;
 
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
 			free((void *)m_mmcounts[dev_index]);
@@ -431,7 +431,7 @@ public:
 	}
 
 	void indicate_mismatches(cl_char* seq, cl_char* comp) {
-		int k;
+		unsigned int k;
 		for (k = 0; k < m_patternlen; k++)
 		if ((comp[k] == 'R' && (seq[k] == 'C' || seq[k] == 'T')) ||
 			(comp[k] == 'Y' && (seq[k] == 'A' || seq[k] == 'G')) ||
@@ -451,7 +451,7 @@ public:
 	}
 
 	void compareAll(const char *arg_compare, unsigned short threshold, const char* outfilename) {
-		int i, j, k, dev_index;
+		unsigned int i, j, dev_index;
 
 		vector <cl::Buffer> comparebufs;
 		vector <cl::Buffer> compareindexbufs;
@@ -463,11 +463,11 @@ public:
 
 		m_comparerevts.clear();
 		for (dev_index = 0; dev_index<m_activedevnum; dev_index++) {
+			comparebufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* m_patternlen * 2));
+			compareindexbufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_uint)* m_patternlen * 2));
+			m_comparerevts.push_back(cl::Event());
 			if (m_locicnts[dev_index] > 0) {
 				const cl_char *compare = (const cl_char*)arg_compare;
-
-				comparebufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* m_patternlen * 2));
-				compareindexbufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_uint)* m_patternlen * 2));
 
 				cl_uint zero = 0;
 				m_queues[dev_index].enqueueWriteBuffer(comparebufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, compare, NULL);
@@ -490,21 +490,21 @@ public:
 				m_comparerkernels[dev_index].setArg(9, m_directionbufs[dev_index]);
 				m_comparerkernels[dev_index].setArg(10, m_entrycountbufs[dev_index]);
 
-				m_comparerevts.push_back(cl::Event());
 				m_queues[dev_index].enqueueNDRangeKernel(m_comparerkernels[dev_index], cl::NullRange, cl::NDRange(m_locicnts[dev_index]), cl::NullRange, NULL, &m_comparerevts[dev_index]);
 			}
 		}
 
-		unsigned int loci;
+		unsigned long long loci;
 
 		char comp_symbol[2] = { '+', '-' };
 		char *strbuf = (char *)malloc(sizeof(char)* (m_patternlen + 1)); strbuf[m_patternlen] = 0;
 
 		ofstream fo(outfilename, ios::out | ios::app);
-		unsigned int localanalyzedsize = 0;
+		unsigned long long localanalyzedsize = 0;
 		unsigned int cnt = 0;
+		unsigned int idx;
 		for (dev_index = 0; dev_index<m_activedevnum; dev_index++) {
-			if (m_locicnts[dev_index] > 0) {
+			 if (m_locicnts[dev_index] > 0) {
 				m_comparerevts[dev_index].wait();
 				m_queues[dev_index].enqueueReadBuffer(m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, NULL);
 				m_queues[dev_index].enqueueReadBuffer(m_mmcountbufs[dev_index], CL_TRUE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], NULL);
@@ -514,10 +514,11 @@ public:
 				for (i = 0; i < cnt; i++) {
 					loci = m_mmlocis[dev_index][i] + m_lasttotalanalyzedsize + localanalyzedsize;
 					if (m_mmcounts[dev_index][i] <= threshold) {
-						strncpy(strbuf, (char *)(m_chrdata + loci), m_patternlen);
+						strncpy(strbuf, (char *)(m_chrdata.c_str() + loci), m_patternlen);
 						if (m_directions[dev_index][i] == '-') set_complementary_sequence((cl_char *)strbuf);
 						indicate_mismatches((cl_char*)strbuf, compare);
-						fo << compare << "\t" << m_chrname << "\t" << loci << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
+						for (j = 0; loci > m_chrpos[j]; j++) idx = j;
+						fo << compare << "\t" << m_chrnames[idx] << "\t" << loci - m_chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
 					}
 				}
 			}
@@ -532,51 +533,28 @@ public:
 	}
 };
 
-int StrUpr(char *str)
-{
-	int loop = 0;
-	while (str[loop] != '\0')
-	{
-		str[loop] = (char)toupper(str[loop]);
-		loop++;
-	}
-	return loop;
-}
-
-int StrUpr(string &str)
-{
-	int loop = 0;
-	for (loop = 0; loop < str.length(); loop++)
-	{
-		str[loop] = (int)toupper((int)str[loop]);
-		loop++;
-	}
-	return loop;
-}
-
 int main(int argc, char *argv[]) {
 	clock_t start, end;
 	float seconds;
 	string fastapath, chrname, pattern, tmpstr, chrdir, outfilename;
 	DIR* dir;
 	dirent *ent;
-	int i, j, l, tmpint;
+	unsigned int i, j, cnt, tmpint;
 
-	FILE *f_fasta;
-
-	kseq_t *seq_f;
+	std::ifstream input;
+	std::string line, name, content;
 
 	vector<cl::Platform> platforms;
 
 	cl::Platform::get(&platforms);
-	int number_of_platforms = platforms.size();
+	size_t number_of_platforms = platforms.size();
 	if (number_of_platforms == 0) {
 		cout << "No OpenCL platforms found. Check OpenCL installation!" << endl;
 		exit(1);
 	}
 
 	if (argc < 4) { // Not all option specified
-		cout << "Cas-OFFinder v2.1 (2014-03-23)" << endl <<
+		cout << "Cas-OFFinder v2.2 (2014-10-22)" << endl <<
 			endl <<
 			"Copyright (c) 2013 Jeongbin Park and Sangsu Bae" << endl <<
 			"Website: http://github.com/snugel/cas-offinder" << endl <<
@@ -627,9 +605,11 @@ int main(int argc, char *argv[]) {
 		cout << "Unknown option: " << argv[2] << endl;
 		exit(-1);
 	}
-	Genos s(devtype);
+	Cas_OFFinder s(devtype);
 
 	vector <string> compare;
+	vector <string> chrnames;
+	vector <unsigned long long> chrpos;
 	vector <int> threshold;
 
 	start = clock();
@@ -647,7 +627,7 @@ int main(int argc, char *argv[]) {
 	while (true) {
 		if (fi.eof()) break;
 		fi >> tmpstr;
-		StrUpr(tmpstr);
+		transform(tmpstr.begin(), tmpstr.end(), tmpstr.begin(), ::toupper);
 		compare.push_back(tmpstr);
 		if (fi.eof()) break;
 		fi >> tmpint;
@@ -655,7 +635,7 @@ int main(int argc, char *argv[]) {
 	}
 	fi.close();
 
-	StrUpr(pattern);
+	transform(pattern.begin(), pattern.end(), pattern.begin(), ::toupper);
 
 	if (argc > 3) {
 		outfilename = argv[3];
@@ -675,33 +655,48 @@ int main(int argc, char *argv[]) {
 			if (ent->d_type == DT_REG) {
 				fastapath = ent->d_name;
 				fastapath = chrdir + "/" + fastapath;
-				cout << "Opening " << fastapath << "..." << endl;
+				cout << "Reading " << fastapath << "..." << endl;
 				cnum = 0;
-
-				f_fasta = fopen(fastapath.c_str(), "r");
-				seq_f = kseq_init(f_fasta);
-				while ((l = kseq_read(seq_f)) >= 0) {
-					cout << "Analyzing " << seq_f->name.s << "..." << endl;
-					StrUpr(seq_f->seq.s);
-					cout << "Sending data to devices..." << endl;
-					s.setChrData(seq_f->name.s, seq_f->seq.s, seq_f->seq.l);
-					cout << "Setting pattern to devices..." << endl;
-					s.setPattern(pattern.c_str());
-					cout << "Chunk load started." << endl;
-					while (s.loadNextChunk()) {
-						// Find patterns in the chunk
-						cout << "Finding pattern in chunk #" << ++cnum << "..." << endl;
-						s.findPattern();
-						pnum = 0;
-						for (i = 0; i < threshold.size(); i++) {
-							cout << "Comparing pattern #" << ++pnum << " in chunk #" << cnum << "..." << endl;
-							s.compareAll(compare[i].c_str(), threshold[i], (outfilename).c_str());
+				input = ifstream(fastapath);
+				cnt = 0;
+				chrnames.clear();
+				content.clear();
+				chrpos.clear();
+				while (getline(input, line).good()){
+					if (!line.empty() && line[0] == '>') { // Identifier marker
+						name = line.substr(1);
+						//if (((cnt++) % 10000) == 0) cout << "Reading " << name << endl;
+						chrnames.push_back(name);
+						if (chrpos.size() != 0) content += ";"; // seperator
+						chrpos.push_back(content.size());
+					}
+					else if (!name.empty()){
+						transform(line.begin(), line.end(), line.begin(), ::toupper);
+						try {
+							content += line;
+						} catch (const std::bad_alloc&) {
+							cout << "Not enough memory!" << endl << "Split fasta file, or try 64bit version of Cas-OFFinder." << endl;
+							exit(1);
 						}
-						s.releaseLociinfo();
 					}
 				}
-				kseq_destroy(seq_f);
-				fclose(f_fasta);
+				input.close();
+				cout << "Sending data to devices..." << endl;
+				s.setChrData(chrnames, content, chrpos);
+				cout << "Setting pattern to devices..." << endl;
+				s.setPattern(pattern.c_str());
+				cout << "Chunk load started." << endl;
+				while (s.loadNextChunk()) {
+					// Find patterns in the chunk
+					cout << "Finding pattern in chunk #" << ++cnum << "..." << endl;
+					s.findPattern();
+					pnum = 0;
+					for (i = 0; i < threshold.size(); i++) {
+						cout << "Comparing pattern #" << ++pnum << " in chunk #" << cnum << "..." << endl;
+						s.compareAll(compare[i].c_str(), threshold[i], (outfilename).c_str());
+					}
+					s.releaseLociinfo();
+				}			
 			}
 		}
 	}

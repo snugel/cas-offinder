@@ -517,7 +517,7 @@ public:
 						strncpy(strbuf, (char *)(m_chrdata.c_str() + loci), m_patternlen);
 						if (m_directions[dev_index][i] == '-') set_complementary_sequence((cl_char *)strbuf);
 						indicate_mismatches((cl_char*)strbuf, compare);
-						for (j = 0; loci > m_chrpos[j]; j++) idx = j;
+						for (j = 0; ((j < m_chrpos.size()) && (loci > m_chrpos[j])); j++) idx = j;
 						fo << compare << "\t" << m_chrnames[idx] << "\t" << loci - m_chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
 					}
 				}

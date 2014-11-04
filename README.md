@@ -76,7 +76,7 @@ and save it to any directory you want.
 And just try running it for a short help:
 
     $> ./cas-offinder
-      Cas-OFFinder v2.1 (2014-03-23)
+      Cas-OFFinder v2.2 (2014-10-22)
       
       Copyright (c) 2013 Jeongbin Park and Sangsu Bae
       Website: http://github.com/snugel/cas-offinder
@@ -257,8 +257,10 @@ https://github.com/snugel/cas-offinder
 
 Changelog
 -------
-
-* 1.2
+* 2.2
+  - Corrected a critical bug (when cas-offinder finds no binding sites in the given genome chunk, it crashes).
+  - Now Cas-OFFinder reads whole fasta file at once, in order to achieve faster searching speed when it searches in FASTA files which contain many small scaffolds.
+* 2.1
   - Using atomic operation, reduced computing load on CPU. In our benchmark, the total computation speed increased about twice as fast as before.
   - When lowercase sequences are given, convert them uppercase sequences before computation.
   - Corrected a bug (mixed bases were shown as lowercases letters, even they had been matched with normal bases).

@@ -98,8 +98,8 @@ And just try running it for a short help:
 
 Also it provides a list of all available OpenCL devices!
 
-On Windows, If you encountered missing .dll error, you may need to download and install [http://www.microsoft.com/en-us/download/details.aspx?id=40784](Visual C++
-Redistributable Packages for Visual Studio 2013).
+On Windows, if you encountered a missing .dll error, you may need to download and install [Visual C++
+Redistributable Packages for Visual Studio 2013](http://www.microsoft.com/en-us/download/details.aspx?id=40784).
 
 Now you should create an input file:
 

@@ -14,6 +14,8 @@
 #define min(a,b) ( ((a)<(b))?(a):(b) )
 #endif
 
+//#define DEBUG
+
 using namespace std;
 
 class Cas_OFFinder {
@@ -343,27 +345,36 @@ public:
 				m_queues[dev_index].enqueueWriteBuffer(m_chrdatabufs[dev_index], CL_FALSE, 0, (size_t)(sizeof(cl_char)* (tailsize + m_patternlen - 1)), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, NULL);
 				m_totalanalyzedsize += tailsize;
 				m_worksizes.push_back(tailsize);
-				// cout << "Worksize: " <<  m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
+				#ifdef DEBUG
+				cout << "Worksize: " <<  m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
+				#endif
 				break;
 			}
 			else {
 				m_queues[dev_index].enqueueWriteBuffer(m_chrdatabufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, NULL);
 				m_totalanalyzedsize += m_dicesizes[dev_index];
 				m_worksizes.push_back(m_dicesizes[dev_index]);
-				// cout << "Worksize: " <<  m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
+				#ifdef DEBUG
+				cout << "Worksize: " <<  m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
+				#endif
 			}
 		}
 		cout << m_activedevnum << " devices selected to analyze..." << endl;
 
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
 			cl_uint zero = 0;
+			#ifdef DEBUG
+			cout << "Writing buffer for find..." << endl;
+			#endif
 			m_queues[dev_index].enqueueWriteBuffer(m_patternbufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, m_pattern, NULL);
 			m_queues[dev_index].enqueueWriteBuffer(m_patternbufs[dev_index], CL_FALSE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_pattern, NULL);
 			m_queues[dev_index].enqueueWriteBuffer(m_patternindexbufs[dev_index], CL_FALSE, 0, sizeof(cl_int)* m_patternlen, pattern_index, NULL);
 			m_queues[dev_index].enqueueWriteBuffer(m_patternindexbufs[dev_index], CL_FALSE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_pattern_index, NULL);
 			m_queues[dev_index].enqueueWriteBuffer(m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, NULL);
 			m_queues[dev_index].finish();
-
+			#ifdef DEBUG
+			cout << "Done." << endl;
+			#endif
 			m_finderkernels[dev_index].setArg(0, m_chrdatabufs[dev_index]);
 			m_finderkernels[dev_index].setArg(1, m_patternbufs[dev_index]);
 			m_finderkernels[dev_index].setArg(2, m_patternindexbufs[dev_index]);
@@ -470,13 +481,33 @@ public:
 				const cl_char *compare = (const cl_char*)arg_compare;
 
 				cl_uint zero = 0;
+				#ifdef DEBUG
+				cout << "Writing compare buffer (frontside)..." << endl;
+				#endif
 				m_queues[dev_index].enqueueWriteBuffer(comparebufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, compare, NULL);
+				#ifdef DEBUG
+				cout << "Writing compare buffer (backside)..." << endl;
+				#endif
 				m_queues[dev_index].enqueueWriteBuffer(comparebufs[dev_index], CL_FALSE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_compare, NULL);
+				#ifdef DEBUG
+				cout << "Writing index buffer (frontside)..." << endl;
+				#endif
 				m_queues[dev_index].enqueueWriteBuffer(compareindexbufs[dev_index], CL_FALSE, 0, sizeof(cl_int)* m_patternlen, compare_index, NULL);
+				#ifdef DEBUG
+				cout << "Writing index buffer (backside)..." << endl;
+				#endif
 				m_queues[dev_index].enqueueWriteBuffer(compareindexbufs[dev_index], CL_FALSE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_compare_index, NULL);
+				#ifdef DEBUG
+				cout << "Writing entry count buffer..." << endl;
+				#endif
 				m_queues[dev_index].enqueueWriteBuffer(m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, NULL);
+				#ifdef DEBUG
+				cout << "Writing buffer for compare..." << endl;
+				#endif
 				m_queues[dev_index].finish();
-
+				#ifdef DEBUG
+				cout << "Done." << endl;
+				#endif
 				cl_ushort cl_threshold = threshold;
 				m_comparerkernels[dev_index].setArg(0, m_chrdatabufs[dev_index]);
 				//m_comparerkernels[dev_index].setArg(1, m_locibufs[dev_index]);

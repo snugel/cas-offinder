@@ -166,6 +166,16 @@ out.txt:
     GGCCGACCTGTCGCTGACGCNNN chr8    22409058     GcCCGACCccTCcCcGACGCCAG +       5
     ...
 
+Advanced Usage
+----------------
+Cas-OFFinder is mainly designed for CRISPR/Cas9 derived RGENs, however, it is also can be used for searching off-targets of other nucleases, e.g. TALENs(Transcription activator-like effector nucleases) or ZFNs(Zinc-finger nucleases), by specifying pattern sequence as all 'N's.
+
+Example input file for TALENs:
+/var/chromosomes/human_hg19
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+TTCTGGAGGTGCCTGAGGCCNNNNNNNNNNNNGAGGCCACCTTTCCAGTCCA 5
+TGGCCAATGTGACGCTGACGNNNNNNNNNNNNCTGGAGACTCCAGACTTCCA 5
+....
 
 Installation
 ----------------

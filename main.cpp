@@ -492,23 +492,23 @@ public:
 				#ifdef DEBUG
 				cout << "Writing compare buffer (frontside)..." << endl;
 				#endif
-				clEnqueueWriteBuffer(m_queues[dev_index], comparebufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* m_patternlen, compare, 0, 0, 0);
+				clEnqueueWriteBuffer(m_queues[dev_index], comparebufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, compare, 0, 0, 0);
 				#ifdef DEBUG
 				cout << "Writing compare buffer (backside)..." << endl;
 				#endif
-				clEnqueueWriteBuffer(m_queues[dev_index], comparebufs[dev_index], CL_TRUE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_compare, 0, 0, 0);
+				clEnqueueWriteBuffer(m_queues[dev_index], comparebufs[dev_index], CL_FALSE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_compare, 0, 0, 0);
 				#ifdef DEBUG
 				cout << "Writing index buffer (frontside)..." << endl;
 				#endif
-				clEnqueueWriteBuffer(m_queues[dev_index], compareindexbufs[dev_index], CL_TRUE, 0, sizeof(cl_int)* m_patternlen, compare_index, 0, 0, 0);
+				clEnqueueWriteBuffer(m_queues[dev_index], compareindexbufs[dev_index], CL_FALSE, 0, sizeof(cl_int)* m_patternlen, compare_index, 0, 0, 0);
 				#ifdef DEBUG
 				cout << "Writing index buffer (backside)..." << endl;
 				#endif
-				clEnqueueWriteBuffer(m_queues[dev_index], compareindexbufs[dev_index], CL_TRUE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_compare_index, 0, 0, 0);
+				clEnqueueWriteBuffer(m_queues[dev_index], compareindexbufs[dev_index], CL_FALSE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_compare_index, 0, 0, 0);
 				#ifdef DEBUG
 				cout << "Writing entry count buffer..." << endl;
 				#endif
-				clEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
+				clEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
 				clFinish(m_queues[dev_index]);
 				#ifdef DEBUG
 				cout << "Done." << endl;
@@ -544,11 +544,11 @@ public:
 				clFinish(m_queues[dev_index]);
 				clEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, 0, 0, 0);
 				if (cnt != 0) {
-					clEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_TRUE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
-					clEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
-					clEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_TRUE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
+					clEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_FALSE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
+					clEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
+					clEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_FALSE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
 				}
-
+				clFinish(m_queues[dev_index]);
 				for (i = 0; i < cnt; i++) {
 					loci = m_mmlocis[dev_index][i] + m_lasttotalanalyzedsize + localanalyzedsize;
 					if (m_mmcounts[dev_index][i] <= threshold) {

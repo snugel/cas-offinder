@@ -4,6 +4,7 @@
 #include <fstream>
 #include <streambuf>
 #include <string>
+#include <cstring>
 #include <vector>
 #include <cassert>
 #include <ctime>
@@ -50,7 +51,7 @@ private:
 	vector<cl_mem> m_mmcountbufs;
 	vector<cl_mem> m_directionbufs;
 
-	vector <cl_uint> m_locicnts;
+	vector <size_t> m_locicnts;
 	vector <cl_uint *> m_locis;
 	vector <cl_ushort *> m_mmcounts;
 	vector <cl_char *> m_flags;
@@ -261,7 +262,6 @@ private:
 			"	}\n"
 			"}";
 
-		//cl::Program::Sources source(1, std::make_pair(program_src, strlen(program_src)));;
 		cl_int err;
 		cl_context context;
 		cl_program program;
@@ -276,7 +276,7 @@ private:
 			err = clBuildProgram(program, 1, &devices[i], "", 0, 0);
 			m_finderkernels.push_back(clCreateKernel(program, "finder", &err));
 			m_comparerkernels.push_back(clCreateKernel(program, "comparer", &err));
-			m_queues.push_back(clCreateCommandQueueWithProperties(m_contexts[i], devices[i], 0, &err));
+			m_queues.push_back(clCreateCommandQueue(m_contexts[i], devices[i], 0, &err));
 			MAX_ALLOC_MEMORY.push_back(0);
 			clGetDeviceInfo(devices[i], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &MAX_ALLOC_MEMORY[i], 0);
 		}
@@ -471,7 +471,7 @@ public:
 	void compareAll(const char *arg_compare, unsigned short threshold, const char* outfilename) {
 		unsigned int i, j, dev_index;
 		cl_int err;
-		cl_uint zero = 0;
+		size_t zero = 0;
 
 		vector <cl_mem> comparebufs;
 		vector <cl_mem> compareindexbufs;

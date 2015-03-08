@@ -186,6 +186,7 @@ private:
 			"			break;\n"
 			"	}\n"
 			"	if (localflag != 3) {\n"
+			"		printf(\"%d\\n\");\n"
 			"		for (j=0; j<patternlen; j++)\n"
 			"			if (chr[i+j] == ';') return;\n"
 			"		old = atomic_inc(entrycount);\n"
@@ -404,7 +405,7 @@ public:
 		size_t zero = 0;
 		cl_int err;
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
-			clEnqueueNDRangeKernel(m_queues[dev_index], m_finderkernels[dev_index], 1, 0, &m_worksizes[dev_index], &zero, 0, 0, 0);
+			clEnqueueNDRangeKernel(m_queues[dev_index], m_finderkernels[dev_index], 1, 0, &m_worksizes[dev_index], 0, 0, 0, 0);
 		}
 
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
@@ -413,7 +414,8 @@ public:
 
 			clEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &m_locicnts[dev_index], 0, 0, 0);
 			m_flags.push_back((cl_char *)malloc(sizeof(cl_char)* m_locicnts[dev_index]));
-			clEnqueueReadBuffer(m_queues[dev_index], m_flagbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)*m_locicnts[dev_index], m_flags[dev_index], 0, 0, 0);
+			if (m_locicnts[dev_index] != 0)
+				clEnqueueReadBuffer(m_queues[dev_index], m_flagbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)*m_locicnts[dev_index], m_flags[dev_index], 0, 0, 0);
 
 			m_mmcounts.push_back((cl_ushort *)malloc(sizeof(cl_ushort)* m_locicnts[dev_index] * 2)); // Maximum numbers of mismatch counts
 			m_directions.push_back((cl_char *)malloc(sizeof(cl_char)* m_locicnts[dev_index] * 2));
@@ -524,7 +526,7 @@ public:
 				clSetKernelArg(m_comparerkernels[dev_index], 9, sizeof(cl_mem), &m_directionbufs[dev_index]);
 				clSetKernelArg(m_comparerkernels[dev_index], 10, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
 				clFinish(m_queues[dev_index]);
-				clEnqueueNDRangeKernel(m_queues[dev_index], m_comparerkernels[dev_index], 1, 0, &m_locicnts[dev_index], &zero, 0, 0, 0);
+				clEnqueueNDRangeKernel(m_queues[dev_index], m_comparerkernels[dev_index], 1, 0, &m_locicnts[dev_index], 0, 0, 0, 0);
 			}
 		}
 
@@ -541,9 +543,11 @@ public:
 			 if (m_locicnts[dev_index] > 0) {
 				clFinish(m_queues[dev_index]);
 				clEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, 0, 0, 0);
-				clEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_TRUE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
-				clEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
-				clEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_TRUE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
+				if (cnt != 0) {
+					clEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_TRUE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
+					clEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
+					clEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_TRUE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
+				}
 
 				for (i = 0; i < cnt; i++) {
 					loci = m_mmlocis[dev_index][i] + m_lasttotalanalyzedsize + localanalyzedsize;

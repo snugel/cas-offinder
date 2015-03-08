@@ -9,6 +9,7 @@
 #include <ctime>
 #include <climits>
 #include <algorithm>
+#include <CL/cl.h>
 
 #ifndef min
 #define min(a,b) ( ((a)<(b))?(a):(b) )
@@ -21,11 +22,11 @@ using namespace std;
 class Cas_OFFinder {
 
 private:
-	vector<cl::CommandQueue> m_queues;
-	vector<cl::Context> m_contexts;
+	vector<cl_command_queue> m_queues;
+	vector<cl_context> m_contexts;
 	vector<cl_ulong> MAX_ALLOC_MEMORY; // on device, in bytes
 
-	unsigned long long m_chrdatasize;
+	size_t m_chrdatasize;
 	vector<string> m_chrnames;
 	vector<unsigned long long> m_chrpos;
 	string m_chrdata;
@@ -35,23 +36,19 @@ private:
 	cl_uint m_patternlen;
 	cl_uint m_entrycount;
 
-	vector<cl::Kernel> m_finderkernels;
-	vector<cl::Kernel> m_comparerkernels;
+	vector<cl_kernel> m_finderkernels;
+	vector<cl_kernel> m_comparerkernels;
 
-	vector<cl::Buffer> m_chrdatabufs;
-	vector<cl::Buffer> m_patternbufs;
-	vector<cl::Buffer> m_patternindexbufs;
-	vector<cl::Buffer> m_flagbufs;
-	vector<cl::Buffer> m_locibufs;
-	vector<cl::Buffer> m_entrycountbufs;
+	vector<cl_mem> m_chrdatabufs;
+	vector<cl_mem> m_patternbufs;
+	vector<cl_mem> m_patternindexbufs;
+	vector<cl_mem> m_flagbufs;
+	vector<cl_mem> m_locibufs;
+	vector<cl_mem> m_entrycountbufs;
 
-	vector<cl::Buffer> m_mmlocibufs;
-	vector<cl::Buffer> m_mmcountbufs;
-	vector<cl::Buffer> m_directionbufs;
-
-
-	vector<cl::Event> m_finderevts;
-	vector<cl::Event> m_comparerevts;
+	vector<cl_mem> m_mmlocibufs;
+	vector<cl_mem> m_mmcountbufs;
+	vector<cl_mem> m_directionbufs;
 
 	vector <cl_uint> m_locicnts;
 	vector <cl_uint *> m_locis;
@@ -61,9 +58,9 @@ private:
 	vector <cl_uint *> m_mmlocis;
 
 	vector<size_t> m_dicesizes;
-	unsigned long long m_totalanalyzedsize;
+	size_t m_totalanalyzedsize;
 	unsigned long long m_lasttotalanalyzedsize;
-	vector<unsigned long long> m_worksizes;
+	vector<size_t> m_worksizes;
 	size_t m_devnum;
 	unsigned int m_activedevnum;
 	unsigned long long m_lastloci;
@@ -113,20 +110,23 @@ private:
 	void initOpenCL(cl_device_type devtype) {
 		unsigned int i, j;
 
-		vector<cl::Platform> platforms;
-		vector<cl::Device> devices;
+		cl_platform_id platforms[10]; // Maximum 10 platforms
+		cl_device_id devices_per_platform[10]; // Maximum 10 devices
 
-		cl::Platform::get(&platforms);
-		size_t number_of_platforms = platforms.size();
+		cl_uint platform_cnt;
+		cl_uint device_cnt;
 
-		vector<cl::Device> devices_per_platform;
-		for (i = 0; i < number_of_platforms; i++) {
-			devices_per_platform.clear();
-			platforms[i].getDevices(devtype, &devices_per_platform);
-			for (j = 0; j < devices_per_platform.size(); j++) {
+		vector<cl_device_id> devices;
+
+		clGetPlatformIDs(10, platforms, &platform_cnt);
+
+		for (i = 0; i < platform_cnt; i++) {
+			clGetDeviceIDs(platforms[i], devtype, 10, devices_per_platform, &device_cnt);
+			for (j = 0; j < device_cnt; j++) {
 				devices.push_back(devices_per_platform[j]);
 			}
 		}
+
 		m_devnum = devices.size();
 		if (m_devnum == 0) {
 			cout << "No OpenCL devices found." << endl;
@@ -137,143 +137,148 @@ private:
 			"#pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable\n"
 			"#pragma OPENCL EXTENSION cl_khr_global_int32_extended_atomics : enable\n"
 			"#pragma OPENCL EXTENSION cl_khr_local_int32_extended_atomics : enable\n"
-			"__kernel void finder(__global char* chr,"
-			"                     __global char* pat, __global int* pat_index, unsigned int patternlen,"
-			"                     __global char* flag, __global unsigned int* entrycount, __global unsigned int* loci)"
-			"{"
-			"	unsigned int i = get_global_id(0);"
-			"	unsigned int j;"
-			"	unsigned int old;"
-			"	int k;"
-			"	char localflag = 0;"
-			"	for (j=0; j<patternlen; j++) {"
-			"		k = pat_index[j];"
-			"		if (k == -1)"
-			"			break;"
-			"		if ( (pat[k] == 'R' && (chr[i+k] == 'C' || chr[i+k] == 'T')) ||"
-			"		     (pat[k] == 'Y' && (chr[i+k] == 'A' || chr[i+k] == 'G')) ||"
-			"		     (pat[k] == 'K' && (chr[i+k] == 'A' || chr[i+k] == 'C')) ||"
-			"		     (pat[k] == 'M' && (chr[i+k] == 'G' || chr[i+k] == 'T')) ||"
-			"		     (pat[k] == 'W' && (chr[i+k] == 'C' || chr[i+k] == 'G')) ||"
-			"		     (pat[k] == 'S' && (chr[i+k] == 'A' || chr[i+k] == 'T')) ||"
-			"		     (pat[k] == 'H' && (chr[i+k] == 'G')) ||"
-			"		     (pat[k] == 'B' && (chr[i+k] == 'A')) ||"
-			"		     (pat[k] == 'V' && (chr[i+k] == 'T')) ||"
-			"		     (pat[k] == 'D' && (chr[i+k] == 'C')) ||"
-			"		     (pat[k] == 'A' && (chr[i+k] != 'A')) ||"
-			"		     (pat[k] == 'G' && (chr[i+k] != 'G')) ||"
-			"		     (pat[k] == 'C' && (chr[i+k] != 'C')) ||"
-			"		     (pat[k] == 'T' && (chr[i+k] != 'T')) )"
-			"			localflag |= 2;"
-			"		k = pat_index[patternlen + j];"
-			"		if ( (pat[k + patternlen] == 'R' && (chr[i+k] == 'C' || chr[i+k] == 'T')) ||"
-			"		     (pat[k + patternlen] == 'Y' && (chr[i+k] == 'A' || chr[i+k] == 'G')) ||"
-			"		     (pat[k + patternlen] == 'K' && (chr[i+k] == 'A' || chr[i+k] == 'C')) ||"
-			"		     (pat[k + patternlen] == 'M' && (chr[i+k] == 'G' || chr[i+k] == 'T')) ||"
-			"		     (pat[k + patternlen] == 'W' && (chr[i+k] == 'C' || chr[i+k] == 'G')) ||"
-			"		     (pat[k + patternlen] == 'S' && (chr[i+k] == 'A' || chr[i+k] == 'T')) ||"
-			"		     (pat[k + patternlen] == 'H' && (chr[i+k] == 'G')) ||"
-			"		     (pat[k + patternlen] == 'B' && (chr[i+k] == 'A')) ||"
-			"		     (pat[k + patternlen] == 'V' && (chr[i+k] == 'T')) ||"
-			"		     (pat[k + patternlen] == 'D' && (chr[i+k] == 'C')) ||"
-			"		     (pat[k + patternlen] == 'A' && (chr[i+k] != 'A')) ||"
-			"		     (pat[k + patternlen] == 'G' && (chr[i+k] != 'G')) ||"
-			"		     (pat[k + patternlen] == 'C' && (chr[i+k] != 'C')) ||"
-			"		     (pat[k + patternlen] == 'T' && (chr[i+k] != 'T')) )"
-			"			localflag |= 1;"
-			"		if (localflag == 3)"
-			"			break;"
-			"	}"
-			"	if (localflag != 3) {"
-			"		for (j=0; j<patternlen; j++)"
-			"			if (chr[i+j] == ';') return;"
-			"		old = atomic_inc(entrycount);"
-			"		loci[old] = i;"
-			"		flag[old] = localflag;"
-			"	}"
-			"}"
-			"__kernel void comparer(__global char* chr, __global unsigned int* loci, __global unsigned int* mm_loci,"
-			"                       __global char* comp, __global int* comp_index, unsigned int patternlen, unsigned short threshold,"
-			"                       __global char* flag, __global unsigned short* mm_count, __global char* direction, __global unsigned int* entrycount)"
-			"{"
-			"	unsigned int i = get_global_id(0);"
-			"	unsigned int j, loopcnt, lmm_count, old;"
-			"	int k;"
-			"	if (flag[i] == 0 || flag[i] == 1) {"
-			"		lmm_count = 0;"
-			"		for (j=0; j<patternlen; j++) {"
-			"			k = comp_index[j]; "
-			"			if (k == -1) break;"
-			"			if ( (comp[k] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||"
-			"			     (comp[k] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||"
-			"			     (comp[k] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||"
-			"			     (comp[k] == 'M' && (chr[loci[i]+k] == 'G' || chr[loci[i]+k] == 'T')) ||"
-			"			     (comp[k] == 'W' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'G')) ||"
-			"			     (comp[k] == 'S' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'T')) ||"
-			"			     (comp[k] == 'H' && (chr[loci[i]+k] == 'G')) ||"
-			"			     (comp[k] == 'B' && (chr[loci[i]+k] == 'A')) ||"
-			"			     (comp[k] == 'V' && (chr[loci[i]+k] == 'T')) ||"
-			"			     (comp[k] == 'D' && (chr[loci[i]+k] == 'C')) ||"
-			"				 (comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||"
-			"			     (comp[k] == 'G' && (chr[loci[i]+k] != 'G')) ||"
-			"			     (comp[k] == 'C' && (chr[loci[i]+k] != 'C')) ||"
-			"			     (comp[k] == 'T' && (chr[loci[i]+k] != 'T'))) {"
-			"				lmm_count++;"
-			"				if (lmm_count > threshold) break;"
-			"			}"
-			"		}"
-			"		if (lmm_count <= threshold) {"
-			"			old = atomic_inc(entrycount);"
-			"			mm_count[old] = lmm_count;"
-			"			direction[old] = '+';"
-			"			mm_loci[old] = loci[i];"
-			"		}"
-			"	}"
-			"	if (flag[i] == 0 || flag[i] == 2) {"
-			"		lmm_count = 0;"
-			"		for (j=0; j<patternlen; j++) {"
-			"			k = comp_index[patternlen + j]; "
-			"			if (k == -1) break;"
-			"			if ( (comp[k+patternlen] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||"
-			"			     (comp[k+patternlen] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||"
-			"			     (comp[k+patternlen] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||"
-			"			     (comp[k+patternlen] == 'M' && (chr[loci[i]+k] == 'G' || chr[loci[i]+k] == 'T')) ||"
-			"			     (comp[k+patternlen] == 'W' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'G')) ||"
-			"			     (comp[k+patternlen] == 'S' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'T')) ||"
-			"			     (comp[k+patternlen] == 'H' && (chr[loci[i]+k] == 'G')) ||"
-			"			     (comp[k+patternlen] == 'B' && (chr[loci[i]+k] == 'A')) ||"
-			"			     (comp[k+patternlen] == 'V' && (chr[loci[i]+k] == 'T')) ||"
-			"			     (comp[k+patternlen] == 'D' && (chr[loci[i]+k] == 'C')) ||"
-			"			     (comp[k+patternlen] == 'A' && (chr[loci[i]+k] != 'A')) ||"
-			"			     (comp[k+patternlen] == 'G' && (chr[loci[i]+k] != 'G')) ||"
-			"			     (comp[k+patternlen] == 'C' && (chr[loci[i]+k] != 'C')) ||"
-			"				 (comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {"
-			"				lmm_count++;"
-			"				if (lmm_count > threshold) break;"
-			"			}"
-			"		}"
-			"		if (lmm_count <= threshold) {"
-			"			old = atomic_inc(entrycount);"
-			"			mm_count[old] = lmm_count;"
-			"			direction[old] = '-';"
-			"			mm_loci[old] = loci[i];"
-			"		}"
-			"	}"
+			"__kernel void finder(__global char* chr,\n"
+			"                     __global char* pat, __global int* pat_index, unsigned int patternlen,\n"
+			"                     __global char* flag, __global unsigned int* entrycount, __global unsigned int* loci)\n"
+			"{\n"
+			"	unsigned int i = get_global_id(0);\n"
+			"	unsigned int j;\n"
+			"	unsigned int old;\n"
+			"	int k;\n"
+			"	char localflag = 0;\n"
+			"	for (j=0; j<patternlen; j++) {\n"
+			"		k = pat_index[j];\n"
+			"		if (k == -1)\n"
+			"			break;\n"
+			"		if ( (pat[k] == 'R' && (chr[i+k] == 'C' || chr[i+k] == 'T')) ||\n"
+			"		     (pat[k] == 'Y' && (chr[i+k] == 'A' || chr[i+k] == 'G')) ||\n"
+			"		     (pat[k] == 'K' && (chr[i+k] == 'A' || chr[i+k] == 'C')) ||\n"
+			"		     (pat[k] == 'M' && (chr[i+k] == 'G' || chr[i+k] == 'T')) ||\n"
+			"		     (pat[k] == 'W' && (chr[i+k] == 'C' || chr[i+k] == 'G')) ||\n"
+			"		     (pat[k] == 'S' && (chr[i+k] == 'A' || chr[i+k] == 'T')) ||\n"
+			"		     (pat[k] == 'H' && (chr[i+k] == 'G')) ||\n"
+			"		     (pat[k] == 'B' && (chr[i+k] == 'A')) ||\n"
+			"		     (pat[k] == 'V' && (chr[i+k] == 'T')) ||\n"
+			"		     (pat[k] == 'D' && (chr[i+k] == 'C')) ||\n"
+			"		     (pat[k] == 'A' && (chr[i+k] != 'A')) ||\n"
+			"		     (pat[k] == 'G' && (chr[i+k] != 'G')) ||\n"
+			"		     (pat[k] == 'C' && (chr[i+k] != 'C')) ||\n"
+			"		     (pat[k] == 'T' && (chr[i+k] != 'T')) )\n"
+			"			localflag |= 2;\n"
+			"		k = pat_index[patternlen + j];\n"
+			"		if ( (pat[k + patternlen] == 'R' && (chr[i+k] == 'C' || chr[i+k] == 'T')) ||\n"
+			"		     (pat[k + patternlen] == 'Y' && (chr[i+k] == 'A' || chr[i+k] == 'G')) ||\n"
+			"		     (pat[k + patternlen] == 'K' && (chr[i+k] == 'A' || chr[i+k] == 'C')) ||\n"
+			"		     (pat[k + patternlen] == 'M' && (chr[i+k] == 'G' || chr[i+k] == 'T')) ||\n"
+			"		     (pat[k + patternlen] == 'W' && (chr[i+k] == 'C' || chr[i+k] == 'G')) ||\n"
+			"		     (pat[k + patternlen] == 'S' && (chr[i+k] == 'A' || chr[i+k] == 'T')) ||\n"
+			"		     (pat[k + patternlen] == 'H' && (chr[i+k] == 'G')) ||\n"
+			"		     (pat[k + patternlen] == 'B' && (chr[i+k] == 'A')) ||\n"
+			"		     (pat[k + patternlen] == 'V' && (chr[i+k] == 'T')) ||\n"
+			"		     (pat[k + patternlen] == 'D' && (chr[i+k] == 'C')) ||\n"
+			"		     (pat[k + patternlen] == 'A' && (chr[i+k] != 'A')) ||\n"
+			"		     (pat[k + patternlen] == 'G' && (chr[i+k] != 'G')) ||\n"
+			"		     (pat[k + patternlen] == 'C' && (chr[i+k] != 'C')) ||\n"
+			"		     (pat[k + patternlen] == 'T' && (chr[i+k] != 'T')) )\n"
+			"			localflag |= 1;\n"
+			"		if (localflag == 3)\n"
+			"			break;\n"
+			"	}\n"
+			"	if (localflag != 3) {\n"
+			"		for (j=0; j<patternlen; j++)\n"
+			"			if (chr[i+j] == ';') return;\n"
+			"		old = atomic_inc(entrycount);\n"
+			"		loci[old] = i;\n"
+			"		flag[old] = localflag;\n"
+			"	}\n"
+			"}\n"
+			"__kernel void comparer(__global char* chr, __global unsigned int* loci, __global unsigned int* mm_loci,\n"
+			"                       __global char* comp, __global int* comp_index, unsigned int patternlen, unsigned short threshold,\n"
+			"                       __global char* flag, __global unsigned short* mm_count, __global char* direction, __global unsigned int* entrycount)\n"
+			"{\n"
+			"	unsigned int i = get_global_id(0);\n"
+			"	unsigned int j, lmm_count, old;\n"
+			"	int k;\n"
+			"	if (flag[i] == 0 || flag[i] == 1) {\n"
+			"		lmm_count = 0;\n"
+			"		for (j=0; j<patternlen; j++) {\n"
+			"			k = comp_index[j];\n"
+			"			if (k == -1) break;\n"
+			"			if ( (comp[k] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||\n"
+			"			     (comp[k] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||\n"
+			"			     (comp[k] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||\n"
+			"			     (comp[k] == 'M' && (chr[loci[i]+k] == 'G' || chr[loci[i]+k] == 'T')) ||\n"
+			"			     (comp[k] == 'W' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'G')) ||\n"
+			"			     (comp[k] == 'S' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'T')) ||\n"
+			"			     (comp[k] == 'H' && (chr[loci[i]+k] == 'G')) ||\n"
+			"			     (comp[k] == 'B' && (chr[loci[i]+k] == 'A')) ||\n"
+			"			     (comp[k] == 'V' && (chr[loci[i]+k] == 'T')) ||\n"
+			"			     (comp[k] == 'D' && (chr[loci[i]+k] == 'C')) ||\n"
+			"				 (comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||\n"
+			"			     (comp[k] == 'G' && (chr[loci[i]+k] != 'G')) ||\n"
+			"			     (comp[k] == 'C' && (chr[loci[i]+k] != 'C')) ||\n"
+			"			     (comp[k] == 'T' && (chr[loci[i]+k] != 'T'))) {\n"
+			"				lmm_count++;\n"
+			"				if (lmm_count > threshold) break;\n"
+			"			}\n"
+			"		}\n"
+			"		if (lmm_count <= threshold) {\n"
+			"			old = atomic_inc(entrycount);\n"
+			"			mm_count[old] = lmm_count;\n"
+			"			direction[old] = '+';\n"
+			"			mm_loci[old] = loci[i];\n"
+			"		}\n"
+			"	}\n"
+			"	if (flag[i] == 0 || flag[i] == 2) {\n"
+			"		lmm_count = 0;\n"
+			"		for (j=0; j<patternlen; j++) {\n"
+			"			k = comp_index[patternlen + j];\n"
+			"			if (k == -1) break;\n"
+			"			if ( (comp[k+patternlen] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||\n"
+			"			     (comp[k+patternlen] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||\n"
+			"			     (comp[k+patternlen] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||\n"
+			"			     (comp[k+patternlen] == 'M' && (chr[loci[i]+k] == 'G' || chr[loci[i]+k] == 'T')) ||\n"
+			"			     (comp[k+patternlen] == 'W' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'G')) ||\n"
+			"			     (comp[k+patternlen] == 'S' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'T')) ||\n"
+			"			     (comp[k+patternlen] == 'H' && (chr[loci[i]+k] == 'G')) ||\n"
+			"			     (comp[k+patternlen] == 'B' && (chr[loci[i]+k] == 'A')) ||\n"
+			"			     (comp[k+patternlen] == 'V' && (chr[loci[i]+k] == 'T')) ||\n"
+			"			     (comp[k+patternlen] == 'D' && (chr[loci[i]+k] == 'C')) ||\n"
+			"			     (comp[k+patternlen] == 'A' && (chr[loci[i]+k] != 'A')) ||\n"
+			"			     (comp[k+patternlen] == 'G' && (chr[loci[i]+k] != 'G')) ||\n"
+			"			     (comp[k+patternlen] == 'C' && (chr[loci[i]+k] != 'C')) ||\n"
+			"				 (comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {\n"
+			"				lmm_count++;\n"
+			"				if (lmm_count > threshold) break;\n"
+			"			}\n"
+			"		}\n"
+			"		if (lmm_count <= threshold) {\n"
+			"			old = atomic_inc(entrycount);\n"
+			"			mm_count[old] = lmm_count;\n"
+			"			direction[old] = '-';\n"
+			"			mm_loci[old] = loci[i];\n"
+			"		}\n"
+			"	}\n"
 			"}";
 
-		cl::Program::Sources source(1, std::make_pair(program_src, strlen(program_src)));;
-		vector<cl::Device> devvec;
+		//cl::Program::Sources source(1, std::make_pair(program_src, strlen(program_src)));;
+		cl_int err;
+		cl_context context;
+		cl_program program;
+
+		const size_t src_len = strlen(program_src);
 		for (i = 0; i < devices.size(); i++) {
 			// Create completely separate contexts per device to avoid unknown errors
-			devvec.clear(); devvec.push_back(devices[i]);
-			m_contexts.push_back(cl::Context(devvec));
-			cl::Program program(m_contexts[i], source);
-			program.build(devvec);
-			m_finderkernels.push_back(cl::Kernel(program, "finder"));
-			m_comparerkernels.push_back(cl::Kernel(program, "comparer"));
-			m_queues.push_back(cl::CommandQueue(m_contexts[i], devices[i]));
+			context = clCreateContext(0, 1, &devices[i], 0, 0, &err);
+			m_contexts.push_back(context);
+			
+			program = clCreateProgramWithSource(context, 1, &program_src, &src_len, &err);
+			err = clBuildProgram(program, 1, &devices[i], "", 0, 0);
+			m_finderkernels.push_back(clCreateKernel(program, "finder", &err));
+			m_comparerkernels.push_back(clCreateKernel(program, "comparer", &err));
+			m_queues.push_back(clCreateCommandQueueWithProperties(m_contexts[i], devices[i], 0, &err));
 			MAX_ALLOC_MEMORY.push_back(0);
-			devices[i].getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &MAX_ALLOC_MEMORY[i]);
+			clGetDeviceInfo(devices[i], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &MAX_ALLOC_MEMORY[i], 0);
 		}
 		cout << "Total " << m_devnum << " device(s) found." << endl;
 	}
@@ -295,6 +300,7 @@ public:
 
 	void setPattern(const char* pattern) {
 		unsigned int dev_index;
+		cl_int err;
 		m_pattern = (cl_char*)pattern;
 		m_patternlen = (cl_uint)strlen(pattern);
 
@@ -314,12 +320,12 @@ public:
 				)
 				); // No more than maximum allocation per device
 			// cout << "Dicesize: " << m_dicesizes[dev_index] << endl;
-			m_chrdatabufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1)));
-			m_patternbufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* m_patternlen * 2));
-			m_patternindexbufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_int)* m_patternlen * 2));
-			m_flagbufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_dicesizes[dev_index]));
-			m_entrycountbufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_WRITE, sizeof(cl_uint)));
-			m_locibufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_dicesizes[dev_index]));
+			m_chrdatabufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), 0, &err));
+			m_patternbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* m_patternlen * 2, 0, &err));
+			m_patternindexbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_int)* m_patternlen * 2, 0, &err));
+			m_flagbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_dicesizes[dev_index], 0, &err));
+			m_entrycountbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_WRITE, sizeof(cl_uint), 0, &err));
+			m_locibufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_dicesizes[dev_index], 0, &err));
 		}
 	}
 
@@ -328,7 +334,8 @@ public:
 			return false;
 
 		unsigned int dev_index;
-		unsigned long long tailsize;
+		size_t tailsize;
+		size_t buf_size;
 
 		cl_char *c_pattern = (cl_char *)malloc(sizeof(cl_char)* (m_patternlen + 1)); c_pattern[m_patternlen] = 0; memcpy(c_pattern, m_pattern, m_patternlen); set_complementary_sequence(c_pattern);
 		int *c_pattern_index = (cl_int *)malloc(sizeof(cl_int)* m_patternlen); set_pattern_index(c_pattern_index, c_pattern);
@@ -342,7 +349,8 @@ public:
 			tailsize = m_chrdatasize - m_totalanalyzedsize;
 			m_activedevnum++;
 			if (tailsize <= m_dicesizes[dev_index]) {
-				m_queues[dev_index].enqueueWriteBuffer(m_chrdatabufs[dev_index], CL_FALSE, 0, (size_t)(sizeof(cl_char)* (tailsize + m_patternlen - 1)), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, NULL);
+				buf_size = (size_t)(sizeof(cl_char)* (tailsize + m_patternlen - 1));
+				clEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_FALSE, 0, buf_size, (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 				m_totalanalyzedsize += tailsize;
 				m_worksizes.push_back(tailsize);
 				#ifdef DEBUG
@@ -351,7 +359,7 @@ public:
 				break;
 			}
 			else {
-				m_queues[dev_index].enqueueWriteBuffer(m_chrdatabufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, NULL);
+				clEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 				m_totalanalyzedsize += m_dicesizes[dev_index];
 				m_worksizes.push_back(m_dicesizes[dev_index]);
 				#ifdef DEBUG
@@ -366,22 +374,22 @@ public:
 			#ifdef DEBUG
 			cout << "Writing buffer for find..." << endl;
 			#endif
-			m_queues[dev_index].enqueueWriteBuffer(m_patternbufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, m_pattern, NULL);
-			m_queues[dev_index].enqueueWriteBuffer(m_patternbufs[dev_index], CL_FALSE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_pattern, NULL);
-			m_queues[dev_index].enqueueWriteBuffer(m_patternindexbufs[dev_index], CL_FALSE, 0, sizeof(cl_int)* m_patternlen, pattern_index, NULL);
-			m_queues[dev_index].enqueueWriteBuffer(m_patternindexbufs[dev_index], CL_FALSE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_pattern_index, NULL);
-			m_queues[dev_index].enqueueWriteBuffer(m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, NULL);
-			m_queues[dev_index].finish();
+			clEnqueueWriteBuffer(m_queues[dev_index], m_patternbufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, m_pattern, 0, 0, 0);
+			clEnqueueWriteBuffer(m_queues[dev_index], m_patternbufs[dev_index], CL_FALSE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_pattern, 0, 0, 0);
+			clEnqueueWriteBuffer(m_queues[dev_index], m_patternindexbufs[dev_index], CL_FALSE, 0, sizeof(cl_int)* m_patternlen, pattern_index, 0, 0, 0);
+			clEnqueueWriteBuffer(m_queues[dev_index], m_patternindexbufs[dev_index], CL_FALSE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_pattern_index, 0, 0, 0);
+			clEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
+			clFinish(m_queues[dev_index]);
 			#ifdef DEBUG
 			cout << "Done." << endl;
 			#endif
-			m_finderkernels[dev_index].setArg(0, m_chrdatabufs[dev_index]);
-			m_finderkernels[dev_index].setArg(1, m_patternbufs[dev_index]);
-			m_finderkernels[dev_index].setArg(2, m_patternindexbufs[dev_index]);
-			m_finderkernels[dev_index].setArg(3, sizeof(cl_uint), &m_patternlen);
-			m_finderkernels[dev_index].setArg(4, m_flagbufs[dev_index]);
-			m_finderkernels[dev_index].setArg(5, m_entrycountbufs[dev_index]);
-			m_finderkernels[dev_index].setArg(6, m_locibufs[dev_index]);
+			clSetKernelArg(m_finderkernels[dev_index], 0, sizeof(cl_mem), &m_chrdatabufs[dev_index]);
+			clSetKernelArg(m_finderkernels[dev_index], 1, sizeof(cl_mem), &m_patternbufs[dev_index]);
+			clSetKernelArg(m_finderkernels[dev_index], 2, sizeof(cl_mem), &m_patternindexbufs[dev_index]);
+			clSetKernelArg(m_finderkernels[dev_index], 3, sizeof(cl_uint), &m_patternlen);
+			clSetKernelArg(m_finderkernels[dev_index], 4, sizeof(cl_mem), &m_flagbufs[dev_index]);
+			clSetKernelArg(m_finderkernels[dev_index], 5, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
+			clSetKernelArg(m_finderkernels[dev_index], 6, sizeof(cl_mem), &m_locibufs[dev_index]);
 		}
 
 		free((void*)pattern_index);
@@ -393,32 +401,31 @@ public:
 
 	void findPattern() {
 		unsigned int dev_index;
-
-		m_finderevts.clear();
+		size_t zero = 0;
+		cl_int err;
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
-			m_finderevts.push_back(cl::Event());
-			m_queues[dev_index].enqueueNDRangeKernel(m_finderkernels[dev_index], cl::NullRange, cl::NDRange((size_t)m_worksizes[dev_index]), cl::NullRange, NULL, &m_finderevts[dev_index]);
+			clEnqueueNDRangeKernel(m_queues[dev_index], m_finderkernels[dev_index], 1, 0, &m_worksizes[dev_index], &zero, 0, 0, 0);
 		}
 
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
-			m_finderevts[dev_index].wait();
+			clFinish(m_queues[dev_index]);
 			m_locicnts.push_back(0);
 
-			m_queues[dev_index].enqueueReadBuffer(m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &m_locicnts[dev_index], NULL);
+			clEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &m_locicnts[dev_index], 0, 0, 0);
 			m_flags.push_back((cl_char *)malloc(sizeof(cl_char)* m_locicnts[dev_index]));
-			m_queues[dev_index].enqueueReadBuffer(m_flagbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)*m_locicnts[dev_index], m_flags[dev_index], NULL);
+			clEnqueueReadBuffer(m_queues[dev_index], m_flagbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)*m_locicnts[dev_index], m_flags[dev_index], 0, 0, 0);
 
 			m_mmcounts.push_back((cl_ushort *)malloc(sizeof(cl_ushort)* m_locicnts[dev_index] * 2)); // Maximum numbers of mismatch counts
 			m_directions.push_back((cl_char *)malloc(sizeof(cl_char)* m_locicnts[dev_index] * 2));
 			m_mmlocis.push_back((cl_uint *)malloc(sizeof(cl_uint)* m_locicnts[dev_index] * 2));
 
-			m_mmlocibufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_locicnts[dev_index] * 2));
-			m_mmcountbufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_ushort)* m_locicnts[dev_index] * 2));
-			m_directionbufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_locicnts[dev_index] * 2));
+			m_mmlocibufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_locicnts[dev_index] * 2, 0, &err));
+			m_mmcountbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_ushort)* m_locicnts[dev_index] * 2, 0, &err));
+			m_directionbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_locicnts[dev_index] * 2, 0, &err));
 
-			m_comparerkernels[dev_index].setArg(1, m_locibufs[dev_index]);
-			m_comparerkernels[dev_index].setArg(2, m_mmlocibufs[dev_index]);
-			m_comparerkernels[dev_index].setArg(7, m_flagbufs[dev_index]);
+			clSetKernelArg(m_comparerkernels[dev_index], 1, sizeof(cl_mem), &m_locibufs[dev_index]);
+			clSetKernelArg(m_comparerkernels[dev_index], 2, sizeof(cl_mem), &m_mmlocibufs[dev_index]);
+			clSetKernelArg(m_comparerkernels[dev_index], 7, sizeof(cl_mem), &m_flagbufs[dev_index]);
 		}
 	}
 
@@ -463,65 +470,61 @@ public:
 
 	void compareAll(const char *arg_compare, unsigned short threshold, const char* outfilename) {
 		unsigned int i, j, dev_index;
+		cl_int err;
+		cl_uint zero = 0;
 
-		vector <cl::Buffer> comparebufs;
-		vector <cl::Buffer> compareindexbufs;
+		vector <cl_mem> comparebufs;
+		vector <cl_mem> compareindexbufs;
 
 		cl_char *compare = (cl_char *)arg_compare;
 		cl_char *c_compare = (cl_char *)malloc(sizeof(cl_char)* (m_patternlen + 1)); c_compare[m_patternlen] = 0; memcpy(c_compare, compare, m_patternlen); set_complementary_sequence(c_compare);
 		int *c_compare_index = (cl_int *)malloc(sizeof(cl_int)* m_patternlen); set_pattern_index(c_compare_index, c_compare);
 		int *compare_index = (cl_int *)malloc(sizeof(cl_int)* m_patternlen); set_pattern_index(compare_index, compare);
 
-		m_comparerevts.clear();
 		for (dev_index = 0; dev_index<m_activedevnum; dev_index++) {
-			comparebufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* m_patternlen * 2));
-			compareindexbufs.push_back(cl::Buffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_uint)* m_patternlen * 2));
-			m_comparerevts.push_back(cl::Event());
+			comparebufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* m_patternlen * 2, 0, &err));
+			compareindexbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_uint)* m_patternlen * 2, 0, &err));
 			if (m_locicnts[dev_index] > 0) {
 				const cl_char *compare = (const cl_char*)arg_compare;
 
-				cl_uint zero = 0;
 				#ifdef DEBUG
 				cout << "Writing compare buffer (frontside)..." << endl;
 				#endif
-				m_queues[dev_index].enqueueWriteBuffer(comparebufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, compare, NULL);
+				clEnqueueWriteBuffer(m_queues[dev_index], comparebufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* m_patternlen, compare, 0, 0, 0);
 				#ifdef DEBUG
 				cout << "Writing compare buffer (backside)..." << endl;
 				#endif
-				m_queues[dev_index].enqueueWriteBuffer(comparebufs[dev_index], CL_FALSE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_compare, NULL);
+				clEnqueueWriteBuffer(m_queues[dev_index], comparebufs[dev_index], CL_TRUE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_compare, 0, 0, 0);
 				#ifdef DEBUG
 				cout << "Writing index buffer (frontside)..." << endl;
 				#endif
-				m_queues[dev_index].enqueueWriteBuffer(compareindexbufs[dev_index], CL_FALSE, 0, sizeof(cl_int)* m_patternlen, compare_index, NULL);
+				clEnqueueWriteBuffer(m_queues[dev_index], compareindexbufs[dev_index], CL_TRUE, 0, sizeof(cl_int)* m_patternlen, compare_index, 0, 0, 0);
 				#ifdef DEBUG
 				cout << "Writing index buffer (backside)..." << endl;
 				#endif
-				m_queues[dev_index].enqueueWriteBuffer(compareindexbufs[dev_index], CL_FALSE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_compare_index, NULL);
+				clEnqueueWriteBuffer(m_queues[dev_index], compareindexbufs[dev_index], CL_TRUE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_compare_index, 0, 0, 0);
 				#ifdef DEBUG
 				cout << "Writing entry count buffer..." << endl;
 				#endif
-				m_queues[dev_index].enqueueWriteBuffer(m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, NULL);
-				#ifdef DEBUG
-				cout << "Writing buffer for compare..." << endl;
-				#endif
-				m_queues[dev_index].finish();
+				clEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
+				clFinish(m_queues[dev_index]);
 				#ifdef DEBUG
 				cout << "Done." << endl;
 				#endif
 				cl_ushort cl_threshold = threshold;
-				m_comparerkernels[dev_index].setArg(0, m_chrdatabufs[dev_index]);
+				clSetKernelArg(m_comparerkernels[dev_index], 0, sizeof(cl_mem), &m_chrdatabufs[dev_index]);
 				//m_comparerkernels[dev_index].setArg(1, m_locibufs[dev_index]);
 				//m_comparerkernels[dev_index].setArg(2, m_mmlocibufs[dev_index]);
-				m_comparerkernels[dev_index].setArg(3, comparebufs[dev_index]);
-				m_comparerkernels[dev_index].setArg(4, compareindexbufs[dev_index]);
-				m_comparerkernels[dev_index].setArg(5, sizeof(cl_uint), &m_patternlen);
-				m_comparerkernels[dev_index].setArg(6, sizeof(cl_ushort), &cl_threshold);
+				clSetKernelArg(m_comparerkernels[dev_index], 3, sizeof(cl_mem), &comparebufs[dev_index]);
+				clSetKernelArg(m_comparerkernels[dev_index], 4, sizeof(cl_mem), &compareindexbufs[dev_index]);
+				clSetKernelArg(m_comparerkernels[dev_index], 5, sizeof(cl_uint), &m_patternlen);
+				clSetKernelArg(m_comparerkernels[dev_index], 6, sizeof(cl_ushort), &cl_threshold);
 				//m_comparerkernels[dev_index].setArg(7, m_flagbufs[dev_index]);
-				m_comparerkernels[dev_index].setArg(8, m_mmcountbufs[dev_index]);
-				m_comparerkernels[dev_index].setArg(9, m_directionbufs[dev_index]);
-				m_comparerkernels[dev_index].setArg(10, m_entrycountbufs[dev_index]);
-
-				m_queues[dev_index].enqueueNDRangeKernel(m_comparerkernels[dev_index], cl::NullRange, cl::NDRange(m_locicnts[dev_index]), cl::NullRange, NULL, &m_comparerevts[dev_index]);
+				clSetKernelArg(m_comparerkernels[dev_index], 8, sizeof(cl_mem), &m_mmcountbufs[dev_index]);
+				clSetKernelArg(m_comparerkernels[dev_index], 9, sizeof(cl_mem), &m_directionbufs[dev_index]);
+				clSetKernelArg(m_comparerkernels[dev_index], 10, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
+				clFinish(m_queues[dev_index]);
+				clEnqueueNDRangeKernel(m_queues[dev_index], m_comparerkernels[dev_index], 1, 0, &m_locicnts[dev_index], &zero, 0, 0, 0);
 			}
 		}
 
@@ -536,11 +539,11 @@ public:
 		unsigned int idx;
 		for (dev_index = 0; dev_index<m_activedevnum; dev_index++) {
 			 if (m_locicnts[dev_index] > 0) {
-				m_comparerevts[dev_index].wait();
-				m_queues[dev_index].enqueueReadBuffer(m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, NULL);
-				m_queues[dev_index].enqueueReadBuffer(m_mmcountbufs[dev_index], CL_TRUE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], NULL);
-				m_queues[dev_index].enqueueReadBuffer(m_directionbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], NULL);
-				m_queues[dev_index].enqueueReadBuffer(m_mmlocibufs[dev_index], CL_TRUE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], NULL);
+				clFinish(m_queues[dev_index]);
+				clEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, 0, 0, 0);
+				clEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_TRUE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
+				clEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
+				clEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_TRUE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
 
 				for (i = 0; i < cnt; i++) {
 					loci = m_mmlocis[dev_index][i] + m_lasttotalanalyzedsize + localanalyzedsize;
@@ -575,17 +578,18 @@ int main(int argc, char *argv[]) {
 	std::ifstream input;
 	std::string line, name, content;
 
-	vector<cl::Platform> platforms;
+	cl_platform_id platforms[10];
+	cl_uint platform_cnt;
 
-	cl::Platform::get(&platforms);
-	size_t number_of_platforms = platforms.size();
-	if (number_of_platforms == 0) {
+	clGetPlatformIDs(10, platforms, &platform_cnt);
+
+	if (platform_cnt == 0) {
 		cout << "No OpenCL platforms found. Check OpenCL installation!" << endl;
 		exit(1);
 	}
 
 	if (argc < 4) { // Not all option specified
-		cout << "Cas-OFFinder v2.2 (2014-10-22)" << endl <<
+		cout << "Cas-OFFinder v2.3 (2015-03-08)" << endl <<
 			endl <<
 			"Copyright (c) 2013 Jeongbin Park and Sangsu Bae" << endl <<
 			"Website: http://github.com/snugel/cas-offinder" << endl <<
@@ -602,21 +606,25 @@ int main(int argc, char *argv[]) {
 			"GTCGCTGACGCTGGCGCCGTNNN 5" << endl <<
 			endl <<
 			"Available device list:" << endl;
-		vector<cl::Device> devices_per_platform;
-		for (i = 0; i < number_of_platforms; i++) {
-			devices_per_platform.clear();
-			platforms[i].getDevices(CL_DEVICE_TYPE_CPU, &devices_per_platform);
-			for (j = 0; j < devices_per_platform.size(); j++) {
-				cout << "Type: CPU, '" << devices_per_platform[j].getInfo<CL_DEVICE_NAME>() << "'" << endl;
+
+		cl_device_id devices_per_platform[10];
+		cl_uint device_cnt;
+		cl_char devname[255] = {0, };
+		for (i = 0; i < platform_cnt; i++) {
+			clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_CPU, 10, devices_per_platform, &device_cnt);
+			for (j = 0; j < device_cnt; j++) {
+				clGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
+				cout << "Type: CPU, '" << devname << "'" << endl;
 			}
-			devices_per_platform.clear();
-			platforms[i].getDevices(CL_DEVICE_TYPE_GPU, &devices_per_platform);
-			for (j = 0; j < devices_per_platform.size(); j++) {
-				cout << "Type: GPU, '" << devices_per_platform[j].getInfo<CL_DEVICE_NAME>() << "'" << endl;
+			clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, 10, devices_per_platform, &device_cnt);
+			for (j = 0; j < device_cnt; j++) {
+				clGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
+				cout << "Type: GPU, '" << devname << "'" << endl;
 			}
-			platforms[i].getDevices(CL_DEVICE_TYPE_ACCELERATOR, &devices_per_platform);
-			for (j = 0; j < devices_per_platform.size(); j++) {
-				cout << "Type: ACCELERATOR, '" << devices_per_platform[j].getInfo<CL_DEVICE_NAME>() << "'" << endl;
+			clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ACCELERATOR, 10, devices_per_platform, &device_cnt);
+			for (j = 0; j < device_cnt; j++) {
+				clGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
+				cout << "Type: ACCELERATOR, '" << devname << "'" << endl;
 			}
 		}
 		exit(0);
@@ -721,9 +729,8 @@ int main(int argc, char *argv[]) {
 					// Find patterns in the chunk
 					cout << "Finding pattern in chunk #" << ++cnum << "..." << endl;
 					s.findPattern();
-					pnum = 0;
+					cout << "Comparing patterns in chunk #" << cnum << "..." << endl;
 					for (i = 0; i < threshold.size(); i++) {
-						cout << "Comparing pattern #" << ++pnum << " in chunk #" << cnum << "..." << endl;
 						s.compareAll(compare[i].c_str(), threshold[i], (outfilename).c_str());
 					}
 					s.releaseLociinfo();

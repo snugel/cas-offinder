@@ -8,7 +8,6 @@ set(CMAKE_BUILD_TYPE Release)
 
 include (CheckIncludeFiles)
 check_include_files (dirent.h HAVE_DIRENT_H)
-check_include_files (CL/cl.hpp HAVE_CL_HPP)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 if (APPLE)

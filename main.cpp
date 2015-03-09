@@ -11,7 +11,6 @@
 #include <ctime>
 #include <climits>
 #include <algorithm>
-#include <CL/cl.h>
 
 #ifndef min
 #define min(a,b) ( ((a)<(b))?(a):(b) )
@@ -120,10 +119,10 @@ private:
 
 		vector<cl_device_id> devices;
 
-		clGetPlatformIDs(10, platforms, &platform_cnt);
+		oclGetPlatformIDs(10, platforms, &platform_cnt);
 
 		for (i = 0; i < platform_cnt; i++) {
-			clGetDeviceIDs(platforms[i], devtype, 10, devices_per_platform, &device_cnt);
+			oclGetDeviceIDs(platforms[i], devtype, 10, devices_per_platform, &device_cnt);
 			for (j = 0; j < device_cnt; j++) {
 				devices.push_back(devices_per_platform[j]);
 			}
@@ -264,23 +263,21 @@ private:
 			"	}\n"
 			"}";
 
-		cl_int err;
 		cl_context context;
 		cl_program program;
 
 		const size_t src_len = strlen(program_src);
 		for (i = 0; i < devices.size(); i++) {
 			// Create completely separate contexts per device to avoid unknown errors
-			context = clCreateContext(0, 1, &devices[i], 0, 0, &err);
+			context = oclCreateContext(0, 1, &devices[i], 0, 0);
 			m_contexts.push_back(context);
-			
-			program = clCreateProgramWithSource(context, 1, &program_src, &src_len, &err);
-			err = clBuildProgram(program, 1, &devices[i], "", 0, 0);
-			m_finderkernels.push_back(clCreateKernel(program, "finder", &err));
-			m_comparerkernels.push_back(clCreateKernel(program, "comparer", &err));
-			m_queues.push_back(clCreateCommandQueue(m_contexts[i], devices[i], 0, &err));
+			program = oclCreateProgramWithSource(context, 1, &program_src, &src_len);
+			oclBuildProgram(program, 1, &devices[i], "", 0, 0);
+			m_finderkernels.push_back(oclCreateKernel(program, "finder"));
+			m_comparerkernels.push_back(oclCreateKernel(program, "comparer"));
+			m_queues.push_back(oclCreateCommandQueue(m_contexts[i], devices[i], 0));
 			MAX_ALLOC_MEMORY.push_back(0);
-			clGetDeviceInfo(devices[i], CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(cl_ulong), &MAX_ALLOC_MEMORY[i], 0);
+			oclGetDeviceInfo(devices[i], CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(cl_ulong), &MAX_ALLOC_MEMORY[i], 0);
 		}
 		cout << "Total " << m_devnum << " device(s) found." << endl;
 	}
@@ -293,12 +290,12 @@ public:
 	~Cas_OFFinder() {
 		unsigned int i;
 		for (i = 0; i < m_finderkernels.size(); i++)
-			clReleaseKernel(m_finderkernels[i]);
+			oclReleaseKernel(m_finderkernels[i]);
 		for (i = 0; i < m_comparerkernels.size(); i++)
-			clReleaseKernel(m_comparerkernels[i]);
+			oclReleaseKernel(m_comparerkernels[i]);
 		for (i = 0; i < m_devnum; i++) {
-			clReleaseCommandQueue(m_queues[i]);
-			clReleaseContext(m_contexts[i]);
+			oclReleaseCommandQueue(m_queues[i]);
+			oclReleaseContext(m_contexts[i]);
 		}
 	}
 
@@ -361,7 +358,7 @@ public:
 			tailsize = m_chrdatasize - m_totalanalyzedsize;
 			m_activedevnum++;
 			if (tailsize <= m_dicesizes[dev_index]) {
-				clEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_FALSE, 0, (size_t)(sizeof(cl_char)* (tailsize + m_patternlen - 1)), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
+				oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_FALSE, 0, (size_t)(sizeof(cl_char)* (tailsize + m_patternlen - 1)), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 				m_totalanalyzedsize += tailsize;
 				m_worksizes.push_back(tailsize);
 				#ifdef DEBUG
@@ -370,7 +367,7 @@ public:
 				break;
 			}
 			else {
-				clEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
+				oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 				m_totalanalyzedsize += m_dicesizes[dev_index];
 				m_worksizes.push_back(m_dicesizes[dev_index]);
 				#ifdef DEBUG
@@ -385,22 +382,22 @@ public:
 			#ifdef DEBUG
 			cout << "Writing buffer for find..." << endl;
 			#endif
-			clEnqueueWriteBuffer(m_queues[dev_index], m_patternbufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, m_pattern, 0, 0, 0);
-			clEnqueueWriteBuffer(m_queues[dev_index], m_patternbufs[dev_index], CL_FALSE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_pattern, 0, 0, 0);
-			clEnqueueWriteBuffer(m_queues[dev_index], m_patternindexbufs[dev_index], CL_FALSE, 0, sizeof(cl_int)* m_patternlen, pattern_index, 0, 0, 0);
-			clEnqueueWriteBuffer(m_queues[dev_index], m_patternindexbufs[dev_index], CL_FALSE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_pattern_index, 0, 0, 0);
-			clEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
-			clFinish(m_queues[dev_index]);
+			oclEnqueueWriteBuffer(m_queues[dev_index], m_patternbufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, m_pattern, 0, 0, 0);
+			oclEnqueueWriteBuffer(m_queues[dev_index], m_patternbufs[dev_index], CL_FALSE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_pattern, 0, 0, 0);
+			oclEnqueueWriteBuffer(m_queues[dev_index], m_patternindexbufs[dev_index], CL_FALSE, 0, sizeof(cl_int)* m_patternlen, pattern_index, 0, 0, 0);
+			oclEnqueueWriteBuffer(m_queues[dev_index], m_patternindexbufs[dev_index], CL_FALSE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_pattern_index, 0, 0, 0);
+			oclEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
+			oclFinish(m_queues[dev_index]);
 			#ifdef DEBUG
 			cout << "Done." << endl;
 			#endif
-			clSetKernelArg(m_finderkernels[dev_index], 0, sizeof(cl_mem), &m_chrdatabufs[dev_index]);
-			clSetKernelArg(m_finderkernels[dev_index], 1, sizeof(cl_mem), &m_patternbufs[dev_index]);
-			clSetKernelArg(m_finderkernels[dev_index], 2, sizeof(cl_mem), &m_patternindexbufs[dev_index]);
-			clSetKernelArg(m_finderkernels[dev_index], 3, sizeof(cl_uint), &m_patternlen);
-			clSetKernelArg(m_finderkernels[dev_index], 4, sizeof(cl_mem), &m_flagbufs[dev_index]);
-			clSetKernelArg(m_finderkernels[dev_index], 5, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
-			clSetKernelArg(m_finderkernels[dev_index], 6, sizeof(cl_mem), &m_locibufs[dev_index]);
+			oclSetKernelArg(m_finderkernels[dev_index], 0, sizeof(cl_mem), &m_chrdatabufs[dev_index]);
+			oclSetKernelArg(m_finderkernels[dev_index], 1, sizeof(cl_mem), &m_patternbufs[dev_index]);
+			oclSetKernelArg(m_finderkernels[dev_index], 2, sizeof(cl_mem), &m_patternindexbufs[dev_index]);
+			oclSetKernelArg(m_finderkernels[dev_index], 3, sizeof(cl_uint), &m_patternlen);
+			oclSetKernelArg(m_finderkernels[dev_index], 4, sizeof(cl_mem), &m_flagbufs[dev_index]);
+			oclSetKernelArg(m_finderkernels[dev_index], 5, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
+			oclSetKernelArg(m_finderkernels[dev_index], 6, sizeof(cl_mem), &m_locibufs[dev_index]);
 		}
 
 		free((void*)pattern_index);
@@ -414,16 +411,16 @@ public:
 		unsigned int dev_index;
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
 			const size_t worksize = (size_t)m_worksizes[dev_index];
-			clEnqueueNDRangeKernel(m_queues[dev_index], m_finderkernels[dev_index], 1, 0, &worksize, 0, 0, 0, 0);
+			oclEnqueueNDRangeKernel(m_queues[dev_index], m_finderkernels[dev_index], 1, 0, &worksize, 0, 0, 0, 0);
 		}
 
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
-			clFinish(m_queues[dev_index]);
+			oclFinish(m_queues[dev_index]);
 			m_locicnts.push_back(0);
-			clEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &m_locicnts[dev_index], 0, 0, 0);
+			oclEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &m_locicnts[dev_index], 0, 0, 0);
 			if (m_locicnts[dev_index] > 0) {
 				m_flags.push_back((cl_char *)malloc(sizeof(cl_char)* m_locicnts[dev_index]));
-				clEnqueueReadBuffer(m_queues[dev_index], m_flagbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)*m_locicnts[dev_index], m_flags[dev_index], 0, 0, 0);
+				oclEnqueueReadBuffer(m_queues[dev_index], m_flagbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)*m_locicnts[dev_index], m_flags[dev_index], 0, 0, 0);
 
 				m_mmcounts.push_back((cl_ushort *)malloc(sizeof(cl_ushort)* m_locicnts[dev_index] * 2)); // Maximum numbers of mismatch counts
 				m_directions.push_back((cl_char *)malloc(sizeof(cl_char)* m_locicnts[dev_index] * 2));
@@ -433,9 +430,9 @@ public:
 				m_mmcountbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_ushort)* m_locicnts[dev_index] * 2, 0));
 				m_directionbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_locicnts[dev_index] * 2, 0));
 
-				clSetKernelArg(m_comparerkernels[dev_index], 1, sizeof(cl_mem), &m_locibufs[dev_index]);
-				clSetKernelArg(m_comparerkernels[dev_index], 2, sizeof(cl_mem), &m_mmlocibufs[dev_index]);
-				clSetKernelArg(m_comparerkernels[dev_index], 7, sizeof(cl_mem), &m_flagbufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 1, sizeof(cl_mem), &m_locibufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 2, sizeof(cl_mem), &m_mmlocibufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 7, sizeof(cl_mem), &m_flagbufs[dev_index]);
 			} else {
 				m_flags.push_back(0);
 				m_mmcounts.push_back(0);
@@ -510,41 +507,41 @@ public:
 				#ifdef DEBUG
 				cout << "Writing compare buffer (frontside)..." << endl;
 				#endif
-				clEnqueueWriteBuffer(m_queues[dev_index], comparebufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, compare, 0, 0, 0);
+				oclEnqueueWriteBuffer(m_queues[dev_index], comparebufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, compare, 0, 0, 0);
 				#ifdef DEBUG
 				cout << "Writing compare buffer (backside)..." << endl;
 				#endif
-				clEnqueueWriteBuffer(m_queues[dev_index], comparebufs[dev_index], CL_FALSE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_compare, 0, 0, 0);
+				oclEnqueueWriteBuffer(m_queues[dev_index], comparebufs[dev_index], CL_FALSE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_compare, 0, 0, 0);
 				#ifdef DEBUG
 				cout << "Writing index buffer (frontside)..." << endl;
 				#endif
-				clEnqueueWriteBuffer(m_queues[dev_index], compareindexbufs[dev_index], CL_FALSE, 0, sizeof(cl_int)* m_patternlen, compare_index, 0, 0, 0);
+				oclEnqueueWriteBuffer(m_queues[dev_index], compareindexbufs[dev_index], CL_FALSE, 0, sizeof(cl_int)* m_patternlen, compare_index, 0, 0, 0);
 				#ifdef DEBUG
 				cout << "Writing index buffer (backside)..." << endl;
 				#endif
-				clEnqueueWriteBuffer(m_queues[dev_index], compareindexbufs[dev_index], CL_FALSE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_compare_index, 0, 0, 0);
+				oclEnqueueWriteBuffer(m_queues[dev_index], compareindexbufs[dev_index], CL_FALSE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_compare_index, 0, 0, 0);
 				#ifdef DEBUG
 				cout << "Writing entry count buffer..." << endl;
 				#endif
-				clEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
-				clFinish(m_queues[dev_index]);
+				oclEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
+				oclFinish(m_queues[dev_index]);
 				#ifdef DEBUG
 				cout << "Done." << endl;
 				#endif
 				cl_ushort cl_threshold = threshold;
-				clSetKernelArg(m_comparerkernels[dev_index], 0, sizeof(cl_mem), &m_chrdatabufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 0, sizeof(cl_mem), &m_chrdatabufs[dev_index]);
 				//m_comparerkernels[dev_index].setArg(1, m_locibufs[dev_index]);
 				//m_comparerkernels[dev_index].setArg(2, m_mmlocibufs[dev_index]);
-				clSetKernelArg(m_comparerkernels[dev_index], 3, sizeof(cl_mem), &comparebufs[dev_index]);
-				clSetKernelArg(m_comparerkernels[dev_index], 4, sizeof(cl_mem), &compareindexbufs[dev_index]);
-				clSetKernelArg(m_comparerkernels[dev_index], 5, sizeof(cl_uint), &m_patternlen);
-				clSetKernelArg(m_comparerkernels[dev_index], 6, sizeof(cl_ushort), &cl_threshold);
+				oclSetKernelArg(m_comparerkernels[dev_index], 3, sizeof(cl_mem), &comparebufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 4, sizeof(cl_mem), &compareindexbufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 5, sizeof(cl_uint), &m_patternlen);
+				oclSetKernelArg(m_comparerkernels[dev_index], 6, sizeof(cl_ushort), &cl_threshold);
 				//m_comparerkernels[dev_index].setArg(7, m_flagbufs[dev_index]);
-				clSetKernelArg(m_comparerkernels[dev_index], 8, sizeof(cl_mem), &m_mmcountbufs[dev_index]);
-				clSetKernelArg(m_comparerkernels[dev_index], 9, sizeof(cl_mem), &m_directionbufs[dev_index]);
-				clSetKernelArg(m_comparerkernels[dev_index], 10, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 8, sizeof(cl_mem), &m_mmcountbufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 9, sizeof(cl_mem), &m_directionbufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 10, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
 				const size_t locicnts = m_locicnts[dev_index];
-				clEnqueueNDRangeKernel(m_queues[dev_index], m_comparerkernels[dev_index], 1, 0, &locicnts, 0, 0, 0, 0);
+				oclEnqueueNDRangeKernel(m_queues[dev_index], m_comparerkernels[dev_index], 1, 0, &locicnts, 0, 0, 0, 0);
 			} else {
 				comparebufs.push_back(0);
 				compareindexbufs.push_back(0);
@@ -562,12 +559,12 @@ public:
 		unsigned int idx;
 		for (dev_index = 0; dev_index<m_activedevnum; dev_index++) {
 			 if (m_locicnts[dev_index] > 0) {
-				clFinish(m_queues[dev_index]);
-				clEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, 0, 0, 0);
+				oclFinish(m_queues[dev_index]);
+				oclEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, 0, 0, 0);
 				if (cnt > 0) {
-					clEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_TRUE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
-					clEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
-					clEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_TRUE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
+					oclEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_TRUE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
+					oclEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
+					oclEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_TRUE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
 					for (i = 0; i < cnt; i++) {
 						loci = m_mmlocis[dev_index][i] + m_lasttotalanalyzedsize + localanalyzedsize;
 						if (m_mmcounts[dev_index][i] <= threshold) {
@@ -606,7 +603,7 @@ int main(int argc, char *argv[]) {
 	cl_platform_id platforms[10];
 	cl_uint platform_cnt;
 
-	clGetPlatformIDs(10, platforms, &platform_cnt);
+	oclGetPlatformIDs(10, platforms, &platform_cnt);
 
 	if (platform_cnt == 0) {
 		cout << "No OpenCL platforms found. Check OpenCL installation!" << endl;
@@ -636,19 +633,19 @@ int main(int argc, char *argv[]) {
 		cl_uint device_cnt;
 		cl_char devname[255] = {0, };
 		for (i = 0; i < platform_cnt; i++) {
-			clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_CPU, 10, devices_per_platform, &device_cnt);
+			oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_CPU, 10, devices_per_platform, &device_cnt);
 			for (j = 0; j < device_cnt; j++) {
-				clGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
+				oclGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
 				cout << "Type: CPU, '" << devname << "'" << endl;
 			}
-			clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, 10, devices_per_platform, &device_cnt);
+			oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, 10, devices_per_platform, &device_cnt);
 			for (j = 0; j < device_cnt; j++) {
-				clGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
+				oclGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
 				cout << "Type: GPU, '" << devname << "'" << endl;
 			}
-			clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ACCELERATOR, 10, devices_per_platform, &device_cnt);
+			oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ACCELERATOR, 10, devices_per_platform, &device_cnt);
 			for (j = 0; j < device_cnt; j++) {
-				clGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
+				oclGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
 				cout << "Type: ACCELERATOR, '" << devname << "'" << endl;
 			}
 		}

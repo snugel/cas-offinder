@@ -300,7 +300,6 @@ public:
 			clReleaseCommandQueue(m_queues[i]);
 			clReleaseContext(m_contexts[i]);
 		}
-		cout << "Rel" << endl;
 	}
 
 	void setChrData(vector<string> chrnames, string chrdata, vector<unsigned long long> chrpos) {

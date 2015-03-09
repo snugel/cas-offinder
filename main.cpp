@@ -1,4 +1,5 @@
 #include "config.h"
+#include "main.h"
 
 #include <iostream>
 #include <fstream>
@@ -313,6 +314,8 @@ public:
 		m_locibufs.clear();
 		m_entrycountbufs.clear();
 
+		cl_mem buf;
+
 		for (dev_index = 0; dev_index < m_devnum; dev_index++) {
 			m_dicesizes.push_back(
 				(size_t)min(
@@ -321,12 +324,12 @@ public:
 				)
 				); // No more than maximum allocation per device
 			// cout << "Dicesize: " << m_dicesizes[dev_index] << endl;
-			m_chrdatabufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), 0, &err));
-			m_patternbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* m_patternlen * 2, 0, &err));
-			m_patternindexbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_int)* m_patternlen * 2, 0, &err));
-			m_flagbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_dicesizes[dev_index], 0, &err));
-			m_entrycountbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_WRITE, sizeof(cl_uint), 0, &err));
-			m_locibufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_dicesizes[dev_index], 0, &err));
+			m_chrdatabufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), 0));
+			m_patternbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* m_patternlen * 2, 0));
+			m_patternindexbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_int)* m_patternlen * 2, 0));
+			m_flagbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_dicesizes[dev_index], 0));
+			m_entrycountbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_WRITE, sizeof(cl_uint), 0));
+			m_locibufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_dicesizes[dev_index], 0));
 		}
 	}
 
@@ -409,23 +412,31 @@ public:
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
 			clFinish(m_queues[dev_index]);
 			m_locicnts.push_back(0);
-
 			clEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &m_locicnts[dev_index], 0, 0, 0);
-			m_flags.push_back((cl_char *)malloc(sizeof(cl_char)* m_locicnts[dev_index]));
-			if (m_locicnts[dev_index] != 0)
+			if (m_locicnts[dev_index] > 0) {
+				m_flags.push_back((cl_char *)malloc(sizeof(cl_char)* m_locicnts[dev_index]));
 				clEnqueueReadBuffer(m_queues[dev_index], m_flagbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)*m_locicnts[dev_index], m_flags[dev_index], 0, 0, 0);
 
-			m_mmcounts.push_back((cl_ushort *)malloc(sizeof(cl_ushort)* m_locicnts[dev_index] * 2)); // Maximum numbers of mismatch counts
-			m_directions.push_back((cl_char *)malloc(sizeof(cl_char)* m_locicnts[dev_index] * 2));
-			m_mmlocis.push_back((cl_uint *)malloc(sizeof(cl_uint)* m_locicnts[dev_index] * 2));
+				m_mmcounts.push_back((cl_ushort *)malloc(sizeof(cl_ushort)* m_locicnts[dev_index] * 2)); // Maximum numbers of mismatch counts
+				m_directions.push_back((cl_char *)malloc(sizeof(cl_char)* m_locicnts[dev_index] * 2));
+				m_mmlocis.push_back((cl_uint *)malloc(sizeof(cl_uint)* m_locicnts[dev_index] * 2));
 
-			m_mmlocibufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_locicnts[dev_index] * 2, 0, &err));
-			m_mmcountbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_ushort)* m_locicnts[dev_index] * 2, 0, &err));
-			m_directionbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_locicnts[dev_index] * 2, 0, &err));
+				m_mmlocibufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_locicnts[dev_index] * 2, 0));
+				m_mmcountbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_ushort)* m_locicnts[dev_index] * 2, 0));
+				m_directionbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_locicnts[dev_index] * 2, 0));
 
-			clSetKernelArg(m_comparerkernels[dev_index], 1, sizeof(cl_mem), &m_locibufs[dev_index]);
-			clSetKernelArg(m_comparerkernels[dev_index], 2, sizeof(cl_mem), &m_mmlocibufs[dev_index]);
-			clSetKernelArg(m_comparerkernels[dev_index], 7, sizeof(cl_mem), &m_flagbufs[dev_index]);
+				clSetKernelArg(m_comparerkernels[dev_index], 1, sizeof(cl_mem), &m_locibufs[dev_index]);
+				clSetKernelArg(m_comparerkernels[dev_index], 2, sizeof(cl_mem), &m_mmlocibufs[dev_index]);
+				clSetKernelArg(m_comparerkernels[dev_index], 7, sizeof(cl_mem), &m_flagbufs[dev_index]);
+			} else {
+				m_flags.push_back(0);
+				m_mmcounts.push_back(0);
+				m_directions.push_back(0);
+				m_mmlocis.push_back(0);
+				m_mmlocibufs.push_back(0);
+				m_mmcountbufs.push_back(0);
+				m_directionbufs.push_back(0);
+			}
 		}
 	}
 
@@ -482,9 +493,10 @@ public:
 		int *compare_index = (cl_int *)malloc(sizeof(cl_int)* m_patternlen); set_pattern_index(compare_index, compare);
 
 		for (dev_index = 0; dev_index<m_activedevnum; dev_index++) {
-			comparebufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* m_patternlen * 2, 0, &err));
-			compareindexbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_uint)* m_patternlen * 2, 0, &err));
 			if (m_locicnts[dev_index] > 0) {
+				comparebufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* m_patternlen * 2, 0, &err));
+				compareindexbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_uint)* m_patternlen * 2, 0, &err));
+
 				const cl_char *compare = (const cl_char*)arg_compare;
 
 				#ifdef DEBUG
@@ -525,6 +537,9 @@ public:
 				clSetKernelArg(m_comparerkernels[dev_index], 10, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
 				const size_t locicnts = m_locicnts[dev_index];
 				clEnqueueNDRangeKernel(m_queues[dev_index], m_comparerkernels[dev_index], 1, 0, &locicnts, 0, 0, 0, 0);
+			} else {
+				comparebufs.push_back(0);
+				compareindexbufs.push_back(0);
 			}
 		}
 
@@ -541,19 +556,19 @@ public:
 			 if (m_locicnts[dev_index] > 0) {
 				clFinish(m_queues[dev_index]);
 				clEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, 0, 0, 0);
-				if (cnt != 0) {
+				if (cnt > 0) {
 					clEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_TRUE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
 					clEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
 					clEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_TRUE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
-				}
-				for (i = 0; i < cnt; i++) {
-					loci = m_mmlocis[dev_index][i] + m_lasttotalanalyzedsize + localanalyzedsize;
-					if (m_mmcounts[dev_index][i] <= threshold) {
-						strncpy(strbuf, (char *)(m_chrdata.c_str() + loci), m_patternlen);
-						if (m_directions[dev_index][i] == '-') set_complementary_sequence((cl_char *)strbuf);
-						indicate_mismatches((cl_char*)strbuf, compare);
-						for (j = 0; ((j < m_chrpos.size()) && (loci > m_chrpos[j])); j++) idx = j;
-						fo << compare << "\t" << m_chrnames[idx] << "\t" << loci - m_chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
+					for (i = 0; i < cnt; i++) {
+						loci = m_mmlocis[dev_index][i] + m_lasttotalanalyzedsize + localanalyzedsize;
+						if (m_mmcounts[dev_index][i] <= threshold) {
+							strncpy(strbuf, (char *)(m_chrdata.c_str() + loci), m_patternlen);
+							if (m_directions[dev_index][i] == '-') set_complementary_sequence((cl_char *)strbuf);
+							indicate_mismatches((cl_char*)strbuf, compare);
+							for (j = 0; ((j < m_chrpos.size()) && (loci > m_chrpos[j])); j++) idx = j;
+							fo << compare << "\t" << m_chrnames[idx] << "\t" << loci - m_chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
+						}
 					}
 				}
 			}

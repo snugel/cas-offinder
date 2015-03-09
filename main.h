@@ -35,7 +35,7 @@ void oclGetDeviceIDs(cl_platform_id platform,
 	cl_uint *num_devices)
 {
 	cl_int err = clGetDeviceIDs(platform, device_type, num_entries, devices, num_devices);
-	if (err != CL_SUCCESS) {
+	if (err != CL_SUCCESS && err != CL_DEVICE_NOT_FOUND) {
 		cout << "clGetDeviceIDs Failed: " << err << endl;
 		exit(1);
 	}

@@ -27,7 +27,7 @@ private:
 	vector<cl_context> m_contexts;
 	vector<cl_ulong> MAX_ALLOC_MEMORY; // on device, in bytes
 
-	size_t m_chrdatasize;
+	unsigned long long m_chrdatasize;
 	vector<string> m_chrnames;
 	vector<unsigned long long> m_chrpos;
 	string m_chrdata;
@@ -51,7 +51,7 @@ private:
 	vector<cl_mem> m_mmcountbufs;
 	vector<cl_mem> m_directionbufs;
 
-	vector <size_t> m_locicnts;
+	vector <cl_uint> m_locicnts;
 	vector <cl_uint *> m_locis;
 	vector <cl_ushort *> m_mmcounts;
 	vector <cl_char *> m_flags;
@@ -59,9 +59,9 @@ private:
 	vector <cl_uint *> m_mmlocis;
 
 	vector<size_t> m_dicesizes;
-	size_t m_totalanalyzedsize;
+	unsigned long long m_totalanalyzedsize;
 	unsigned long long m_lasttotalanalyzedsize;
-	vector<size_t> m_worksizes;
+	vector<unsigned long long> m_worksizes;
 	size_t m_devnum;
 	unsigned int m_activedevnum;
 	unsigned long long m_lastloci;
@@ -279,7 +279,7 @@ private:
 			m_comparerkernels.push_back(clCreateKernel(program, "comparer", &err));
 			m_queues.push_back(clCreateCommandQueue(m_contexts[i], devices[i], 0, &err));
 			MAX_ALLOC_MEMORY.push_back(0);
-			clGetDeviceInfo(devices[i], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &MAX_ALLOC_MEMORY[i], 0);
+			clGetDeviceInfo(devices[i], CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(cl_ulong), &MAX_ALLOC_MEMORY[i], 0);
 		}
 		cout << "Total " << m_devnum << " device(s) found." << endl;
 	}
@@ -335,8 +335,7 @@ public:
 			return false;
 
 		unsigned int dev_index;
-		size_t tailsize;
-		size_t buf_size;
+		unsigned long long tailsize;
 
 		cl_char *c_pattern = (cl_char *)malloc(sizeof(cl_char)* (m_patternlen + 1)); c_pattern[m_patternlen] = 0; memcpy(c_pattern, m_pattern, m_patternlen); set_complementary_sequence(c_pattern);
 		int *c_pattern_index = (cl_int *)malloc(sizeof(cl_int)* m_patternlen); set_pattern_index(c_pattern_index, c_pattern);
@@ -350,8 +349,7 @@ public:
 			tailsize = m_chrdatasize - m_totalanalyzedsize;
 			m_activedevnum++;
 			if (tailsize <= m_dicesizes[dev_index]) {
-				buf_size = (size_t)(sizeof(cl_char)* (tailsize + m_patternlen - 1));
-				clEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_FALSE, 0, buf_size, (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
+				clEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_FALSE, 0, (size_t)(sizeof(cl_char)* (tailsize + m_patternlen - 1)), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 				m_totalanalyzedsize += tailsize;
 				m_worksizes.push_back(tailsize);
 				#ifdef DEBUG
@@ -402,10 +400,10 @@ public:
 
 	void findPattern() {
 		unsigned int dev_index;
-		size_t zero = 0;
 		cl_int err;
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
-			clEnqueueNDRangeKernel(m_queues[dev_index], m_finderkernels[dev_index], 1, 0, &m_worksizes[dev_index], 0, 0, 0, 0);
+			const size_t worksize = m_worksizes[dev_index];
+			clEnqueueNDRangeKernel(m_queues[dev_index], m_finderkernels[dev_index], 1, 0, &worksize, 0, 0, 0, 0);
 		}
 
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
@@ -473,7 +471,7 @@ public:
 	void compareAll(const char *arg_compare, unsigned short threshold, const char* outfilename) {
 		unsigned int i, j, dev_index;
 		cl_int err;
-		size_t zero = 0;
+		cl_uint zero = 0;
 
 		vector <cl_mem> comparebufs;
 		vector <cl_mem> compareindexbufs;
@@ -525,8 +523,8 @@ public:
 				clSetKernelArg(m_comparerkernels[dev_index], 8, sizeof(cl_mem), &m_mmcountbufs[dev_index]);
 				clSetKernelArg(m_comparerkernels[dev_index], 9, sizeof(cl_mem), &m_directionbufs[dev_index]);
 				clSetKernelArg(m_comparerkernels[dev_index], 10, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
-				clFinish(m_queues[dev_index]);
-				clEnqueueNDRangeKernel(m_queues[dev_index], m_comparerkernels[dev_index], 1, 0, &m_locicnts[dev_index], 0, 0, 0, 0);
+				const size_t locicnts = m_locicnts[dev_index];
+				clEnqueueNDRangeKernel(m_queues[dev_index], m_comparerkernels[dev_index], 1, 0, &locicnts, 0, 0, 0, 0);
 			}
 		}
 
@@ -544,11 +542,10 @@ public:
 				clFinish(m_queues[dev_index]);
 				clEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, 0, 0, 0);
 				if (cnt != 0) {
-					clEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_FALSE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
-					clEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
-					clEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_FALSE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
+					clEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_TRUE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
+					clEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
+					clEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_TRUE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
 				}
-				clFinish(m_queues[dev_index]);
 				for (i = 0; i < cnt; i++) {
 					loci = m_mmlocis[dev_index][i] + m_lasttotalanalyzedsize + localanalyzedsize;
 					if (m_mmcounts[dev_index][i] <= threshold) {

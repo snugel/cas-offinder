@@ -562,9 +562,10 @@ public:
 				oclFinish(m_queues[dev_index]);
 				oclEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, 0, 0, 0);
 				if (cnt > 0) {
-					oclEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_TRUE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
-					oclEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
-					oclEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_TRUE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
+					oclEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_FALSE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
+					oclEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
+					oclEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_FALSE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
+					oclFinish(m_queues[dev_index]);
 					for (i = 0; i < cnt; i++) {
 						loci = m_mmlocis[dev_index][i] + m_lasttotalanalyzedsize + localanalyzedsize;
 						if (m_mmcounts[dev_index][i] <= threshold) {

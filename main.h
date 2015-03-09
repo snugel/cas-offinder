@@ -1,5 +1,6 @@
 #include <CL/cl.h>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -12,4 +13,12 @@ cl_mem oclCreateBuffer(cl_context context, cl_mem_flags flags, size_t size, void
 		exit(1);
 	}
 	return mem;
+}
+
+void clearbufvec(vector<cl_mem> *bufvec) {
+	unsigned int i;
+	for (i = 0; i < bufvec->size(); i++) {
+		if ((*bufvec)[i] != 0) clReleaseMemObject((*bufvec)[i]);
+	}
+	bufvec->clear();
 }

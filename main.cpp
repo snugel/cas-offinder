@@ -290,6 +290,19 @@ public:
 		initOpenCL(devtype);
 	}
 
+	~Cas_OFFinder() {
+		unsigned int i;
+		for (i = 0; i < m_finderkernels.size(); i++)
+			clReleaseKernel(m_finderkernels[i]);
+		for (i = 0; i < m_comparerkernels.size(); i++)
+			clReleaseKernel(m_comparerkernels[i]);
+		for (i = 0; i < m_devnum; i++) {
+			clReleaseCommandQueue(m_queues[i]);
+			clReleaseContext(m_contexts[i]);
+		}
+		cout << "Rel" << endl;
+	}
+
 	void setChrData(vector<string> chrnames, string chrdata, vector<unsigned long long> chrpos) {
 		m_chrnames = chrnames;
 		m_chrpos = chrpos;
@@ -302,19 +315,16 @@ public:
 
 	void setPattern(const char* pattern) {
 		unsigned int dev_index;
-		cl_int err;
 		m_pattern = (cl_char*)pattern;
 		m_patternlen = (cl_uint)strlen(pattern);
 
 		m_dicesizes.clear();
-		m_chrdatabufs.clear();
-		m_patternbufs.clear();
-		m_patternindexbufs.clear();
-		m_flagbufs.clear();
-		m_locibufs.clear();
-		m_entrycountbufs.clear();
-
-		cl_mem buf;
+		clearbufvec(&m_chrdatabufs);
+		clearbufvec(&m_patternbufs);
+		clearbufvec(&m_patternindexbufs);
+		clearbufvec(&m_flagbufs);
+		clearbufvec(&m_locibufs);
+		clearbufvec(&m_entrycountbufs);
 
 		for (dev_index = 0; dev_index < m_devnum; dev_index++) {
 			m_dicesizes.push_back(
@@ -403,9 +413,8 @@ public:
 
 	void findPattern() {
 		unsigned int dev_index;
-		cl_int err;
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
-			const size_t worksize = m_worksizes[dev_index];
+			const size_t worksize = (size_t)m_worksizes[dev_index];
 			clEnqueueNDRangeKernel(m_queues[dev_index], m_finderkernels[dev_index], 1, 0, &worksize, 0, 0, 0, 0);
 		}
 
@@ -453,10 +462,10 @@ public:
 		m_mmlocis.clear();
 		m_mmcounts.clear();
 		m_locicnts.clear();
-		m_mmlocibufs.clear();
+		clearbufvec(&m_mmlocibufs);
 		m_flags.clear();
-		m_mmcountbufs.clear();
-		m_directionbufs.clear();
+		clearbufvec(&m_mmcountbufs);
+		clearbufvec(&m_directionbufs);
 	}
 
 	void indicate_mismatches(cl_char* seq, cl_char* comp) {
@@ -575,7 +584,8 @@ public:
 			localanalyzedsize += m_worksizes[dev_index];
 		}
 		fo.close();
-
+		clearbufvec(&comparebufs);
+		clearbufvec(&compareindexbufs);
 		free((void *)strbuf);
 		free((void *)c_compare);
 		free((void *)c_compare_index);

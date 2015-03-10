@@ -186,7 +186,6 @@ private:
 			"			break;\n"
 			"	}\n"
 			"	if (localflag != 3) {\n"
-			"		printf(\"%d\\n\");\n"
 			"		for (j=0; j<patternlen; j++)\n"
 			"			if (chr[i+j] == ';') return;\n"
 			"		old = atomic_inc(entrycount);\n"

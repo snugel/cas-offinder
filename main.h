@@ -1,6 +1,7 @@
 #include <CL/cl.h>
 #include <iostream>
 #include <vector>
+#include <cstdlib>
 
 using namespace std;
 

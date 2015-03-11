@@ -18,6 +18,9 @@
 
 //#define DEBUG
 
+#define MAX_PLATFORM_NUM 10
+#define MAX_DEVICE_NUM 1000
+
 using namespace std;
 
 class Cas_OFFinder {
@@ -108,31 +111,23 @@ private:
 			pattern_index[n] = -1;
 	}
 
-	void initOpenCL(cl_device_type devtype) {
+	void initOpenCL(cl_device_type devtype, cl_platform_id* platforms, cl_uint platform_cnt) {
 		unsigned int i, j;
 
-		cl_platform_id platforms[10]; // Maximum 10 platforms
-		cl_device_id devices_per_platform[10]; // Maximum 10 devices
-
-		cl_uint platform_cnt;
+		cl_device_id devices[MAX_DEVICE_NUM];
 		cl_uint device_cnt;
 
-		vector<cl_device_id> devices;
-
-		oclGetPlatformIDs(10, platforms, &platform_cnt);
-
+		m_devnum = 0;
 		for (i = 0; i < platform_cnt; i++) {
-			oclGetDeviceIDs(platforms[i], devtype, 10, devices_per_platform, &device_cnt);
-			for (j = 0; j < device_cnt; j++) {
-				devices.push_back(devices_per_platform[j]);
-			}
+			oclGetDeviceIDs(platforms[i], devtype, MAX_DEVICE_NUM-m_devnum, devices+m_devnum, &device_cnt);
+			m_devnum += device_cnt;
 		}
 
-		m_devnum = devices.size();
 		if (m_devnum == 0) {
 			cout << "No OpenCL devices found." << endl;
 			exit(1);
 		}
+
 		const char* program_src =
 			"#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable\n"
 			"#pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable\n"
@@ -266,7 +261,7 @@ private:
 		cl_program program;
 
 		const size_t src_len = strlen(program_src);
-		for (i = 0; i < devices.size(); i++) {
+		for (i = 0; i < m_devnum; i++) {
 			// Create completely separate contexts per device to avoid unknown errors
 			context = oclCreateContext(0, 1, &devices[i], 0, 0);
 			m_contexts.push_back(context);
@@ -282,8 +277,8 @@ private:
 	}
 
 public:
-	Cas_OFFinder(cl_device_type devtype) {
-		initOpenCL(devtype);
+	Cas_OFFinder(cl_device_type devtype, cl_platform_id* platforms, cl_uint platform_cnt) {
+		initOpenCL(devtype, platforms, platform_cnt);
 	}
 
 	~Cas_OFFinder() {
@@ -587,31 +582,16 @@ public:
 		free((void *)c_compare_index);
 		free((void *)compare_index);
 	}
-};
-
-int main(int argc, char *argv[]) {
-	clock_t start, end;
-	float seconds;
-	string fastapath, chrname, pattern, tmpstr, chrdir, outfilename;
-	DIR* dir;
-	dirent *ent;
-	unsigned int i, j, cnt, tmpint;
-
-	std::ifstream input;
-	std::string line, name, content;
-
-	cl_platform_id platforms[10];
-	cl_uint platform_cnt;
-
-	oclGetPlatformIDs(10, platforms, &platform_cnt);
-
-	if (platform_cnt == 0) {
-		cout << "No OpenCL platforms found. Check OpenCL installation!" << endl;
-		exit(1);
+	static void get_platforms(cl_platform_id *platforms, cl_uint *platform_cnt) {
+		oclGetPlatformIDs(MAX_PLATFORM_NUM, platforms, platform_cnt);
+		if ((*platform_cnt) == 0) {
+			cout << "No OpenCL platforms found. Check OpenCL installation!" << endl;
+			exit(1);
+		}
 	}
-
-	if (argc < 4) { // Not all option specified
-		cout << "Cas-OFFinder v2.3 (2015-03-08)" << endl <<
+	static void print_usage(cl_platform_id *platforms, cl_uint platform_cnt) {
+		unsigned int i, j;
+		cout << "Cas-OFFinder v2.3 (" << __DATE__ << ")" << endl <<
 			endl <<
 			"Copyright (c) 2013 Jeongbin Park and Sangsu Bae" << endl <<
 			"Website: http://github.com/snugel/cas-offinder" << endl <<
@@ -629,21 +609,21 @@ int main(int argc, char *argv[]) {
 			endl <<
 			"Available device list:" << endl;
 
-		cl_device_id devices_per_platform[10];
+		cl_device_id devices_per_platform[MAX_DEVICE_NUM];
 		cl_uint device_cnt;
 		cl_char devname[255] = {0, };
 		for (i = 0; i < platform_cnt; i++) {
-			oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_CPU, 10, devices_per_platform, &device_cnt);
+			oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_CPU, MAX_DEVICE_NUM, devices_per_platform, &device_cnt);
 			for (j = 0; j < device_cnt; j++) {
 				oclGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
 				cout << "Type: CPU, '" << devname << "'" << endl;
 			}
-			oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, 10, devices_per_platform, &device_cnt);
+			oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, MAX_DEVICE_NUM, devices_per_platform, &device_cnt);
 			for (j = 0; j < device_cnt; j++) {
 				oclGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
 				cout << "Type: GPU, '" << devname << "'" << endl;
 			}
-			oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ACCELERATOR, 10, devices_per_platform, &device_cnt);
+			oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ACCELERATOR, MAX_DEVICE_NUM, devices_per_platform, &device_cnt);
 			for (j = 0; j < device_cnt; j++) {
 				oclGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
 				cout << "Type: ACCELERATOR, '" << devname << "'" << endl;
@@ -651,6 +631,76 @@ int main(int argc, char *argv[]) {
 		}
 		exit(0);
 	}
+};
+
+int read_fasta(string filepath, vector<string> *chrnames, string *content, vector<unsigned long long> *chrpos) {
+	string line, name;
+	ifstream input;
+	input.open(filepath.c_str());
+	chrnames->clear();
+	content->clear();
+	chrpos->clear();
+	char c; input.get(c);
+	if (c != '>') return 1;
+	input.seekg(0, input.beg);
+	while (getline(input, line).good()){
+		if (!line.empty()) {
+			if (line[0] == '>') { // Identifier marker
+				name = line.substr(1);
+				//if (((cnt++) % 10000) == 0) cout << "Reading " << name << endl;
+				chrnames->push_back(name);
+				if (chrpos->size() != 0) (*content) += ";"; // seperator
+				chrpos->push_back(content->size());
+			} else {
+				transform(line.begin(), line.end(), line.begin(), ::toupper);
+				try {
+					(*content) += line;
+				} catch (const std::bad_alloc&) {
+					cout << "File is too big!" << endl << "Split FASTA file, or try 64bit version of Cas-OFFinder." << endl;
+					exit(1);
+				}
+			}
+		}
+	}
+	input.close();
+	return 0;
+}
+
+int read_twobit(string filepath, vector<string> *chrnames, string *content, vector<unsigned long long> *chrpos) {
+	unsigned int read_uint(ifstream *input) {
+		unsigned int val;
+		input->read(reinterpret_cast<char*>(val), sizeof(unsigned int));
+		return val;
+	}
+	ifstream input;
+	input.open(filepath.c_str());
+
+	if (read_uint(&input) != 440477507) return 1;
+	if (read_uint(&input) != 0) return 1;
+
+	unsigned int chrcnt = read_uint(&input);
+	input.seekg(4, input.cur); // Reserved
+
+
+
+	return 1;
+}
+
+int main(int argc, char *argv[]) {
+	clock_t start, end;
+	float seconds;
+	string filepath, chrname, pattern, tmpstr, chrdir, outfilename;
+	DIR* dir;
+	dirent *ent;
+	unsigned int i, j, cnt, tmpint;
+
+	cl_platform_id platforms[MAX_PLATFORM_NUM];
+	cl_uint platform_cnt;
+
+	Cas_OFFinder::get_platforms(platforms, &platform_cnt);
+
+	if (argc < 4) // Not all option specified
+		Cas_OFFinder::print_usage(platforms, platform_cnt);
 
 	cl_device_type devtype;
 	if (argv[2][0] == 'C') {
@@ -666,12 +716,14 @@ int main(int argc, char *argv[]) {
 		cout << "Unknown option: " << argv[2] << endl;
 		exit(-1);
 	}
-	Cas_OFFinder s(devtype);
+
+	Cas_OFFinder s(devtype, platforms, platform_cnt);
 
 	vector <string> compare;
 	vector <string> chrnames;
 	vector <unsigned long long> chrpos;
 	vector <int> threshold;
+	string content;
 
 	start = clock();
 	cout << "Loading input file..." << endl;
@@ -714,34 +766,17 @@ int main(int argc, char *argv[]) {
 	else {
 		while ((ent = readdir(dir)) != NULL) {
 			if (ent->d_type == DT_REG) {
-				fastapath = ent->d_name;
-				fastapath = chrdir + "/" + fastapath;
-				cout << "Reading " << fastapath << "..." << endl;
+				filepath = ent->d_name;
+				filepath = chrdir + "/" + filepath;
+				cout << "Reading " << filepath << "..." << endl;
 				cnum = 0;
-				input.open(fastapath.c_str());
 				cnt = 0;
-				chrnames.clear();
-				content.clear();
-				chrpos.clear();
-				while (getline(input, line).good()){
-					if (!line.empty() && line[0] == '>') { // Identifier marker
-						name = line.substr(1);
-						//if (((cnt++) % 10000) == 0) cout << "Reading " << name << endl;
-						chrnames.push_back(name);
-						if (chrpos.size() != 0) content += ";"; // seperator
-						chrpos.push_back(content.size());
-					}
-					else if (!name.empty()){
-						transform(line.begin(), line.end(), line.begin(), ::toupper);
-						try {
-							content += line;
-						} catch (const std::bad_alloc&) {
-							cout << "Not enough memory!" << endl << "Split fasta file, or try 64bit version of Cas-OFFinder." << endl;
-							exit(1);
-						}
+				if (read_fasta(filepath, &chrnames, &content, &chrpos)) {
+					if (read_twobit(filepath, &chrnames, &content, &chrpos)) {
+						cout << "Skipping non-sequence file " << filepath << "..." << endl;
+						continue;
 					}
 				}
-				input.close();
 				cout << "Sending data to devices..." << endl;
 				s.setChrData(chrnames, content, chrpos);
 				cout << "Setting pattern to devices..." << endl;

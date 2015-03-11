@@ -24,10 +24,10 @@ using namespace std;
 int main(int argc, char *argv[]) {
 #ifdef _MSC_VER
 	clock_t start, end;
-	float seconds;
 #else
 	struct timeval start, end;
 #endif
+	float seconds;
 	string filepath, tmpstr, outfilename;
 	DIR* dir;
 	dirent *ent;
@@ -40,6 +40,12 @@ int main(int argc, char *argv[]) {
 
 	if (argc < 4) // Not all option specified
 		Cas_OFFinder::print_usage(platforms, platform_cnt);
+
+#ifdef _MSC_VER
+	start = clock();
+#else
+	gettimeofday(&start, NULL);
+#endif
 
 	cl_device_type devtype;
 	if (argv[2][0] == 'C') {
@@ -61,12 +67,6 @@ int main(int argc, char *argv[]) {
 	string chrdir, pattern;
 	vector <string> compares;
 	vector <int> thresholds;
-
-#ifdef _MSC_VER
-	start = clock();
-#else
-	gettimeofday(&start, NULL);
-#endif
 
 	cout << "Loading input file..." << endl;
 
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
 	seconds = (float)(end - start) / CLOCKS_PER_SEC;
 #else
 	gettimeofday(&end, NULL);
-	seconds = (float)((end.tv_sec + end.tv_usec / 1000.0f) - (start.tv_sec + start.tv_usec / 1000.0f))
+	seconds = (float)((end.tv_sec + (end.tv_usec / 1000000.0)) - (start.tv_sec + (start.tv_usec / 1000000.0)));
 #endif
 	cout << seconds << " seconds elapsed." << endl;
 	return 0;

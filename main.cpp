@@ -14,10 +14,6 @@
 #include <ctime>
 #include <cstdlib>
 
-#ifndef min
-#define min(a,b) ( ((a)<(b))?(a):(b) )
-#endif
-
 //#define DEBUG
 
 using namespace std;

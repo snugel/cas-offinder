@@ -5,6 +5,10 @@
 #include <algorithm>
 #include <CL/cl.h>
 
+#ifndef min
+#define min(a,b) ( ((a)<(b))?(a):(b) )
+#endif
+
 using namespace std;
 
 class Cas_OFFinder {

@@ -29,5 +29,5 @@ configure_file (
 	"${PROJECT_BINARY_DIR}/config.h"
 )
 
-add_executable(cas-offinder main.cpp)
+add_executable(cas-offinder main.cpp cas-offinder.cpp read_fasta.cpp read_twobit.cpp)
 target_link_libraries(cas-offinder ${OPENCL_LIBRARY})

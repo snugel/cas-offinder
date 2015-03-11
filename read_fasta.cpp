@@ -10,7 +10,10 @@ int read_fasta(string &filepath, vector<string> &chrnames, string &content, vect
 	content.clear();
 	chrpos.clear();
 	char c; input.get(c);
-	if (c != '>') return 1;
+	if (c != '>') {
+		input.close();
+		return 1;
+	}
 	input.seekg(0, input.beg);
 	while (getline(input, line).good()){
 		if (!line.empty()) {

@@ -6,12 +6,15 @@
 
 #include <iostream>
 #include <fstream>
-#include <streambuf>
 #include <string>
 #include <vector>
 
-#include <climits>
+#ifdef _MSC_VER
 #include <ctime>
+#else
+#include <sys/time.h>
+#include <unistd.h>
+#endif
 #include <cstdlib>
 
 //#define DEBUG
@@ -19,8 +22,12 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
+#ifdef _MSC_VER
 	clock_t start, end;
 	float seconds;
+#else
+	struct timeval start, end;
+#endif
 	string filepath, tmpstr, outfilename;
 	DIR* dir;
 	dirent *ent;
@@ -55,7 +62,12 @@ int main(int argc, char *argv[]) {
 	vector <string> compares;
 	vector <int> thresholds;
 
+#ifdef _MSC_VER
 	start = clock();
+#else
+	gettimeofday(&start, NULL);
+#endif
+
 	cout << "Loading input file..." << endl;
 
 	Cas_OFFinder::readInputFile(argv[1], chrdir, pattern, compares, thresholds);
@@ -99,6 +111,13 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
-	end = clock(); seconds = (float)(end - start) / CLOCKS_PER_SEC; cout << seconds << " seconds elapsed." << endl;
+#ifdef _MSC_VER
+	end = clock();
+	seconds = (float)(end - start) / CLOCKS_PER_SEC;
+#else
+	gettimeofday(&end, NULL);
+	seconds = (float)((end.tv_sec + end.tv_usec / 1000.0f) - (start.tv_sec + start.tv_usec / 1000.0f))
+#endif
+	cout << seconds << " seconds elapsed." << endl;
 	return 0;
 }

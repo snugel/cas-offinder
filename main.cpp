@@ -16,16 +16,29 @@
 #include <unistd.h>
 #endif
 #include <cstdlib>
+#include <cstdarg>
 
 //#define DEBUG
 
 using namespace std;
 
+void error_exit(int nargs, ...) {
+	va_list errmsgs;
+	va_start(errmsgs, nargs);
+	for (int i=1; i<=nargs; i++)
+		cout << (char*)(va_arg(errmsgs, char*));
+	cout << endl;
+	va_end(errmsgs);
+	exit(1);
+}
+
 int main(int argc, char *argv[]) {
 #ifdef _MSC_VER
 	clock_t start, end;
+	start = clock();
 #else
 	struct timeval start, end;
+	gettimeofday(&start, NULL);
 #endif
 	float seconds;
 	string filepath, tmpstr, outfilename;
@@ -33,54 +46,44 @@ int main(int argc, char *argv[]) {
 	dirent *ent;
 	unsigned int i, cnt;
 
-	cl_platform_id platforms[MAX_PLATFORM_NUM];
-	cl_uint platform_cnt;
+	Cas_OFFinder::init_platforms();
 
-	Cas_OFFinder::get_platforms(platforms, &platform_cnt);
-
-	if (argc < 4) // Not all option specified
-		Cas_OFFinder::print_usage(platforms, platform_cnt);
-
-#ifdef _MSC_VER
-	start = clock();
-#else
-	gettimeofday(&start, NULL);
-#endif
+	if (argc < 4) { // Not all option specified
+		Cas_OFFinder::print_usage();
+		exit(0);
+	}
 
 	cl_device_type devtype;
-	if (argv[2][0] == 'C') {
+	switch (argv[2][0]) {
+	case 'C':
 		devtype = CL_DEVICE_TYPE_CPU;
-	}
-	else if (argv[2][0] == 'G') {
+		break;
+	case 'G':
 		devtype = CL_DEVICE_TYPE_GPU;
-	}
-	else if (argv[2][0] == 'A') {
+		break;
+	case 'A':
 		devtype = CL_DEVICE_TYPE_ACCELERATOR;
-	}
-	else {
-		cout << "Unknown option: " << argv[2] << endl;
-		exit(-1);
+		break;
+	default:
+		error_exit(2, "Unknown option: ", argv[2]);
 	}
 
-	Cas_OFFinder s(devtype, platforms, platform_cnt);
+	Cas_OFFinder s(devtype);
 
 	string chrdir, pattern;
 	vector <string> compares;
 	vector <int> thresholds;
 
 	cout << "Loading input file..." << endl;
-
 	Cas_OFFinder::readInputFile(argv[1], chrdir, pattern, compares, thresholds);
 
-	outfilename = argv[3];
-	remove(argv[3]);
+	outfilename = argv[3]; remove(argv[3]);
 
 	int cnum = 0, pnum = 0;
 	if ((dir = opendir(chrdir.c_str())) == NULL) {
-		cout << "No such directory: " << chrdir << endl;
+		error_exit(2, "No such directory: ", chrdir.c_str());
 		exit(1);
-	}
-	else {
+	} else {
 		while ((ent = readdir(dir)) != NULL) {
 			if (ent->d_type == DT_REG) {
 				filepath = ent->d_name;

@@ -1,8 +1,11 @@
+#include "oclkernels.h"
+
 #include <vector>
 #include <string>
 #include <cstring>
 #include <fstream>
 #include <algorithm>
+
 #include <CL/cl.h>
 
 #ifndef min
@@ -10,6 +13,9 @@
 #endif
 
 using namespace std;
+
+static cl_platform_id platforms[MAX_PLATFORM_NUM];
+static cl_uint platform_cnt;
 
 class Cas_OFFinder {
 private:
@@ -61,14 +67,14 @@ private:
 
 	void set_complementary_sequence(cl_char* seq);
 	void set_pattern_index(int* pattern_index, const cl_char* pattern);
-	void initOpenCL(cl_device_type devtype, cl_platform_id* platforms, cl_uint platform_cnt);
+	void initOpenCL(cl_device_type devtype);
 
 public:
 	vector<string> chrnames;
 	string chrdata;
 	vector<unsigned long long> chrpos;
 
-	Cas_OFFinder(cl_device_type devtype, cl_platform_id* platforms, cl_uint platform_cnt);
+	Cas_OFFinder(cl_device_type devtype);
 	~Cas_OFFinder();
 
 	void setChrData();
@@ -82,7 +88,7 @@ public:
 
 	void compareAll(const char *arg_compare, unsigned short threshold, const char* outfilename);
 
-	static void get_platforms(cl_platform_id *platforms, cl_uint *platform_cnt);
-	static void print_usage(cl_platform_id *platforms, cl_uint platform_cnt);
+	static void print_usage();
 	static void readInputFile(const char* inputfile, string &chrdir, string &pattern, vector<string> &compares, vector<int> &thresholds);
+	static void init_platforms();
 };

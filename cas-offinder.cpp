@@ -43,7 +43,7 @@ void Cas_OFFinder::set_pattern_index(int* pattern_index, const cl_char* pattern)
 		pattern_index[n] = -1;
 }
 
-void Cas_OFFinder::initOpenCL(cl_device_type devtype, cl_platform_id* platforms, cl_uint platform_cnt) {
+void Cas_OFFinder::initOpenCL(cl_device_type devtype) {
 	unsigned int i;
 
 	cl_device_id devices[MAX_DEVICE_NUM];
@@ -59,135 +59,6 @@ void Cas_OFFinder::initOpenCL(cl_device_type devtype, cl_platform_id* platforms,
 		cout << "No OpenCL devices found." << endl;
 		exit(1);
 	}
-
-	const char* program_src =
-		"#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable\n"
-		"#pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable\n"
-		"#pragma OPENCL EXTENSION cl_khr_global_int32_extended_atomics : enable\n"
-		"#pragma OPENCL EXTENSION cl_khr_local_int32_extended_atomics : enable\n"
-		"__kernel void finder(__global char* chr,\n"
-		"                     __constant char* pat, __constant int* pat_index, unsigned int patternlen,\n"
-		"                     __global char* flag, __global unsigned int* entrycount, __global unsigned int* loci)\n"
-		"{\n"
-		"	unsigned int i = get_global_id(0);\n"
-		"	unsigned int j;\n"
-		"	unsigned int old;\n"
-		"	int k;\n"
-		"	char localflag = 0;\n"
-		"	for (j=0; j<patternlen; j++) {\n"
-		"		k = pat_index[j];\n"
-		"		if (k == -1)\n"
-		"			break;\n"
-		"		if ( (pat[k] == 'R' && (chr[i+k] == 'C' || chr[i+k] == 'T')) ||\n"
-		"		     (pat[k] == 'Y' && (chr[i+k] == 'A' || chr[i+k] == 'G')) ||\n"
-		"		     (pat[k] == 'K' && (chr[i+k] == 'A' || chr[i+k] == 'C')) ||\n"
-		"		     (pat[k] == 'M' && (chr[i+k] == 'G' || chr[i+k] == 'T')) ||\n"
-		"		     (pat[k] == 'W' && (chr[i+k] == 'C' || chr[i+k] == 'G')) ||\n"
-		"		     (pat[k] == 'S' && (chr[i+k] == 'A' || chr[i+k] == 'T')) ||\n"
-		"		     (pat[k] == 'H' && (chr[i+k] == 'G')) ||\n"
-		"		     (pat[k] == 'B' && (chr[i+k] == 'A')) ||\n"
-		"		     (pat[k] == 'V' && (chr[i+k] == 'T')) ||\n"
-		"		     (pat[k] == 'D' && (chr[i+k] == 'C')) ||\n"
-		"		     (pat[k] == 'A' && (chr[i+k] != 'A')) ||\n"
-		"		     (pat[k] == 'G' && (chr[i+k] != 'G')) ||\n"
-		"		     (pat[k] == 'C' && (chr[i+k] != 'C')) ||\n"
-		"		     (pat[k] == 'T' && (chr[i+k] != 'T')) )\n"
-		"			localflag |= 2;\n"
-		"		k = pat_index[patternlen + j];\n"
-		"		if ( (pat[k + patternlen] == 'R' && (chr[i+k] == 'C' || chr[i+k] == 'T')) ||\n"
-		"		     (pat[k + patternlen] == 'Y' && (chr[i+k] == 'A' || chr[i+k] == 'G')) ||\n"
-		"		     (pat[k + patternlen] == 'K' && (chr[i+k] == 'A' || chr[i+k] == 'C')) ||\n"
-		"		     (pat[k + patternlen] == 'M' && (chr[i+k] == 'G' || chr[i+k] == 'T')) ||\n"
-		"		     (pat[k + patternlen] == 'W' && (chr[i+k] == 'C' || chr[i+k] == 'G')) ||\n"
-		"		     (pat[k + patternlen] == 'S' && (chr[i+k] == 'A' || chr[i+k] == 'T')) ||\n"
-		"		     (pat[k + patternlen] == 'H' && (chr[i+k] == 'G')) ||\n"
-		"		     (pat[k + patternlen] == 'B' && (chr[i+k] == 'A')) ||\n"
-		"		     (pat[k + patternlen] == 'V' && (chr[i+k] == 'T')) ||\n"
-		"		     (pat[k + patternlen] == 'D' && (chr[i+k] == 'C')) ||\n"
-		"		     (pat[k + patternlen] == 'A' && (chr[i+k] != 'A')) ||\n"
-		"		     (pat[k + patternlen] == 'G' && (chr[i+k] != 'G')) ||\n"
-		"		     (pat[k + patternlen] == 'C' && (chr[i+k] != 'C')) ||\n"
-		"		     (pat[k + patternlen] == 'T' && (chr[i+k] != 'T')) )\n"
-		"			localflag |= 1;\n"
-		"		if (localflag == 3)\n"
-		"			break;\n"
-		"	}\n"
-		"	if (localflag != 3) {\n"
-		"		for (j=0; j<patternlen; j++)\n"
-		"			if (chr[i+j] == ';') return;\n"
-		"		old = atomic_inc(entrycount);\n"
-		"		loci[old] = i;\n"
-		"		flag[old] = localflag;\n"
-		"	}\n"
-		"}\n"
-		"__kernel void comparer(__global char* chr, __global unsigned int* loci, __global unsigned int* mm_loci,\n"
-		"                       __constant char* comp, __constant int* comp_index, unsigned int patternlen, unsigned short threshold,\n"
-		"                       __global char* flag, __global unsigned short* mm_count, __global char* direction, __global unsigned int* entrycount)\n"
-		"{\n"
-		"	unsigned int i = get_global_id(0);\n"
-		"	unsigned int j, lmm_count, old;\n"
-		"	int k;\n"
-		"	if (flag[i] == 0 || flag[i] == 1) {\n"
-		"		lmm_count = 0;\n"
-		"		for (j=0; j<patternlen; j++) {\n"
-		"			k = comp_index[j];\n"
-		"			if (k == -1) break;\n"
-		"			if ( (comp[k] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||\n"
-		"			     (comp[k] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||\n"
-		"			     (comp[k] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||\n"
-		"			     (comp[k] == 'M' && (chr[loci[i]+k] == 'G' || chr[loci[i]+k] == 'T')) ||\n"
-		"			     (comp[k] == 'W' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'G')) ||\n"
-		"			     (comp[k] == 'S' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'T')) ||\n"
-		"			     (comp[k] == 'H' && (chr[loci[i]+k] == 'G')) ||\n"
-		"			     (comp[k] == 'B' && (chr[loci[i]+k] == 'A')) ||\n"
-		"			     (comp[k] == 'V' && (chr[loci[i]+k] == 'T')) ||\n"
-		"			     (comp[k] == 'D' && (chr[loci[i]+k] == 'C')) ||\n"
-		"				 (comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||\n"
-		"			     (comp[k] == 'G' && (chr[loci[i]+k] != 'G')) ||\n"
-		"			     (comp[k] == 'C' && (chr[loci[i]+k] != 'C')) ||\n"
-		"			     (comp[k] == 'T' && (chr[loci[i]+k] != 'T'))) {\n"
-		"				lmm_count++;\n"
-		"				if (lmm_count > threshold) break;\n"
-		"			}\n"
-		"		}\n"
-		"		if (lmm_count <= threshold) {\n"
-		"			old = atomic_inc(entrycount);\n"
-		"			mm_count[old] = lmm_count;\n"
-		"			direction[old] = '+';\n"
-		"			mm_loci[old] = loci[i];\n"
-		"		}\n"
-		"	}\n"
-		"	if (flag[i] == 0 || flag[i] == 2) {\n"
-		"		lmm_count = 0;\n"
-		"		for (j=0; j<patternlen; j++) {\n"
-		"			k = comp_index[patternlen + j];\n"
-		"			if (k == -1) break;\n"
-		"			if ( (comp[k+patternlen] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||\n"
-		"			     (comp[k+patternlen] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||\n"
-		"			     (comp[k+patternlen] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||\n"
-		"			     (comp[k+patternlen] == 'M' && (chr[loci[i]+k] == 'G' || chr[loci[i]+k] == 'T')) ||\n"
-		"			     (comp[k+patternlen] == 'W' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'G')) ||\n"
-		"			     (comp[k+patternlen] == 'S' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'T')) ||\n"
-		"			     (comp[k+patternlen] == 'H' && (chr[loci[i]+k] == 'G')) ||\n"
-		"			     (comp[k+patternlen] == 'B' && (chr[loci[i]+k] == 'A')) ||\n"
-		"			     (comp[k+patternlen] == 'V' && (chr[loci[i]+k] == 'T')) ||\n"
-		"			     (comp[k+patternlen] == 'D' && (chr[loci[i]+k] == 'C')) ||\n"
-		"			     (comp[k+patternlen] == 'A' && (chr[loci[i]+k] != 'A')) ||\n"
-		"			     (comp[k+patternlen] == 'G' && (chr[loci[i]+k] != 'G')) ||\n"
-		"			     (comp[k+patternlen] == 'C' && (chr[loci[i]+k] != 'C')) ||\n"
-		"				 (comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {\n"
-		"				lmm_count++;\n"
-		"				if (lmm_count > threshold) break;\n"
-		"			}\n"
-		"		}\n"
-		"		if (lmm_count <= threshold) {\n"
-		"			old = atomic_inc(entrycount);\n"
-		"			mm_count[old] = lmm_count;\n"
-		"			direction[old] = '-';\n"
-		"			mm_loci[old] = loci[i];\n"
-		"		}\n"
-		"	}\n"
-		"}";
 
 	cl_context context;
 	cl_program program;
@@ -208,8 +79,8 @@ void Cas_OFFinder::initOpenCL(cl_device_type devtype, cl_platform_id* platforms,
 	cout << "Total " << m_devnum << " device(s) found." << endl;
 }
 
-Cas_OFFinder::Cas_OFFinder(cl_device_type devtype, cl_platform_id* platforms, cl_uint platform_cnt) {
-	initOpenCL(devtype, platforms, platform_cnt);
+Cas_OFFinder::Cas_OFFinder(cl_device_type devtype) {
+	initOpenCL(devtype);
 }
 
 Cas_OFFinder::~Cas_OFFinder() {
@@ -512,14 +383,15 @@ void Cas_OFFinder::compareAll(const char *arg_compare, unsigned short threshold,
 	free((void *)c_compare_index);
 	free((void *)compare_index);
 }
-void Cas_OFFinder::get_platforms(cl_platform_id *platforms, cl_uint *platform_cnt) {
-	oclGetPlatformIDs(MAX_PLATFORM_NUM, platforms, platform_cnt);
-	if ((*platform_cnt) == 0) {
+
+void Cas_OFFinder::init_platforms() {
+	oclGetPlatformIDs(MAX_PLATFORM_NUM, platforms, &platform_cnt);
+	if (platform_cnt == 0) {
 		cout << "No OpenCL platforms found. Check OpenCL installation!" << endl;
 		exit(1);
 	}
 }
-void Cas_OFFinder::print_usage(cl_platform_id *platforms, cl_uint platform_cnt) {
+void Cas_OFFinder::print_usage() {
 	unsigned int i, j;
 	cout << "Cas-OFFinder v2.3 (" << __DATE__ << ")" << endl <<
 		endl <<
@@ -559,7 +431,6 @@ void Cas_OFFinder::print_usage(cl_platform_id *platforms, cl_uint platform_cnt) 
 			cout << "Type: ACCELERATOR, '" << devname << "'" << endl;
 		}
 	}
-	exit(0);
 }
 
 void Cas_OFFinder::readInputFile(const char* inputfile, string &chrdir, string &pattern, vector<string> &compares, vector<int> &thresholds) {

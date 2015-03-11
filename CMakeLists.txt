@@ -40,6 +40,7 @@ set (HEADERS
 	cas-offinder.h
 	read_fasta.h
 	read_twobit.h
+	config.h
 )
 
 add_executable(cas-offinder ${SOURCES} ${HEADERS})

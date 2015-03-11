@@ -26,8 +26,21 @@ endif (NOT HAVE_DIRENT_H)
 
 configure_file (
 	"${PROJECT_SOURCE_DIR}/config.h.in"
-	"${PROJECT_BINARY_DIR}/config.h"
+	"${PROJECT_SOURCE_DIR}/config.h"
 )
 
-add_executable(cas-offinder main.cpp cas-offinder.cpp read_fasta.cpp read_twobit.cpp)
+set (SOURCES
+	main.cpp
+	cas-offinder.cpp
+	read_fasta.cpp
+	read_twobit.cpp
+)
+
+set (HEADERS
+	cas-offinder.h
+	read_fasta.h
+	read_twobit.h
+)
+
+add_executable(cas-offinder ${SOURCES} ${HEADERS})
 target_link_libraries(cas-offinder ${OPENCL_LIBRARY})

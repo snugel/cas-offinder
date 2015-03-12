@@ -14,7 +14,8 @@ typedef union {
 
 inline unsigned int read_uint(FILE *input) {
 	static RECORD4 val4;
-	fread((char*)val4.bytes, 4, 1, input);
+	static size_t readsize;
+	readsize = fread((char*)val4.bytes, 4, 1, input);
 	return val4.num;
 }
 
@@ -34,6 +35,7 @@ inline char bit_to_seq(unsigned char b) {
 int read_twobit(string &filepath, vector<string> &chrnames, string &content, vector<unsigned long long> &chrpos) {
 	unsigned int i, j, k, chrcnt, chrlen, nblockcnt, maskblockcnt, rawlen, rem, cnt;
 	unsigned char achar;
+	size_t readsize;
 	char len_chrname;
 	char chrname[256];
 	vector<unsigned int> nblockstarts;
@@ -53,8 +55,8 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 	fseek(input, 4, SEEK_CUR); // Reserved
 
 	for (i=0; i<chrcnt; i++) {
-		fread(&len_chrname, 1, 1, input);
-		fread(chrname, 1, len_chrname, input);
+		readsize = fread(&len_chrname, 1, 1, input);
+		readsize = fread(chrname, 1, len_chrname, input);
 		chrname[len_chrname] = 0;
 		chrnames.push_back(string(chrname));
 		fseek(input, 4, SEEK_CUR); // Absolute position of each sequence
@@ -73,7 +75,7 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 		rawlen = chrlen/4+(rem==0?0:1);
 		char *chrbuf = new char[chrlen+1]; chrbuf[chrlen] = 0;
 		char *raw_chrbuf = new char[rawlen+1];
-		fread(raw_chrbuf, 1, rawlen, input);
+		readsize = fread(raw_chrbuf, 1, rawlen, input);
 		cnt = 0;
 
 		#pragma omp parallel for private(j, k)

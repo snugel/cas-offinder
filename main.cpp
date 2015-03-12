@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
 				cnum = 0;
 				cnt = 0;
 				if (read_fasta(filepath, s.chrnames, s.chrdata, s.chrpos)) {
-				    if (read_twobit(filepath, &s.chrnames, &s.chrdata, &s.chrpos)) {
+				    if (read_twobit(filepath, s.chrnames, s.chrdata, s.chrpos)) {
 						cout << "Skipping non-acceptable file " << filepath << "..." << endl;
 						continue;
 					}

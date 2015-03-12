@@ -12,13 +12,13 @@ typedef union {
 	unsigned int num;
 } RECORD4;
 
-unsigned int read_uint(FILE *input) {
+inline unsigned int read_uint(FILE *input) {
 	static RECORD4 val4;
 	fread((char*)val4.bytes, 4, 1, input);
 	return val4.num;
 }
 
-char bit_to_seq(unsigned char b) {
+inline char bit_to_seq(unsigned char b) {
 	switch(b) {
 	case 0:
 		return 'T';
@@ -32,7 +32,7 @@ char bit_to_seq(unsigned char b) {
 }
 
 int read_twobit(string &filepath, vector<string> &chrnames, string &content, vector<unsigned long long> &chrpos) {
-	unsigned int i, j, k, chrcnt, chrlen, nblockcnt, maskblockcnt, rem;
+	unsigned int i, j, k, chrcnt, chrlen, nblockcnt, maskblockcnt, rawlen, rem, cnt;
 	unsigned char achar;
 	char len_chrname;
 	char chrname[256];
@@ -68,19 +68,31 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 		for (j=0; j<nblockcnt; j++) nblocksizes.push_back(read_uint(input));
 		maskblockcnt = read_uint(input);
 		fseek(input, maskblockcnt*8 + 4, SEEK_CUR);
-		char *chrbuf = new char[chrlen+1]; chrbuf[chrlen] = 0;
+
 		rem = chrlen&3;
-		for (j=0; j<chrlen-rem; j+=4) {
-			fread((char*)&achar, 1, 1, input);
-			for (k=0; k<4; k++)
-				chrbuf[j+k] = bit_to_seq((achar>>((3-k)*2))&0x3);
+		rawlen = chrlen/4+(rem==0?0:1);
+		char *chrbuf = new char[chrlen+1]; chrbuf[chrlen] = 0;
+		char *raw_chrbuf = new char[rawlen+1];
+		fread(raw_chrbuf, 1, rawlen, input);
+		cnt = 0;
+
+		#pragma omp parallel for private(j, k)
+		for (j=0; j<chrlen/4; j++) {
+			for (k=0; k<4; k++) {
+				chrbuf[j*4+k] = bit_to_seq((raw_chrbuf[j]>>((3-k)*2))&0x3);
+			}
 		}
-		fread((char*)&achar, 1, 1, input);
-		for (j=0; j<rem; j++)
-			chrbuf[chrlen-rem+j] = bit_to_seq((achar>>((3-j)*2))&0x3);
-		for (j=0; j<nblockcnt; j++)
-			for (k=nblockstarts[j]; k<nblockstarts[j]+nblocksizes[j]; k++)
+
+		if (rem) {
+			for (j=0; j<rem; j++)
+				chrbuf[chrlen-rem+j] = bit_to_seq((raw_chrbuf[rawlen-rem+j]>>((3-j)*2))&0x3);
+		}
+
+		for (j=0; j<nblockcnt; j++) {
+			for (k=nblockstarts[j]; k<nblockstarts[j]+nblocksizes[j]; k++) {
 				chrbuf[k] = 'N';
+			}
+		}
 		content += chrbuf;
 		delete [] chrbuf;
 		if (i < chrcnt-1) {

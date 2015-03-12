@@ -3,6 +3,7 @@
 using namespace std;
 
 int read_fasta(string &filepath, vector<string> &chrnames, string &content, vector<unsigned long long> &chrpos) {
+	unsigned int i;
 	string line, name;
 	ifstream input;
 	input.open(filepath.c_str());

@@ -30,11 +30,16 @@ inline char bit_to_seq(unsigned char b) {
 	case 3:
 		return 'G';
 	}
+	return 0;
 }
 
 int read_twobit(string &filepath, vector<string> &chrnames, string &content, vector<unsigned long long> &chrpos) {
-	unsigned int i, j, k, chrcnt, chrlen, nblockcnt, maskblockcnt, rawlen, rem, cnt;
-	unsigned char achar;
+	unsigned int i, k, chrcnt, chrlen, nblockcnt, maskblockcnt, rawlen, rem, cnt;
+#ifdef _MSC_VER
+	int j;
+#else
+	unsigned int j;
+#endif
 	size_t readsize;
 	char len_chrname;
 	char chrname[256];

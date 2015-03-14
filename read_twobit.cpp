@@ -102,6 +102,8 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 		}
 		content += chrbuf;
 		delete [] chrbuf;
+		nblockstarts.clear();
+		nblocksizes.clear();
 		if (i < chrcnt-1) {
 			content += ';';
 			chrpos.push_back(content.size());

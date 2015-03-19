@@ -25,6 +25,8 @@ private:
 
 	unsigned long long m_chrdatasize;
 	vector<string> m_chrnames;
+	vector<string> m_compares;
+	vector<cl_ushort> m_thresholds;
 	vector<unsigned long long> m_chrpos;
 	string m_chrdata;
 	cl_char* m_pattern;
@@ -38,10 +40,13 @@ private:
 
 	vector<cl_mem> m_chrdatabufs;
 	vector<cl_mem> m_patternbufs;
-	vector<cl_mem> m_patternindexbufs;
+	vector<cl_mem> m_patternflagbufs;
 	vector<cl_mem> m_flagbufs;
 	vector<cl_mem> m_locibufs;
 	vector<cl_mem> m_entrycountbufs;
+	vector<cl_mem> m_comparebufs;
+	vector<cl_mem> m_compareflagbufs;
+
 
 	vector<cl_mem> m_mmlocibufs;
 	vector<cl_mem> m_mmcountbufs;
@@ -58,15 +63,16 @@ private:
 	unsigned long long m_totalanalyzedsize;
 	unsigned long long m_lasttotalanalyzedsize;
 	vector<unsigned long long> m_worksizes;
-	size_t m_devnum;
+	cl_uint m_devnum;
 	unsigned int m_activedevnum;
 	unsigned long long m_lastloci;
 
 	unsigned long long m_linenum;
 	unsigned long long m_filenum;
+	size_t m_totalcompcount;
 
-	void set_complementary_sequence(cl_char* seq);
-	void set_pattern_index(int* pattern_index, const cl_char* pattern);
+	void set_complementary_sequence(cl_char* seq, size_t seqlen);
+	void set_seq_flags(int* seq_flags, const cl_char* seq, size_t seqlen);
 	void initOpenCL(cl_device_type devtype);
 
 public:
@@ -74,11 +80,12 @@ public:
 	string chrdata;
 	vector<unsigned long long> chrpos;
 
+	string chrdir;
+
 	Cas_OFFinder(cl_device_type devtype);
 	~Cas_OFFinder();
 
 	void setChrData();
-	void setPattern(const char* pattern);
 
 	bool loadNextChunk();
 	void findPattern();
@@ -86,9 +93,9 @@ public:
 
 	void indicate_mismatches(cl_char* seq, cl_char* comp);
 
-	void compareAll(const char *arg_compare, unsigned short threshold, const char* outfilename);
+	void compareAll(const char* outfilename);
+	void readInputFile(const char* inputfile);
 
 	static void print_usage();
-	static void readInputFile(const char* inputfile, string &chrdir, string &pattern, vector<string> &compares, vector<int> &thresholds);
 	static void init_platforms();
 };

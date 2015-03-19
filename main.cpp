@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 	string filepath, tmpstr, outfilename;
 	DIR* dir;
 	dirent *ent;
-	unsigned int i, cnt;
+	unsigned int cnt;
 
 	Cas_OFFinder::init_platforms();
 
@@ -70,24 +70,20 @@ int main(int argc, char *argv[]) {
 
 	Cas_OFFinder s(devtype);
 
-	string chrdir, pattern;
-	vector <string> compares;
-	vector <int> thresholds;
-
 	cout << "Loading input file..." << endl;
-	Cas_OFFinder::readInputFile(argv[1], chrdir, pattern, compares, thresholds);
+	s.readInputFile(argv[1]);
 
 	outfilename = argv[3]; remove(argv[3]);
 
 	int cnum = 0, pnum = 0;
-	if ((dir = opendir(chrdir.c_str())) == NULL) {
-		error_exit(2, "No such directory: ", chrdir.c_str());
+	if ((dir = opendir(s.chrdir.c_str())) == NULL) {
+		error_exit(2, "No such directory: ", s.chrdir.c_str());
 		exit(1);
 	} else {
 		while ((ent = readdir(dir)) != NULL) {
 			if (ent->d_type == DT_REG) {
 				filepath = ent->d_name;
-				filepath = chrdir + "/" + filepath;
+				filepath = s.chrdir + "/" + filepath;
 				cout << "Reading " << filepath << "..." << endl;
 				cnum = 0;
 				cnt = 0;
@@ -99,16 +95,13 @@ int main(int argc, char *argv[]) {
 				}
 				cout << "Sending data to devices..." << endl;
 				s.setChrData();
-				cout << "Setting pattern to devices..." << endl;
-				s.setPattern(pattern.c_str());
 				cout << "Chunk load started." << endl;
 				while (s.loadNextChunk()) {
 					// Find patterns in the chunk
 					cout << "Finding pattern in chunk #" << ++cnum << "..." << endl;
 					s.findPattern();
 					cout << "Comparing patterns in chunk #" << cnum << "..." << endl;
-					for (i = 0; i < thresholds.size(); i++)
-						s.compareAll(compares[i].c_str(), thresholds[i], (outfilename).c_str());
+					s.compareAll(outfilename.c_str());
 					s.releaseLociinfo();
 				}			
 			}

@@ -3,13 +3,15 @@
 #include "cas-offinder.h"
 #include "oclfunctions.h"
 
+#include <sstream>
+
 using namespace std;
 
-void Cas_OFFinder::set_complementary_sequence(cl_char* seq) {
+void Cas_OFFinder::set_complementary_sequence(cl_char* seq, size_t seqlen) {
 	size_t i, l = 0;
 	cl_char tmp;
 
-	for (i = 0; seq[i] != 0; i++) {
+	for (i = 0; i < seqlen; i++) {
 		if (seq[i] == 'A') seq[i] = 'T';
 		else if (seq[i] == 'T') seq[i] = 'A';
 		else if (seq[i] == 'G') seq[i] = 'C';
@@ -22,25 +24,24 @@ void Cas_OFFinder::set_complementary_sequence(cl_char* seq) {
 		else if (seq[i] == 'D') seq[i] = 'H';
 		else if (seq[i] == 'B') seq[i] = 'V';
 		else if (seq[i] == 'V') seq[i] = 'B';
-		l++;
 	}
-	for (i = 0; i < l / 2; i++) {
+	for (i = 0; i < seqlen / 2; i++) {
 		tmp = seq[i];
-		seq[i] = seq[l - i - 1];
-		seq[l - i - 1] = tmp;
+		seq[i] = seq[seqlen - i - 1];
+		seq[seqlen - i - 1] = tmp;
 	}
 }
 
-void Cas_OFFinder::set_pattern_index(int* pattern_index, const cl_char* pattern) {
+void Cas_OFFinder::set_seq_flags(int* seq_flags, const cl_char* seq, size_t seqlen) {
 	int i, n = 0;
-	for (i = 0; pattern[i] != 0; i++) {
-		if (pattern[i] != 'N') {
-			pattern_index[n] = i;
+	for (i = 0; i < seqlen; i++) {
+		if (seq[i] != 'N') {
+			seq_flags[n] = i;
 			n++;
 		}
 	}
 	if (i != n)
-		pattern_index[n] = -1;
+		seq_flags[n] = -1;
 }
 
 void Cas_OFFinder::initOpenCL(cl_device_type devtype) {
@@ -93,27 +94,25 @@ Cas_OFFinder::~Cas_OFFinder() {
 		oclReleaseCommandQueue(m_queues[i]);
 		oclReleaseContext(m_contexts[i]);
 	}
+	clearbufvec(&m_patternbufs);
+	clearbufvec(&m_patternflagbufs);
+	clearbufvec(&m_comparebufs);
+	clearbufvec(&m_compareflagbufs);
+	clearbufvec(&m_entrycountbufs);
 }
 
 void Cas_OFFinder::setChrData() {
+	unsigned int dev_index;
+
 	m_chrdatasize = chrdata.size();
 	m_totalanalyzedsize = 0;
 	m_lasttotalanalyzedsize = 0;
 	m_lastloci = 0;
-}
-
-void Cas_OFFinder::setPattern(const char* pattern) {
-	unsigned int dev_index;
-	m_pattern = (cl_char*)pattern;
-	m_patternlen = (cl_uint)strlen(pattern);
 
 	m_dicesizes.clear();
 	clearbufvec(&m_chrdatabufs);
-	clearbufvec(&m_patternbufs);
-	clearbufvec(&m_patternindexbufs);
 	clearbufvec(&m_flagbufs);
 	clearbufvec(&m_locibufs);
-	clearbufvec(&m_entrycountbufs);
 
 	for (dev_index = 0; dev_index < m_devnum; dev_index++) {
 		m_dicesizes.push_back(
@@ -124,10 +123,7 @@ void Cas_OFFinder::setPattern(const char* pattern) {
 			); // No more than maximum allocation per device
 		// cout << "Dicesize: " << m_dicesizes[dev_index] << endl;
 		m_chrdatabufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), 0));
-		m_patternbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* m_patternlen * 2, 0));
-		m_patternindexbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_int)* m_patternlen * 2, 0));
 		m_flagbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_dicesizes[dev_index], 0));
-		m_entrycountbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_WRITE, sizeof(cl_uint), 0));
 		m_locibufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_dicesizes[dev_index], 0));
 	}
 }
@@ -138,10 +134,6 @@ bool Cas_OFFinder::loadNextChunk() {
 
 	unsigned int dev_index;
 	unsigned long long tailsize;
-
-	cl_char *c_pattern = (cl_char *)malloc(sizeof(cl_char)* (m_patternlen + 1)); c_pattern[m_patternlen] = 0; memcpy(c_pattern, m_pattern, m_patternlen); set_complementary_sequence(c_pattern);
-	int *c_pattern_index = (cl_int *)malloc(sizeof(cl_int)* m_patternlen); set_pattern_index(c_pattern_index, c_pattern);
-	int *pattern_index = (cl_int *)malloc(sizeof(cl_int)* m_patternlen); set_pattern_index(pattern_index, m_pattern);
 
 	m_activedevnum = 0;
 	m_worksizes.clear();
@@ -171,31 +163,15 @@ bool Cas_OFFinder::loadNextChunk() {
 	cout << m_activedevnum << " devices selected to analyze..." << endl;
 
 	for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
-		cl_uint zero = 0;
-#ifdef DEBUG
-		cout << "Writing buffer for find..." << endl;
-#endif
-		oclEnqueueWriteBuffer(m_queues[dev_index], m_patternbufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, m_pattern, 0, 0, 0);
-		oclEnqueueWriteBuffer(m_queues[dev_index], m_patternbufs[dev_index], CL_FALSE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_pattern, 0, 0, 0);
-		oclEnqueueWriteBuffer(m_queues[dev_index], m_patternindexbufs[dev_index], CL_FALSE, 0, sizeof(cl_int)* m_patternlen, pattern_index, 0, 0, 0);
-		oclEnqueueWriteBuffer(m_queues[dev_index], m_patternindexbufs[dev_index], CL_FALSE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_pattern_index, 0, 0, 0);
-		oclEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
 		oclFinish(m_queues[dev_index]);
-#ifdef DEBUG
-		cout << "Done." << endl;
-#endif
 		oclSetKernelArg(m_finderkernels[dev_index], 0, sizeof(cl_mem), &m_chrdatabufs[dev_index]);
 		oclSetKernelArg(m_finderkernels[dev_index], 1, sizeof(cl_mem), &m_patternbufs[dev_index]);
-		oclSetKernelArg(m_finderkernels[dev_index], 2, sizeof(cl_mem), &m_patternindexbufs[dev_index]);
+		oclSetKernelArg(m_finderkernels[dev_index], 2, sizeof(cl_mem), &m_patternflagbufs[dev_index]);
 		oclSetKernelArg(m_finderkernels[dev_index], 3, sizeof(cl_uint), &m_patternlen);
 		oclSetKernelArg(m_finderkernels[dev_index], 4, sizeof(cl_mem), &m_flagbufs[dev_index]);
 		oclSetKernelArg(m_finderkernels[dev_index], 5, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
 		oclSetKernelArg(m_finderkernels[dev_index], 6, sizeof(cl_mem), &m_locibufs[dev_index]);
 	}
-
-	free((void*)pattern_index);
-	free((void*)c_pattern);
-	free((void*)c_pattern_index);
 
 	return true;
 }
@@ -278,110 +254,80 @@ void Cas_OFFinder::indicate_mismatches(cl_char* seq, cl_char* comp) {
 			seq[k] += 32;
 }
 
-void Cas_OFFinder::compareAll(const char *arg_compare, unsigned short threshold, const char* outfilename) {
-	unsigned int i, j, dev_index;
-	cl_int err;
+void Cas_OFFinder::compareAll(const char* outfilename) {
+	unsigned int compcnt, i, j, dev_index;
 	cl_uint zero = 0;
 
-	vector <cl_mem> comparebufs;
-	vector <cl_mem> compareindexbufs;
+	cl_char *cl_compare = new cl_char[m_patternlen * 2];
+	cl_int *cl_compare_flags = new cl_int[m_patternlen * 2];
 
-	cl_char *compare = (cl_char *)arg_compare;
-	cl_char *c_compare = (cl_char *)malloc(sizeof(cl_char)* (m_patternlen + 1)); c_compare[m_patternlen] = 0; memcpy(c_compare, compare, m_patternlen); set_complementary_sequence(c_compare);
-	int *c_compare_index = (cl_int *)malloc(sizeof(cl_int)* m_patternlen); set_pattern_index(c_compare_index, c_compare);
-	int *compare_index = (cl_int *)malloc(sizeof(cl_int)* m_patternlen); set_pattern_index(compare_index, compare);
+	char *strbuf = new char[m_patternlen + 1]; strbuf[m_patternlen] = 0;
 
-	for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
-		if (m_locicnts[dev_index] > 0) {
-			comparebufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* m_patternlen * 2, 0, &err));
-			compareindexbufs.push_back(clCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_uint)* m_patternlen * 2, 0, &err));
+	for (compcnt = 0; compcnt < m_totalcompcount; compcnt++) {
+		memcpy(cl_compare, m_compares[compcnt].c_str(), m_patternlen);
+		memcpy(cl_compare + m_patternlen, m_compares[compcnt].c_str(), m_patternlen);
+		set_complementary_sequence(cl_compare + m_patternlen, m_patternlen);
+		set_seq_flags(cl_compare_flags, cl_compare, m_patternlen);
+		set_seq_flags(cl_compare_flags + m_patternlen, cl_compare + m_patternlen, m_patternlen);
 
-			const cl_char *compare = (const cl_char*)arg_compare;
-
-#ifdef DEBUG
-			cout << "Writing compare buffer (frontside)..." << endl;
-#endif
-			oclEnqueueWriteBuffer(m_queues[dev_index], comparebufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* m_patternlen, compare, 0, 0, 0);
-#ifdef DEBUG
-			cout << "Writing compare buffer (backside)..." << endl;
-#endif
-			oclEnqueueWriteBuffer(m_queues[dev_index], comparebufs[dev_index], CL_FALSE, sizeof(cl_char)* m_patternlen, sizeof(cl_char)* m_patternlen, c_compare, 0, 0, 0);
-#ifdef DEBUG
-			cout << "Writing index buffer (frontside)..." << endl;
-#endif
-			oclEnqueueWriteBuffer(m_queues[dev_index], compareindexbufs[dev_index], CL_FALSE, 0, sizeof(cl_int)* m_patternlen, compare_index, 0, 0, 0);
-#ifdef DEBUG
-			cout << "Writing index buffer (backside)..." << endl;
-#endif
-			oclEnqueueWriteBuffer(m_queues[dev_index], compareindexbufs[dev_index], CL_FALSE, sizeof(cl_int)* m_patternlen, sizeof(cl_int)* m_patternlen, c_compare_index, 0, 0, 0);
-#ifdef DEBUG
-			cout << "Writing entry count buffer..." << endl;
-#endif
-			oclEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
-			oclFinish(m_queues[dev_index]);
-#ifdef DEBUG
-			cout << "Done." << endl;
-#endif
-			cl_ushort cl_threshold = threshold;
-			oclSetKernelArg(m_comparerkernels[dev_index], 0, sizeof(cl_mem), &m_chrdatabufs[dev_index]);
-			//m_comparerkernels[dev_index].setArg(1, m_locibufs[dev_index]);
-			//m_comparerkernels[dev_index].setArg(2, m_mmlocibufs[dev_index]);
-			oclSetKernelArg(m_comparerkernels[dev_index], 3, sizeof(cl_mem), &comparebufs[dev_index]);
-			oclSetKernelArg(m_comparerkernels[dev_index], 4, sizeof(cl_mem), &compareindexbufs[dev_index]);
-			oclSetKernelArg(m_comparerkernels[dev_index], 5, sizeof(cl_uint), &m_patternlen);
-			oclSetKernelArg(m_comparerkernels[dev_index], 6, sizeof(cl_ushort), &cl_threshold);
-			//m_comparerkernels[dev_index].setArg(7, m_flagbufs[dev_index]);
-			oclSetKernelArg(m_comparerkernels[dev_index], 8, sizeof(cl_mem), &m_mmcountbufs[dev_index]);
-			oclSetKernelArg(m_comparerkernels[dev_index], 9, sizeof(cl_mem), &m_directionbufs[dev_index]);
-			oclSetKernelArg(m_comparerkernels[dev_index], 10, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
-			const size_t locicnts = m_locicnts[dev_index];
-			oclEnqueueNDRangeKernel(m_queues[dev_index], m_comparerkernels[dev_index], 1, 0, &locicnts, 0, 0, 0, 0);
-		}
-		else {
-			comparebufs.push_back(0);
-			compareindexbufs.push_back(0);
-		}
-	}
-
-	unsigned long long loci;
-
-	char comp_symbol[2] = { '+', '-' };
-	char *strbuf = (char *)malloc(sizeof(char)* (m_patternlen + 1)); strbuf[m_patternlen] = 0;
-
-	ofstream fo(outfilename, ios::out | ios::app);
-	unsigned long long localanalyzedsize = 0;
-	unsigned int cnt = 0;
-	unsigned int idx;
-	for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
-		if (m_locicnts[dev_index] > 0) {
-			oclFinish(m_queues[dev_index]);
-			oclEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, 0, 0, 0);
-			if (cnt > 0) {
-				oclEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_FALSE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
-				oclEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
-				oclEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_FALSE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
+		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
+			if (m_locicnts[dev_index] > 0) {
+				oclEnqueueWriteBuffer(m_queues[dev_index], m_comparebufs[dev_index], CL_FALSE, 0, sizeof(cl_char) * m_patternlen * 2, cl_compare, 0, 0, 0);
+				oclEnqueueWriteBuffer(m_queues[dev_index], m_compareflagbufs[dev_index], CL_FALSE, 0, sizeof(cl_int) * m_patternlen * 2, cl_compare_flags, 0, 0, 0);
+				oclEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
 				oclFinish(m_queues[dev_index]);
-				for (i = 0; i < cnt; i++) {
-					loci = m_mmlocis[dev_index][i] + m_lasttotalanalyzedsize + localanalyzedsize;
-					if (m_mmcounts[dev_index][i] <= threshold) {
-						strncpy(strbuf, (char *)(chrdata.c_str() + loci), m_patternlen);
-						if (m_directions[dev_index][i] == '-') set_complementary_sequence((cl_char *)strbuf);
-						indicate_mismatches((cl_char*)strbuf, compare);
-						for (j = 0; ((j < chrpos.size()) && (loci > chrpos[j])); j++) idx = j;
-						fo << compare << "\t" << chrnames[idx] << "\t" << loci - chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
+				oclSetKernelArg(m_comparerkernels[dev_index], 0, sizeof(cl_mem), &m_chrdatabufs[dev_index]);
+				//m_comparerkernels[dev_index].setArg(1, m_locibufs[dev_index]);
+				//m_comparerkernels[dev_index].setArg(2, m_mmlocibufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 3, sizeof(cl_mem), &m_comparebufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 4, sizeof(cl_mem), &m_compareflagbufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 5, sizeof(cl_uint), &m_patternlen);
+				oclSetKernelArg(m_comparerkernels[dev_index], 6, sizeof(cl_ushort), &m_thresholds[compcnt]);
+				//m_comparerkernels[dev_index].setArg(7, m_flagbufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 8, sizeof(cl_mem), &m_mmcountbufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 9, sizeof(cl_mem), &m_directionbufs[dev_index]);
+				oclSetKernelArg(m_comparerkernels[dev_index], 10, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
+				const size_t locicnts = m_locicnts[dev_index];
+				oclEnqueueNDRangeKernel(m_queues[dev_index], m_comparerkernels[dev_index], 1, 0, &locicnts, 0, 0, 0, 0);
+			}
+		}
+
+		unsigned long long loci;
+
+		char comp_symbol[2] = { '+', '-' };
+
+		ofstream fo(outfilename, ios::out | ios::app);
+		unsigned long long localanalyzedsize = 0;
+		unsigned int cnt = 0;
+		unsigned int idx;
+		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
+			if (m_locicnts[dev_index] > 0) {
+				oclFinish(m_queues[dev_index]);
+				oclEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, 0, 0, 0);
+				if (cnt > 0) {
+					oclEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_FALSE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
+					oclEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
+					oclEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_FALSE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
+					oclFinish(m_queues[dev_index]);
+					for (i = 0; i < cnt; i++) {
+						loci = m_mmlocis[dev_index][i] + m_lasttotalanalyzedsize + localanalyzedsize;
+						if (m_mmcounts[dev_index][i] <= m_thresholds[compcnt]) {
+							strncpy(strbuf, (char *)(chrdata.c_str() + loci), m_patternlen);
+							if (m_directions[dev_index][i] == '-') set_complementary_sequence((cl_char *)strbuf, m_patternlen);
+							indicate_mismatches((cl_char*)strbuf, (cl_char*)m_compares[compcnt].c_str());
+							for (j = 0; ((j < chrpos.size()) && (loci > chrpos[j])); j++) idx = j;
+							fo << m_compares[compcnt] << "\t" << chrnames[idx] << "\t" << loci - chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
+						}
 					}
 				}
 			}
+			localanalyzedsize += m_worksizes[dev_index];
 		}
-		localanalyzedsize += m_worksizes[dev_index];
+		fo.close();
 	}
-	fo.close();
-	clearbufvec(&comparebufs);
-	clearbufvec(&compareindexbufs);
-	free((void *)strbuf);
-	free((void *)c_compare);
-	free((void *)c_compare_index);
-	free((void *)compare_index);
+	delete [] strbuf;
+	delete [] cl_compare;
+	delete [] cl_compare_flags;
 }
 
 void Cas_OFFinder::init_platforms() {
@@ -433,28 +379,61 @@ void Cas_OFFinder::print_usage() {
 	}
 }
 
-void Cas_OFFinder::readInputFile(const char* inputfile, string &chrdir, string &pattern, vector<string> &compares, vector<int> &thresholds) {
-	string tmpstr;
-	int tmpint;
+vector<string> split(string const &input) {
+	istringstream sbuffer(input);
+	vector<string> ret((istream_iterator<string>(sbuffer)),
+		istream_iterator<string>());
+	return ret;	
+}
+
+void Cas_OFFinder::readInputFile(const char* inputfile) {
+	unsigned int dev_index;
+	string pattern, line;
+	vector<string> sline;
+	cl_uint zero = 0;
 
 	ifstream fi(inputfile, ios::in);
 	if (!fi.good()) {
-		cout << "No such file: " << inputfile << endl;
 		exit(0);
 	}
 	if (!fi.eof())
-		fi >> chrdir;
+		getline(fi, chrdir);
 	if (!fi.eof())
-		fi >> pattern;
-	while (true) {
-		if (fi.eof()) break;
-		fi >> tmpstr;
-		transform(tmpstr.begin(), tmpstr.end(), tmpstr.begin(), ::toupper);
-		compares.push_back(tmpstr);
-		if (fi.eof()) break;
-		fi >> tmpint;
-		thresholds.push_back(tmpint);
+		getline(fi, pattern);
+	transform(pattern.begin(), pattern.end(), pattern.begin(), ::toupper);
+	while (getline(fi, line).good()) {
+		if (line.empty()) break;
+		sline = split(line);
+		transform(sline[0].begin(), sline[0].end(), sline[0].begin(), ::toupper);
+		m_compares.push_back(sline[0]);
+		m_thresholds.push_back(atoi(sline[1].c_str()));
 	}
 	fi.close();
-	transform(pattern.begin(), pattern.end(), pattern.begin(), ::toupper);
+
+	m_totalcompcount = m_thresholds.size();
+	m_patternlen = (cl_uint)(pattern.size());
+	
+	cl_char *cl_pattern = new cl_char[m_patternlen * 2]; 
+	memcpy(cl_pattern, pattern.c_str(), m_patternlen);
+	memcpy(cl_pattern + m_patternlen, pattern.c_str(), m_patternlen);
+	set_complementary_sequence(cl_pattern+m_patternlen, m_patternlen);
+	cl_int *cl_pattern_flags = new cl_int[m_patternlen * 2];
+	set_seq_flags(cl_pattern_flags, cl_pattern, m_patternlen);
+	set_seq_flags(cl_pattern_flags + m_patternlen, cl_pattern + m_patternlen, m_patternlen);
+	
+	for (dev_index = 0; dev_index < m_devnum; dev_index++) {
+		m_patternbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char) * m_patternlen * 2, 0));
+		m_patternflagbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_int) * m_patternlen * 2, 0));
+		oclEnqueueWriteBuffer(m_queues[dev_index], m_patternbufs[dev_index], CL_FALSE, 0, sizeof(cl_char) * m_patternlen * 2, cl_pattern, 0, 0, 0);
+		oclEnqueueWriteBuffer(m_queues[dev_index], m_patternflagbufs[dev_index], CL_FALSE, 0, sizeof(cl_int) * m_patternlen * 2, cl_pattern_flags, 0, 0, 0);
+		
+		m_comparebufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char) * m_patternlen * 2, 0));
+		m_compareflagbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_uint) * m_patternlen * 2, 0));
+		m_entrycountbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_WRITE, sizeof(cl_uint), 0));
+		oclEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_FALSE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
+		oclFinish(m_queues[dev_index]);
+	}
+
+	delete[] cl_pattern;
+	delete[] cl_pattern_flags;
 }

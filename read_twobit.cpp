@@ -4,6 +4,7 @@
 #include <utility>
 
 #include <cstdlib>
+#include <cstring> // memset
 
 using namespace std;
 
@@ -96,9 +97,10 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 		}
 
 		for (j=0; j<nblockcnt; j++) {
-			for (k=nblockstarts[j]; k<nblockstarts[j]+nblocksizes[j]; k++) {
-				chrbuf[k] = 'N';
-			}
+			memset(chrbuf + nblockstarts[j], 'N', nblocksizes[j]);
+			//for (k=nblockstarts[j]; k<nblockstarts[j]+nblocksizes[j]; k++) {
+			//	chrbuf[k] = 'N';
+			//}
 		}
 		content += chrbuf;
 		delete [] chrbuf;

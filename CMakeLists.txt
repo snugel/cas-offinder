@@ -35,6 +35,8 @@ configure_file (
 	"${PROJECT_SOURCE_DIR}/config.h"
 )
 
+execute_process(COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
+
 set (SOURCES
 	main.cpp
 	cas-offinder.cpp

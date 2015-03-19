@@ -4,6 +4,7 @@
 #include "oclfunctions.h"
 
 #include <sstream>
+#include <iterator>
 
 using namespace std;
 
@@ -116,7 +117,7 @@ void Cas_OFFinder::setChrData() {
 
 	for (dev_index = 0; dev_index < m_devnum; dev_index++) {
 		m_dicesizes.push_back(
-			(size_t)min(
+			(size_t)MIN(
 			(MAX_ALLOC_MEMORY[dev_index] - sizeof(cl_char)* (3 * m_patternlen - 1) - sizeof(cl_uint)* (2 * m_patternlen + 3) - sizeof(cl_ushort)) / (4 * sizeof(cl_char) + 3 * sizeof(cl_uint) + 2 * sizeof(cl_ushort)),
 			((m_chrdatasize / m_devnum) + ((m_chrdatasize%m_devnum == 0) ? 0 : 1))
 			)

@@ -8,8 +8,8 @@
 
 #include <CL/cl.h>
 
-#ifndef min
-#define min(a,b) ( ((a)<(b))?(a):(b) )
+#ifndef MIN
+#define MIN(a,b) ( ((a)<(b))?(a):(b) )
 #endif
 
 using namespace std;

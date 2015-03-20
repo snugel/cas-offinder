@@ -11,6 +11,7 @@ __kernel void finder(__global char* chr,
 	unsigned int j;
 	unsigned int old;
 	int k;
+
 	char localflag = 0;
 	for (j=0; j<patternlen; j++) {
 		k = pat_index[j];
@@ -60,30 +61,38 @@ __kernel void finder(__global char* chr,
 }
 __kernel void comparer(__global char* chr, __global unsigned int* loci, __global unsigned int* mm_loci,
                        __constant char* comp, __constant int* comp_index, unsigned int patternlen, unsigned short threshold,
-                       __global char* flag, __global unsigned short* mm_count, __global char* direction, __global unsigned int* entrycount)
+                       __global char* flag, __global unsigned short* mm_count, __global char* direction, __global unsigned int* entrycount,
+					   __local char* l_comp, __local int* l_comp_index)
 {
 	unsigned int i = get_global_id(0);
 	unsigned int j, lmm_count, old;
 	int k;
+
+	unsigned int li = i - get_group_id(0)*get_local_size(0);
+	if (li < patternlen*2) {
+		l_comp[li] = comp[li];
+		l_comp_index[li] = comp_index[li];
+	}
+	barrier(CLK_LOCAL_MEM_FENCE);
 	if (flag[i] == 0 || flag[i] == 1) {
 		lmm_count = 0;
 		for (j=0; j<patternlen; j++) {
-			k = comp_index[j];
+			k = l_comp_index[j];
 			if (k == -1) break;
-			if ( (comp[k] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||
-			     (comp[k] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||
-			     (comp[k] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||
-			     (comp[k] == 'M' && (chr[loci[i]+k] == 'G' || chr[loci[i]+k] == 'T')) ||
-			     (comp[k] == 'W' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'G')) ||
-			     (comp[k] == 'S' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'T')) ||
-			     (comp[k] == 'H' && (chr[loci[i]+k] == 'G')) ||
-			     (comp[k] == 'B' && (chr[loci[i]+k] == 'A')) ||
-			     (comp[k] == 'V' && (chr[loci[i]+k] == 'T')) ||
-			     (comp[k] == 'D' && (chr[loci[i]+k] == 'C')) ||
-				 (comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||
-			     (comp[k] == 'G' && (chr[loci[i]+k] != 'G')) ||
-			     (comp[k] == 'C' && (chr[loci[i]+k] != 'C')) ||
-			     (comp[k] == 'T' && (chr[loci[i]+k] != 'T'))) {
+			if ( (l_comp[k] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||
+			     (l_comp[k] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||
+			     (l_comp[k] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||
+			     (l_comp[k] == 'M' && (chr[loci[i]+k] == 'G' || chr[loci[i]+k] == 'T')) ||
+			     (l_comp[k] == 'W' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'G')) ||
+			     (l_comp[k] == 'S' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'T')) ||
+			     (l_comp[k] == 'H' && (chr[loci[i]+k] == 'G')) ||
+			     (l_comp[k] == 'B' && (chr[loci[i]+k] == 'A')) ||
+			     (l_comp[k] == 'V' && (chr[loci[i]+k] == 'T')) ||
+			     (l_comp[k] == 'D' && (chr[loci[i]+k] == 'C')) ||
+				 (l_comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||
+			     (l_comp[k] == 'G' && (chr[loci[i]+k] != 'G')) ||
+			     (l_comp[k] == 'C' && (chr[loci[i]+k] != 'C')) ||
+			     (l_comp[k] == 'T' && (chr[loci[i]+k] != 'T'))) {
 				lmm_count++;
 				if (lmm_count > threshold) break;
 			}
@@ -98,22 +107,22 @@ __kernel void comparer(__global char* chr, __global unsigned int* loci, __global
 	if (flag[i] == 0 || flag[i] == 2) {
 	lmm_count = 0;
 		for (j=0; j<patternlen; j++) {
-			k = comp_index[patternlen + j];
+			k = l_comp_index[patternlen + j];
 			if (k == -1) break;
-			if ( (comp[k+patternlen] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||
-			     (comp[k+patternlen] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||
-			     (comp[k+patternlen] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||
-			     (comp[k+patternlen] == 'M' && (chr[loci[i]+k] == 'G' || chr[loci[i]+k] == 'T')) ||
-			     (comp[k+patternlen] == 'W' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'G')) ||
-			     (comp[k+patternlen] == 'S' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'T')) ||
-			     (comp[k+patternlen] == 'H' && (chr[loci[i]+k] == 'G')) ||
-			     (comp[k+patternlen] == 'B' && (chr[loci[i]+k] == 'A')) ||
-			     (comp[k+patternlen] == 'V' && (chr[loci[i]+k] == 'T')) ||
-			     (comp[k+patternlen] == 'D' && (chr[loci[i]+k] == 'C')) ||
-			     (comp[k+patternlen] == 'A' && (chr[loci[i]+k] != 'A')) ||
-			     (comp[k+patternlen] == 'G' && (chr[loci[i]+k] != 'G')) ||
-			     (comp[k+patternlen] == 'C' && (chr[loci[i]+k] != 'C')) ||
-				 (comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {
+			if ( (l_comp[k+patternlen] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||
+			     (l_comp[k+patternlen] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||
+			     (l_comp[k+patternlen] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||
+			     (l_comp[k+patternlen] == 'M' && (chr[loci[i]+k] == 'G' || chr[loci[i]+k] == 'T')) ||
+			     (l_comp[k+patternlen] == 'W' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'G')) ||
+			     (l_comp[k+patternlen] == 'S' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'T')) ||
+			     (l_comp[k+patternlen] == 'H' && (chr[loci[i]+k] == 'G')) ||
+			     (l_comp[k+patternlen] == 'B' && (chr[loci[i]+k] == 'A')) ||
+			     (l_comp[k+patternlen] == 'V' && (chr[loci[i]+k] == 'T')) ||
+			     (l_comp[k+patternlen] == 'D' && (chr[loci[i]+k] == 'C')) ||
+			     (l_comp[k+patternlen] == 'A' && (chr[loci[i]+k] != 'A')) ||
+			     (l_comp[k+patternlen] == 'G' && (chr[loci[i]+k] != 'G')) ||
+			     (l_comp[k+patternlen] == 'C' && (chr[loci[i]+k] != 'C')) ||
+				 (l_comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {
 				lmm_count++;
 				if (lmm_count > threshold) break;
 			}

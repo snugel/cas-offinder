@@ -22,6 +22,7 @@ private:
 	vector<cl_command_queue> m_queues;
 	vector<cl_context> m_contexts;
 	vector<cl_ulong> MAX_ALLOC_MEMORY; // on device, in bytes
+	vector<size_t> MAX_LOCAL_SIZE;
 
 	unsigned long long m_chrdatasize;
 	vector<string> m_chrnames;

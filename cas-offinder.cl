@@ -22,39 +22,39 @@ __kernel void finder(__global char* chr,
 
 	char localflag = 0;
 	for (j=0; j<patternlen; j++) {
-		k = pat_index[j];
+		k = l_pat_index[j];
 		if (k == -1)
 			break;
-		if ( (pat[k] == 'R' && (chr[i+k] == 'C' || chr[i+k] == 'T')) ||
-		     (pat[k] == 'Y' && (chr[i+k] == 'A' || chr[i+k] == 'G')) ||
-		     (pat[k] == 'K' && (chr[i+k] == 'A' || chr[i+k] == 'C')) ||
-		     (pat[k] == 'M' && (chr[i+k] == 'G' || chr[i+k] == 'T')) ||
-		     (pat[k] == 'W' && (chr[i+k] == 'C' || chr[i+k] == 'G')) ||
-		     (pat[k] == 'S' && (chr[i+k] == 'A' || chr[i+k] == 'T')) ||
-		     (pat[k] == 'H' && (chr[i+k] == 'G')) ||
-		     (pat[k] == 'B' && (chr[i+k] == 'A')) ||
-		     (pat[k] == 'V' && (chr[i+k] == 'T')) ||
-		     (pat[k] == 'D' && (chr[i+k] == 'C')) ||
-		     (pat[k] == 'A' && (chr[i+k] != 'A')) ||
-		     (pat[k] == 'G' && (chr[i+k] != 'G')) ||
-		     (pat[k] == 'C' && (chr[i+k] != 'C')) ||
-		     (pat[k] == 'T' && (chr[i+k] != 'T')) )
+		if ( (l_pat[k] == 'R' && (chr[i+k] == 'C' || chr[i+k] == 'T')) ||
+		     (l_pat[k] == 'Y' && (chr[i+k] == 'A' || chr[i+k] == 'G')) ||
+		     (l_pat[k] == 'K' && (chr[i+k] == 'A' || chr[i+k] == 'C')) ||
+		     (l_pat[k] == 'M' && (chr[i+k] == 'G' || chr[i+k] == 'T')) ||
+		     (l_pat[k] == 'W' && (chr[i+k] == 'C' || chr[i+k] == 'G')) ||
+		     (l_pat[k] == 'S' && (chr[i+k] == 'A' || chr[i+k] == 'T')) ||
+		     (l_pat[k] == 'H' && (chr[i+k] == 'G')) ||
+		     (l_pat[k] == 'B' && (chr[i+k] == 'A')) ||
+		     (l_pat[k] == 'V' && (chr[i+k] == 'T')) ||
+		     (l_pat[k] == 'D' && (chr[i+k] == 'C')) ||
+		     (l_pat[k] == 'A' && (chr[i+k] != 'A')) ||
+		     (l_pat[k] == 'G' && (chr[i+k] != 'G')) ||
+		     (l_pat[k] == 'C' && (chr[i+k] != 'C')) ||
+		     (l_pat[k] == 'T' && (chr[i+k] != 'T')) )
 			localflag |= 2;
-		k = pat_index[patternlen + j];
-		if ( (pat[k + patternlen] == 'R' && (chr[i+k] == 'C' || chr[i+k] == 'T')) ||
-		     (pat[k + patternlen] == 'Y' && (chr[i+k] == 'A' || chr[i+k] == 'G')) ||
-		     (pat[k + patternlen] == 'K' && (chr[i+k] == 'A' || chr[i+k] == 'C')) ||
-		     (pat[k + patternlen] == 'M' && (chr[i+k] == 'G' || chr[i+k] == 'T')) ||
-		     (pat[k + patternlen] == 'W' && (chr[i+k] == 'C' || chr[i+k] == 'G')) ||
-		     (pat[k + patternlen] == 'S' && (chr[i+k] == 'A' || chr[i+k] == 'T')) ||
-		     (pat[k + patternlen] == 'H' && (chr[i+k] == 'G')) ||
-		     (pat[k + patternlen] == 'B' && (chr[i+k] == 'A')) ||
-		     (pat[k + patternlen] == 'V' && (chr[i+k] == 'T')) ||
-		     (pat[k + patternlen] == 'D' && (chr[i+k] == 'C')) ||
-		     (pat[k + patternlen] == 'A' && (chr[i+k] != 'A')) ||
-		     (pat[k + patternlen] == 'G' && (chr[i+k] != 'G')) ||
-		     (pat[k + patternlen] == 'C' && (chr[i+k] != 'C')) ||
-		     (pat[k + patternlen] == 'T' && (chr[i+k] != 'T')) )
+		k = l_pat_index[patternlen + j];
+		if ( (l_pat[k + patternlen] == 'R' && (chr[i+k] == 'C' || chr[i+k] == 'T')) ||
+		     (l_pat[k + patternlen] == 'Y' && (chr[i+k] == 'A' || chr[i+k] == 'G')) ||
+		     (l_pat[k + patternlen] == 'K' && (chr[i+k] == 'A' || chr[i+k] == 'C')) ||
+		     (l_pat[k + patternlen] == 'M' && (chr[i+k] == 'G' || chr[i+k] == 'T')) ||
+		     (l_pat[k + patternlen] == 'W' && (chr[i+k] == 'C' || chr[i+k] == 'G')) ||
+		     (l_pat[k + patternlen] == 'S' && (chr[i+k] == 'A' || chr[i+k] == 'T')) ||
+		     (l_pat[k + patternlen] == 'H' && (chr[i+k] == 'G')) ||
+		     (l_pat[k + patternlen] == 'B' && (chr[i+k] == 'A')) ||
+		     (l_pat[k + patternlen] == 'V' && (chr[i+k] == 'T')) ||
+		     (l_pat[k + patternlen] == 'D' && (chr[i+k] == 'C')) ||
+		     (l_pat[k + patternlen] == 'A' && (chr[i+k] != 'A')) ||
+		     (l_pat[k + patternlen] == 'G' && (chr[i+k] != 'G')) ||
+		     (l_pat[k + patternlen] == 'C' && (chr[i+k] != 'C')) ||
+		     (l_pat[k + patternlen] == 'T' && (chr[i+k] != 'T')) )
 			localflag |= 1;
 		if (localflag == 3)
 			break;

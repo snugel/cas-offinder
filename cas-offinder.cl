@@ -5,12 +5,20 @@
 
 __kernel void finder(__global char* chr,
                      __constant char* pat, __constant int* pat_index, unsigned int patternlen,
-                     __global char* flag, __global unsigned int* entrycount, __global unsigned int* loci)
+                     __global char* flag, __global unsigned int* entrycount, __global unsigned int* loci,
+                     __local char* l_pat, __local int* l_pat_index)
 {
 	unsigned int i = get_global_id(0);
 	unsigned int j;
 	unsigned int old;
 	int k;
+
+	unsigned int li = i - get_group_id(0)*get_local_size(0);
+	if (li < patternlen*2) {
+		l_pat[li] = pat[li];
+		l_pat_index[li] = pat_index[li];
+	}
+	barrier(CLK_LOCAL_MEM_FENCE);
 
 	char localflag = 0;
 	for (j=0; j<patternlen; j++) {
@@ -62,7 +70,7 @@ __kernel void finder(__global char* chr,
 __kernel void comparer(__global char* chr, __global unsigned int* loci, __global unsigned int* mm_loci,
                        __constant char* comp, __constant int* comp_index, unsigned int patternlen, unsigned short threshold,
                        __global char* flag, __global unsigned short* mm_count, __global char* direction, __global unsigned int* entrycount,
-					   __local char* l_comp, __local int* l_comp_index)
+                       __local char* l_comp, __local int* l_comp_index)
 {
 	unsigned int i = get_global_id(0);
 	unsigned int j, lmm_count, old;

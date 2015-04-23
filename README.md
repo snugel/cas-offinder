@@ -275,6 +275,7 @@ Changelog
   - Removed cl.hpp due to lack of C++ binding support in the new OpenCL 2.0 standard.
   - Constant arguments are stored in constant or local memory, rather than global memory.
   - Added support for 2bit format.
+  - Removed kseq.h
   - Precise running time measurment on POSIX platform.
 * 2.2
   - Corrected a critical bug (when cas-offinder finds no binding sites in the given genome chunk, it crashes).
@@ -293,7 +294,7 @@ Changelog
 
 License
 -------
-Cas-OFFinder (except kseq.h and dirent.h) is licensed under the new BSD licence.
+Cas-OFFinder (except dirent.h) is licensed under the new BSD licence.
 
 Copyright (c) 2013, Jeongbin Park and Sangsu Bae
 All rights reserved.

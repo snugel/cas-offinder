@@ -45,7 +45,7 @@ void Cas_OFFinder::set_seq_flags(int* seq_flags, const cl_char* seq, size_t seql
 		seq_flags[n] = -1;
 }
 
-void Cas_OFFinder::initOpenCL(cl_device_type devtype) {
+void Cas_OFFinder::initOpenCL() {
 	unsigned int i;
 
 	cl_device_id devices[MAX_DEVICE_NUM];
@@ -53,7 +53,7 @@ void Cas_OFFinder::initOpenCL(cl_device_type devtype) {
 
 	m_devnum = 0;
 	for (i = 0; i < platform_cnt; i++) {
-		oclGetDeviceIDs(platforms[i], devtype, MAX_DEVICE_NUM - m_devnum, devices + m_devnum, &device_cnt);
+		oclGetDeviceIDs(platforms[i], m_devtype, MAX_DEVICE_NUM - m_devnum, devices + m_devnum, &device_cnt);
 		m_devnum += device_cnt;
 	}
 
@@ -72,8 +72,13 @@ void Cas_OFFinder::initOpenCL(cl_device_type devtype) {
 		m_contexts.push_back(context);
 		program = oclCreateProgramWithSource(context, 1, &program_src, &src_len);
 		oclBuildProgram(program, 1, &devices[i], "", 0, 0);
-		m_finderkernels.push_back(oclCreateKernel(program, "finder"));
-		m_comparerkernels.push_back(oclCreateKernel(program, "comparer"));
+        if (m_devtype == CL_DEVICE_TYPE_CPU) {
+		    m_finderkernels.push_back(oclCreateKernel(program, "finder_cpu"));
+		    m_comparerkernels.push_back(oclCreateKernel(program, "comparer_cpu"));
+        } else {
+            m_finderkernels.push_back(oclCreateKernel(program, "finder"));
+            m_comparerkernels.push_back(oclCreateKernel(program, "comparer"));
+        }
 		m_queues.push_back(oclCreateCommandQueue(m_contexts[i], devices[i], 0));
 		MAX_ALLOC_MEMORY.push_back(0);
 		oclGetDeviceInfo(devices[i], CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(cl_ulong), &MAX_ALLOC_MEMORY[i], 0);
@@ -82,7 +87,8 @@ void Cas_OFFinder::initOpenCL(cl_device_type devtype) {
 }
 
 Cas_OFFinder::Cas_OFFinder(cl_device_type devtype) {
-	initOpenCL(devtype);
+    m_devtype = devtype;
+    initOpenCL();
 }
 
 Cas_OFFinder::~Cas_OFFinder() {
@@ -283,7 +289,7 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 		unsigned long long loci;
 
 		char comp_symbol[2] = { '+', '-' };
-
+        
 		ofstream fo(outfilename, ios::out | ios::app);
 		unsigned long long localanalyzedsize = 0;
 		unsigned int cnt = 0;
@@ -426,16 +432,19 @@ void Cas_OFFinder::readInputFile(const char* inputfile) {
 		oclSetKernelArg(m_finderkernels[dev_index], 2, sizeof(cl_mem), &m_patternflagbufs[dev_index]);
 		oclSetKernelArg(m_finderkernels[dev_index], 3, sizeof(cl_uint), &m_patternlen);
 		oclSetKernelArg(m_finderkernels[dev_index], 5, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
-		oclSetKernelArg(m_finderkernels[dev_index], 7, sizeof(cl_char) * m_patternlen * 2, 0);
-		oclSetKernelArg(m_finderkernels[dev_index], 8, sizeof(cl_int) * m_patternlen * 2, 0);
 
 		oclSetKernelArg(m_comparerkernels[dev_index], 3, sizeof(cl_mem), &m_comparebufs[dev_index]);
 		oclSetKernelArg(m_comparerkernels[dev_index], 4, sizeof(cl_mem), &m_compareflagbufs[dev_index]);
 		oclSetKernelArg(m_comparerkernels[dev_index], 5, sizeof(cl_uint), &m_patternlen);
 		oclSetKernelArg(m_comparerkernels[dev_index], 10, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
-		oclSetKernelArg(m_comparerkernels[dev_index], 11, sizeof(cl_char) * m_patternlen * 2, 0);
-		oclSetKernelArg(m_comparerkernels[dev_index], 12, sizeof(cl_int) * m_patternlen * 2, 0);
-	}
+
+        if (m_devtype != CL_DEVICE_TYPE_CPU) {
+            oclSetKernelArg(m_finderkernels[dev_index], 7, sizeof(cl_char) * m_patternlen * 2, 0);
+            oclSetKernelArg(m_finderkernels[dev_index], 8, sizeof(cl_int) * m_patternlen * 2, 0);
+            oclSetKernelArg(m_comparerkernels[dev_index], 11, sizeof(cl_char) * m_patternlen * 2, 0);
+            oclSetKernelArg(m_comparerkernels[dev_index], 12, sizeof(cl_int) * m_patternlen * 2, 0);
+        }
+    }
 
 	delete[] cl_pattern;
 	delete[] cl_pattern_flags;

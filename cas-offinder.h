@@ -19,6 +19,8 @@ static cl_uint platform_cnt;
 
 class Cas_OFFinder {
 private:
+    cl_device_type m_devtype;
+
 	vector<cl_command_queue> m_queues;
 	vector<cl_context> m_contexts;
 	vector<cl_ulong> MAX_ALLOC_MEMORY; // on device, in bytes
@@ -74,7 +76,7 @@ private:
 
 	void set_complementary_sequence(cl_char* seq, size_t seqlen);
 	void set_seq_flags(int* seq_flags, const cl_char* seq, size_t seqlen);
-	void initOpenCL(cl_device_type devtype);
+	void initOpenCL();
 
 public:
 	vector<string> chrnames;

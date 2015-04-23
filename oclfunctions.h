@@ -84,7 +84,25 @@ void oclBuildProgram(cl_program program,
 	cl_int err = clBuildProgram(program, num_devices, device_list, options, pfn_notify, user_data);
 	if (err != CL_SUCCESS) {
 		cout << "clBuildProgram Failed: " << err << endl;
-		exit(1);
+        if (err == CL_BUILD_PROGRAM_FAILURE) {
+            for (int i = 0; i < num_devices; i++) {
+                // Determine the size of the log
+                size_t log_size;
+                clGetProgramBuildInfo(program, device_list[i], CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+
+                // Allocate memory for the log
+                char *log = (char *)malloc(log_size);
+
+                // Get the log
+                clGetProgramBuildInfo(program, device_list[i], CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+
+                // Print the log
+                printf("Log from device %d:\n", i);
+                printf("%s\n", log);
+                free(log);
+            }
+        }
+        exit(1);
 	}
 }
 

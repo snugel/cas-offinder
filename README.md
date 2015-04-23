@@ -273,7 +273,7 @@ Changelog
 -------
 * 2.3
   - Removed cl.hpp due to lack of C++ binding support in the new OpenCL 2.0 standard.
-  - Constant arguments are now stored in constant space , rather than global space.
+  - Constant arguments are now stored in constant or local memory, rather than global memory.
 * 2.2
   - Corrected a critical bug (when cas-offinder finds no binding sites in the given genome chunk, it crashes).
   - Now Cas-OFFinder reads whole fasta file at once, in order to achieve faster searching speed when it searches in FASTA files which contain many small scaffolds.

@@ -17,6 +17,8 @@ int read_fasta(string &filepath, vector<string> &chrnames, string &content, vect
 	input.seekg(0, input.beg);
 	while (getline(input, line).good()){
 		if (!line.empty()) {
+			if (line[line.length()-1] == '\r')
+				line = line.substr(0, line.length()-1);
 			if (line[0] == '>') { // Identifier marker
 				name = line.substr(1);
 				//if (((cnt++) % 10000) == 0) cout << "Reading " << name << endl;

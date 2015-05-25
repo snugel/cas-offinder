@@ -390,13 +390,22 @@ void Cas_OFFinder::readInputFile(const char* inputfile) {
 	if (!fi.good()) {
 		exit(0);
 	}
+
 	if (!fi.eof())
 		getline(fi, chrdir);
+	if (chrdir[chrdir.length()-1] == '\r')
+		chrdir = chrdir.substr(0, chrdir.length()-1);
+
 	if (!fi.eof())
 		getline(fi, pattern);
+	if (pattern[pattern.length()-1] == '\r')
+		pattern = pattern.substr(0, pattern.length()-1);
+
 	transform(pattern.begin(), pattern.end(), pattern.begin(), ::toupper);
 	while (getline(fi, line).good()) {
 		if (line.empty()) break;
+		if (line[line.length()-1] == '\r')
+			line = line.substr(0, line.length()-1);
 		sline = split(line);
 		transform(sline[0].begin(), sline[0].end(), sline[0].begin(), ::toupper);
 		m_compares.push_back(sline[0]);

@@ -182,8 +182,10 @@ bool Cas_OFFinder::loadNextChunk() {
 
 void Cas_OFFinder::findPattern() {
 	unsigned int dev_index;
+	cl_uint zero = 0;
 	for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
 		const size_t worksize = (size_t)m_worksizes[dev_index];
+		oclEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
 		oclEnqueueNDRangeKernel(m_queues[dev_index], m_finderkernels[dev_index], 1, 0, &worksize, 0, 0, 0, 0);
 	}
 

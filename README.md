@@ -32,6 +32,7 @@ PAM sites:
 * __SpCas9__ from *Streptococcus pyogenes*: 5’-NGG-3’ (to a lesser extent, 5’-NAG-3’)
 * __StCas9__ from *Streptococcus thermophilus*: 5’-NNAGAAW-3’ (W = A or T)
 * __NmCas9__ from *Neisseria meningitidis*:5’-NNNNGMTT-3’ (M = A or C)
+* __SaCas9__ from *Staphylococcus aureus*: 5’-NNGRRT-3’ (R = A or G)
 
 Usage
 -------

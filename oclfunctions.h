@@ -1,7 +1,7 @@
 #include <CL/cl.h>
 #include <iostream>
 #include <vector>
-
+#pragma warning (disable : 4996)
 using namespace std;
 
 cl_mem oclCreateBuffer(cl_context context,

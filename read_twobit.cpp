@@ -47,7 +47,7 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 	vector<unsigned int> nblockstarts;
 	vector<unsigned int> nblocksizes;
 	
-	FILE *input = fopen(filepath.c_str(), "r");
+	FILE *input = fopen(filepath.c_str(), "rb");
 	if (read_uint(input) != 440477507) { // Magic
 		fclose(input);
 		return 1;

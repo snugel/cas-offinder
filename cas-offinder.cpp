@@ -404,7 +404,7 @@ void Cas_OFFinder::readInputFile(const char* inputfile) {
 		pattern = pattern.substr(0, pattern.length()-1);
 
 	transform(pattern.begin(), pattern.end(), pattern.begin(), ::toupper);
-	while (getline(fi, line).good()) {
+	while (getline(fi, line)) {
 		if (line.empty()) break;
 		if (line[line.length()-1] == '\r')
 			line = line.substr(0, line.length()-1);

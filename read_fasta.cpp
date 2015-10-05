@@ -15,7 +15,7 @@ int read_fasta(string &filepath, vector<string> &chrnames, string &content, vect
 		return 1;
 	}
 	input.seekg(0, input.beg);
-	while (getline(input, line).good()){
+	while (getline(input, line)){
 		if (!line.empty()) {
 			if (line[line.length()-1] == '\r')
 				line = line.substr(0, line.length()-1);

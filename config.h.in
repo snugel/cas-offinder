@@ -1,7 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #cmakedefine HAVE_DIRENT_H
-#cmakedefine HAVE_CL_HPP
 #cmakedefine BUILD_FOR_SNUCL
 
 #ifdef BUILD_FOR_SNUCL
@@ -15,8 +14,5 @@
 #include "ext/dirent.h"
 #endif
 
-#ifdef HAVE_CL_HPP
-#include <CL/cl.hpp>
-#else
-#include "ext/cl.hpp"
-#endif
+#define MAX_PLATFORM_NUM 10
+#define MAX_DEVICE_NUM 1000

@@ -1,4 +1,9 @@
-#include <CL/cl.h>
+#ifdef __APPLE__
+#  include <OpenCL/cl.h>
+#  define CL_CALLBACK
+#else
+#  include <CL/cl.h>
+#endif
 #include <iostream>
 #include <vector>
 #pragma warning (disable : 4996)

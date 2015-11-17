@@ -6,7 +6,11 @@
 #include <fstream>
 #include <algorithm>
 
-#include <CL/cl.h>
+#ifdef __APPLE__
+#  include <OpenCL/cl.h>
+#else
+#  include <CL/cl.h>
+#endif
 
 #ifndef MIN
 #define MIN(a,b) ( ((a)<(b))?(a):(b) )

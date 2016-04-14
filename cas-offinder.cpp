@@ -311,7 +311,7 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 							strncpy(strbuf, (char *)(chrdata.c_str() + loci), m_patternlen);
 							if (m_directions[dev_index][i] == '-') set_complementary_sequence((cl_char *)strbuf, m_patternlen);
 							indicate_mismatches((cl_char*)strbuf, (cl_char*)m_compares[compcnt].c_str());
-							for (j = 0; ((j < chrpos.size()) && (loci > chrpos[j])); j++) idx = j;
+							for (j = 0; ((j < chrpos.size()) && (loci >= chrpos[j])); j++) idx = j;
 							fo << m_compares[compcnt] << "\t" << chrnames[idx] << "\t" << loci - chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
 						}
 					}

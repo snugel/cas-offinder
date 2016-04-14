@@ -45,16 +45,18 @@ void Cas_OFFinder::set_seq_flags(int* seq_flags, const cl_char* seq, size_t seql
 		seq_flags[n] = -1;
 }
 
-void Cas_OFFinder::initOpenCL() {
+void Cas_OFFinder::initOpenCL(int maxdevnum) {
 	unsigned int i;
 
-	cl_device_id devices[MAX_DEVICE_NUM];
+	cl_device_id* devices = new cl_device_id[maxdevnum];
 	cl_uint device_cnt;
 
 	m_devnum = 0;
 	for (i = 0; i < platform_cnt; i++) {
-		oclGetDeviceIDs(platforms[i], m_devtype, MAX_DEVICE_NUM - m_devnum, devices + m_devnum, &device_cnt);
-		m_devnum += device_cnt;
+		if (maxdevnum - m_devnum > 0) {
+			oclGetDeviceIDs(platforms[i], m_devtype, maxdevnum - m_devnum, devices + m_devnum, &device_cnt);
+			m_devnum += device_cnt;
+		}
 	}
 
 	if (m_devnum == 0) {
@@ -83,12 +85,13 @@ void Cas_OFFinder::initOpenCL() {
 		MAX_ALLOC_MEMORY.push_back(0);
 		oclGetDeviceInfo(devices[i], CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(cl_ulong), &MAX_ALLOC_MEMORY[i], 0);
 	}
+	delete[] devices;
 	cout << "Total " << m_devnum << " device(s) found." << endl;
 }
 
-Cas_OFFinder::Cas_OFFinder(cl_device_type devtype) {
+Cas_OFFinder::Cas_OFFinder(cl_device_type devtype, int maxdevnum) {
     m_devtype = devtype;
-    initOpenCL();
+    initOpenCL(maxdevnum);
 }
 
 Cas_OFFinder::~Cas_OFFinder() {
@@ -335,12 +338,12 @@ void Cas_OFFinder::init_platforms() {
 }
 void Cas_OFFinder::print_usage() {
 	unsigned int i, j;
-	cout << "Cas-OFFinder v2.3 (" << __DATE__ << ")" << endl <<
+	cout << "Cas-OFFinder v2.4 (" << __DATE__ << ")" << endl <<
 		endl <<
 		"Copyright (c) 2013 Jeongbin Park and Sangsu Bae" << endl <<
 		"Website: http://github.com/snugel/cas-offinder" << endl <<
 		endl <<
-		"Usage: cas-offinder {input_file} {C|G|A} {output_file}" << endl <<
+		"Usage: cas-offinder {input_file} {C|G|A}[max_device_count] {output_file}" << endl <<
 		"(C: using CPUs, G: using GPUs, A: using accelerators)" << endl <<
 		endl <<
 		"Example input file:" << endl <<

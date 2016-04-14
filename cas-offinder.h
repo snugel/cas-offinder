@@ -80,7 +80,7 @@ private:
 
 	void set_complementary_sequence(cl_char* seq, size_t seqlen);
 	void set_seq_flags(int* seq_flags, const cl_char* seq, size_t seqlen);
-	void initOpenCL();
+	void initOpenCL(int maxdevnum);
 
 public:
 	vector<string> chrnames;
@@ -89,7 +89,7 @@ public:
 
 	string chrdir;
 
-	Cas_OFFinder(cl_device_type devtype);
+	Cas_OFFinder(cl_device_type devtype, int maxdevnum);
 	~Cas_OFFinder();
 
 	void setChrData();

@@ -45,6 +45,7 @@ int main(int argc, char *argv[]) {
 	DIR* dir;
 	dirent *ent;
 	unsigned int cnt;
+	int maxdevnum = MAX_DEVICE_NUM;
 
 	Cas_OFFinder::init_platforms();
 
@@ -68,7 +69,18 @@ int main(int argc, char *argv[]) {
 		error_exit(2, "Unknown option: ", argv[2]);
 	}
 
-	Cas_OFFinder s(devtype);
+	int devarglen = strlen(argv[2]);
+	if (devarglen > 1) {
+		char* num = (char *)malloc(devarglen * sizeof(char));
+		strcpy(num, argv[2]+1);
+		try {
+			maxdevnum = atoi(num);
+		} catch(...) {
+			error_exit(2, "Unknown option: ", argv[2]);
+		}
+	}
+
+	Cas_OFFinder s(devtype, maxdevnum);
 
 	cout << "Loading input file..." << endl;
 	s.readInputFile(argv[1]);

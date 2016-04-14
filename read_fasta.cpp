@@ -36,7 +36,7 @@ int read_fasta(string &filepath, vector<string> &chrnames, string &content, vect
 				line = line.substr(0, line.length()-1);
 			if (line[0] == '>') { // Identifier marker
 				name = line.substr(1);
-				//if (((cnt++) % 10000) == 0) cout << "Reading " << name << endl;
+				//if (((cnt++) % 10000) == 0) cerr << "Reading " << name << endl;
 				chrnames.push_back(name);
 				if (chrpos.size() != 0) content += ";"; // seperator
 				chrpos.push_back(content.size());
@@ -47,7 +47,7 @@ int read_fasta(string &filepath, vector<string> &chrnames, string &content, vect
 					content += line;
 				}
 				catch (const std::bad_alloc&) {
-					cout << "File is too big!" << endl << "Split FASTA file, or try 64bit version of Cas-OFFinder." << endl;
+					cerr << "File is too big!" << endl << "Split FASTA file, or try 64bit version of Cas-OFFinder." << endl;
 					exit(1);
 				}
 			}

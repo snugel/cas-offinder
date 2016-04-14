@@ -1,11 +1,26 @@
 #include "read_fasta.h"
 
+#ifndef _WIN32
+  #include <unistd.h> // readlink
+  #include <limits.h> // PATH_MAX
+  #include <cstring> // memset
+#endif
+
 using namespace std;
 
 int read_fasta(string &filepath, vector<string> &chrnames, string &content, vector<unsigned long long> &chrpos) {
 	string line, name;
 	ifstream input;
+#ifdef _WIN32
 	input.open(filepath.c_str());
+#else
+	char path_buf[PATH_MAX+1]; memset(path_buf, 0, PATH_MAX + 1);
+	int path_cnt = readlink(filepath.c_str(), path_buf, PATH_MAX);
+	if (path_cnt >= 0)
+		input.open(buf);
+	else
+		input.open(filepath.c_str());
+#endif
 	chrnames.clear();
 	content.clear();
 	chrpos.clear();

@@ -6,6 +6,11 @@
 #include <cstdlib>
 #include <cstring> // memset
 
+#ifndef _WIN32
+#include <unistd.h> // readlink
+#include <limits.h> // PATH_MAX
+#endif
+
 using namespace std;
 
 typedef union {
@@ -46,8 +51,18 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 	char chrname[256];
 	vector<unsigned int> nblockstarts;
 	vector<unsigned int> nblocksizes;
-	
+
+#ifdef _WIN32
 	FILE *input = fopen(filepath.c_str(), "rb");
+#else
+	char path_buf[PATH_MAX + 1]; memset(path_buf, 0, PATH_MAX + 1);
+	int path_cnt = readlink(filepath.c_str(), path_buf, PATH_MAX);
+	if (path_cnt >= 0)
+		FILE *input = fopen(buf, "rb");
+	else
+		FILE *input = fopen(filepath.c_str(), "rb");
+#endif
+
 	if (read_uint(input) != 440477507) { // Magic
 		fclose(input);
 		return 1;

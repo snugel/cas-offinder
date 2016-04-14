@@ -17,7 +17,7 @@ int read_fasta(string &filepath, vector<string> &chrnames, string &content, vect
 	char path_buf[PATH_MAX+1]; memset(path_buf, 0, PATH_MAX + 1);
 	int path_cnt = readlink(filepath.c_str(), path_buf, PATH_MAX);
 	if (path_cnt >= 0)
-		input.open(buf);
+		input.open(path_buf);
 	else
 		input.open(filepath.c_str());
 #endif

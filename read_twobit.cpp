@@ -55,12 +55,13 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 #ifdef _WIN32
 	FILE *input = fopen(filepath.c_str(), "rb");
 #else
+	FILE *input;
 	char path_buf[PATH_MAX + 1]; memset(path_buf, 0, PATH_MAX + 1);
 	int path_cnt = readlink(filepath.c_str(), path_buf, PATH_MAX);
 	if (path_cnt >= 0)
-		FILE *input = fopen(buf, "rb");
+		input = fopen(path_buf, "rb");
 	else
-		FILE *input = fopen(filepath.c_str(), "rb");
+		input = fopen(filepath.c_str(), "rb");
 #endif
 
 	if (read_uint(input) != 440477507) { // Magic

@@ -27,8 +27,8 @@ void error_exit(int nargs, ...) {
 	va_list errmsgs;
 	va_start(errmsgs, nargs);
 	for (int i=1; i<=nargs; i++)
-		cout << (char*)(va_arg(errmsgs, char*));
-	cout << endl;
+		cerr << (char*)(va_arg(errmsgs, char*));
+	cerr << endl;
 	va_end(errmsgs);
 	exit(1);
 }
@@ -41,22 +41,22 @@ int check_file(const char* filename) {
 void run_cas_offinder(Cas_OFFinder &s, const char* chromfilename, const char* outfilename, int *cnum) {
 	string filepath = chromfilename;
 
-	cout << "Reading " << filepath << "..." << endl;
+	cerr << "Reading " << filepath << "..." << endl;
 	
 	if (read_fasta(filepath, s.chrnames, s.chrdata, s.chrpos)) {
 		if (read_twobit(filepath, s.chrnames, s.chrdata, s.chrpos)) {
-			cout << "Skipping non-acceptable file " << filepath << "..." << endl;
+			cerr << "Skipping non-acceptable file " << filepath << "..." << endl;
 			return;
 		}
 	}
-	cout << "Sending data to devices..." << endl;
+	cerr << "Sending data to devices..." << endl;
 	s.setChrData();
-	cout << "Chunk load started." << endl;
+	cerr << "Chunk load started." << endl;
 	while (s.loadNextChunk()) {
 		// Find patterns in the chunk
-		cout << "Finding pattern in chunk #" << ++(*cnum) << "..." << endl;
+		cerr << "Finding pattern in chunk #" << ++(*cnum) << "..." << endl;
 		s.findPattern();
-		cout << "Comparing patterns in chunk #" << *cnum << "..." << endl;
+		cerr << "Comparing patterns in chunk #" << *cnum << "..." << endl;
 		s.compareAll(outfilename);
 		s.releaseLociinfo();
 	}
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
 
 	Cas_OFFinder s(devtype, maxdevnum);
 
-	cout << "Loading input file..." << endl;
+	cerr << "Loading input file..." << endl;
 	s.readInputFile(argv[1]);
 
 	outfilename = argv[3]; remove(argv[3]);
@@ -140,6 +140,6 @@ int main(int argc, char *argv[]) {
 	gettimeofday(&end, NULL);
 	seconds = (float)((end.tv_sec + (end.tv_usec / 1000000.0)) - (start.tv_sec + (start.tv_usec / 1000000.0)));
 #endif
-	cout << seconds << " seconds elapsed." << endl;
+	cerr << seconds << " seconds elapsed." << endl;
 	return 0;
 }

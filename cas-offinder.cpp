@@ -62,7 +62,7 @@ void Cas_OFFinder::initOpenCL(int maxdevnum) {
 	}
 
 	if (m_devnum == 0) {
-		cout << "No OpenCL devices found." << endl;
+		cerr << "No OpenCL devices found." << endl;
 		exit(1);
 	}
 
@@ -88,7 +88,7 @@ void Cas_OFFinder::initOpenCL(int maxdevnum) {
 		oclGetDeviceInfo(devices[i], CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(cl_ulong), &MAX_ALLOC_MEMORY[i], 0);
 	}
 	delete[] devices;
-	cout << "Total " << m_devnum << " device(s) found." << endl;
+	cerr << "Total " << m_devnum << " device(s) found." << endl;
 }
 
 Cas_OFFinder::Cas_OFFinder(cl_device_type devtype, int maxdevnum) {
@@ -133,7 +133,7 @@ void Cas_OFFinder::setChrData() {
 			((m_chrdatasize / m_devnum) + ((m_chrdatasize%m_devnum == 0) ? 0 : 1))
 			)
 			); // No more than maximum allocation per device
-		// cout << "Dicesize: " << m_dicesizes[dev_index] << endl;
+		// cerr << "Dicesize: " << m_dicesizes[dev_index] << endl;
 		m_chrdatabufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), 0));
 		m_flagbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_dicesizes[dev_index], 0));
 		m_locibufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_dicesizes[dev_index], 0));
@@ -167,7 +167,7 @@ bool Cas_OFFinder::loadNextChunk() {
 			m_totalanalyzedsize += tailsize;
 			m_worksizes.push_back(tailsize);
 #ifdef DEBUG
-			cout << "Worksize: " << m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
+			cerr << "Worksize: " << m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
 #endif
 			break;
 		}
@@ -176,11 +176,11 @@ bool Cas_OFFinder::loadNextChunk() {
 			m_totalanalyzedsize += m_dicesizes[dev_index];
 			m_worksizes.push_back(m_dicesizes[dev_index]);
 #ifdef DEBUG
-			cout << "Worksize: " << m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
+			cerr << "Worksize: " << m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
 #endif
 		}
 	}
-	cout << m_activedevnum << " devices selected to analyze..." << endl;
+	cerr << m_activedevnum << " devices selected to analyze..." << endl;
 
 	return true;
 }
@@ -296,8 +296,14 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 		unsigned long long loci;
 
 		char comp_symbol[2] = { '+', '-' };
-        
-		ofstream fo(outfilename, ios::out | ios::app);
+		bool isfile = false;
+		ostream *fo;
+		if (strlen(outfilename) == 1 && outfilename[0] == '-') {
+			fo = &cout;
+		} else {
+			fo = new ofstream(outfilename, ios::out | ios::app);
+			isfile = true;
+		}
 		unsigned long long localanalyzedsize = 0;
 		unsigned int cnt = 0;
 		unsigned int idx;
@@ -317,14 +323,14 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 							if (m_directions[dev_index][i] == '-') set_complementary_sequence((cl_char *)strbuf, m_patternlen);
 							indicate_mismatches((cl_char*)strbuf, (cl_char*)m_compares[compcnt].c_str());
 							for (j = 0; ((j < chrpos.size()) && (loci >= chrpos[j])); j++) idx = j;
-							fo << m_compares[compcnt] << "\t" << chrnames[idx] << "\t" << loci - chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
+							(*fo) << m_compares[compcnt] << "\t" << chrnames[idx] << "\t" << loci - chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
 						}
 					}
 				}
 			}
 			localanalyzedsize += m_worksizes[dev_index];
 		}
-		fo.close();
+		if (isfile) ((ofstream *)fo)->close();
 	}
 	delete [] strbuf;
 	delete [] cl_compare;
@@ -334,7 +340,7 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 void Cas_OFFinder::init_platforms() {
 	oclGetPlatformIDs(MAX_PLATFORM_NUM, platforms, &platform_cnt);
 	if (platform_cnt == 0) {
-		cout << "No OpenCL platforms found. Check OpenCL installation!" << endl;
+		cerr << "No OpenCL platforms found. Check OpenCL installation!" << endl;
 		exit(1);
 	}
 }

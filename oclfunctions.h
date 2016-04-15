@@ -17,7 +17,7 @@ cl_mem oclCreateBuffer(cl_context context,
 	cl_int err;
 	cl_mem mem = clCreateBuffer(context, flags, size, host_ptr, &err);
 	if (err != CL_SUCCESS) {
-		cout << "clCreateBuffer Failed: " << err << endl;
+		cerr << "clCreateBuffer Failed: " << err << endl;
 		exit(1);
 	}
 	return mem;
@@ -29,7 +29,7 @@ void oclGetPlatformIDs(cl_uint num_entries,
 {
 	cl_int err = clGetPlatformIDs(num_entries, platforms, num_platforms);
 	if (err != CL_SUCCESS) {
-		cout << "clGetPlatformIDs Failed: " << err << endl;
+		cerr << "clGetPlatformIDs Failed: " << err << endl;
 		exit(1);
 	}
 }
@@ -41,7 +41,7 @@ void oclGetDeviceIDs(cl_platform_id platform,
 {
 	cl_int err = clGetDeviceIDs(platform, device_type, num_entries, devices, num_devices);
 	if (err != CL_SUCCESS && err != CL_DEVICE_NOT_FOUND) {
-		cout << "clGetDeviceIDs Failed: " << err << endl;
+		cerr << "clGetDeviceIDs Failed: " << err << endl;
 		exit(1);
 	}
 }
@@ -60,7 +60,7 @@ cl_context oclCreateContext(cl_context_properties *properties,
 	cl_int err;
 	cl_context context = clCreateContext(properties, num_devices, devices, pfn_notify, user_data, &err);
 	if (err != CL_SUCCESS) {
-		cout << "clCreateContext Failed: " << err << endl;
+		cerr << "clCreateContext Failed: " << err << endl;
 		exit(1);
 	}
 	return context;
@@ -74,7 +74,7 @@ cl_program oclCreateProgramWithSource(cl_context context,
 	cl_int err;
 	cl_program program = clCreateProgramWithSource(context, count, strings, lengths, &err);
 	if (err != CL_SUCCESS) {
-		cout << "clCreateProgramWithSource Failed: " << err << endl;
+		cerr << "clCreateProgramWithSource Failed: " << err << endl;
 		exit(1);
 	}
 	return program;
@@ -88,7 +88,7 @@ void oclBuildProgram(cl_program program,
 	void *user_data) {
 	cl_int err = clBuildProgram(program, num_devices, device_list, options, pfn_notify, user_data);
 	if (err != CL_SUCCESS) {
-		cout << "clBuildProgram Failed: " << err << endl;
+		cerr << "clBuildProgram Failed: " << err << endl;
         if (err == CL_BUILD_PROGRAM_FAILURE) {
             for (int i = 0; i < num_devices; i++) {
                 // Determine the size of the log
@@ -117,7 +117,7 @@ cl_kernel oclCreateKernel(cl_program  program,
 	cl_int err;
 	cl_kernel kernel = clCreateKernel(program, kernel_name, &err);
 	if (err != CL_SUCCESS) {
-		cout << "clCreateKernel Failed: " << err << endl;
+		cerr << "clCreateKernel Failed: " << err << endl;
 		exit(1);
 	}
 	return kernel;
@@ -130,7 +130,7 @@ cl_command_queue oclCreateCommandQueue(cl_context context,
 	cl_int err;
 	cl_command_queue command_queue = clCreateCommandQueue(context, device, properties, &err);
 	if (err != CL_SUCCESS) {
-		cout << "clCreateCommandQueue Failed: " << err << endl;
+		cerr << "clCreateCommandQueue Failed: " << err << endl;
 		exit(1);
 	}
 	return command_queue;
@@ -144,7 +144,7 @@ void oclGetDeviceInfo(cl_device_id device,
 {
 	cl_int err = clGetDeviceInfo(device, param_name, param_value_size, param_value, param_value_size_ret);
 	if (err != CL_SUCCESS) {
-		cout << "clGetDeviceInfo Failed: " << err << endl;
+		cerr << "clGetDeviceInfo Failed: " << err << endl;
 		exit(1);
 	}
 }
@@ -155,7 +155,7 @@ void oclReleaseKernel(cl_kernel kernel)
 	if (kernel != 0) {
 		err = clReleaseKernel(kernel);
 		if (err != CL_SUCCESS) {
-			cout << "clReleaseKernel Failed: " << err << endl;
+			cerr << "clReleaseKernel Failed: " << err << endl;
 			exit(1);
 		}
 	}
@@ -167,7 +167,7 @@ void oclReleaseCommandQueue(cl_command_queue command_queue)
 	if (command_queue != 0) {
 		err = clReleaseCommandQueue(command_queue);
 		if (err != CL_SUCCESS) {
-			cout << "clReleaseCommandQueue Failed: " << err << endl;
+			cerr << "clReleaseCommandQueue Failed: " << err << endl;
 			exit(1);
 		}
 	}
@@ -179,7 +179,7 @@ void oclReleaseContext(cl_context context)
 	if (context != 0) {
 		err = clReleaseContext(context);
 		if (err != CL_SUCCESS) {
-			cout << "clReleaseContext Failed: " << err << endl;
+			cerr << "clReleaseContext Failed: " << err << endl;
 			exit(1);
 		}
 	}
@@ -197,7 +197,7 @@ void oclEnqueueWriteBuffer(cl_command_queue command_queue,
 {
 	cl_int err = clEnqueueWriteBuffer(command_queue, buffer, blocking_write, offset, cb, ptr, num_events_in_wait_list, event_wait_list, event);
 	if (err != CL_SUCCESS) {
-		cout << "clEnqueueWriteBuffer Failed: " << err << endl;
+		cerr << "clEnqueueWriteBuffer Failed: " << err << endl;
 		exit(1);
 	}
 }
@@ -206,7 +206,7 @@ void oclFinish(cl_command_queue command_queue)
 {
 	cl_int err = clFinish(command_queue);
 	if (err != CL_SUCCESS) {
-		cout << "clFinish Failed: " << err << endl;
+		cerr << "clFinish Failed: " << err << endl;
 		exit(1);
 	}
 }
@@ -218,7 +218,7 @@ void oclSetKernelArg(cl_kernel kernel,
 {
 	cl_int err = clSetKernelArg(kernel, arg_index, arg_size, arg_value);
 	if (err != CL_SUCCESS) {
-		cout << "clSetKernelArg Failed: " << err << endl;
+		cerr << "clSetKernelArg Failed: " << err << endl;
 		exit(1);
 	}
 }
@@ -235,7 +235,7 @@ void oclEnqueueNDRangeKernel(cl_command_queue command_queue,
 {
 	cl_int err = clEnqueueNDRangeKernel(command_queue, kernel, work_dim, global_work_offset, global_work_size, local_work_size, num_events_in_wait_list, event_wait_list, event);
 	if (err != CL_SUCCESS) {
-		cout << "clEnqueueNDRangeKernel Failed: " << err << endl;
+		cerr << "clEnqueueNDRangeKernel Failed: " << err << endl;
 		exit(1);
 	}
 }
@@ -252,7 +252,7 @@ void oclEnqueueReadBuffer(cl_command_queue command_queue,
 {
 	cl_int err = clEnqueueReadBuffer(command_queue, buffer, blocking_read, offset, cb, ptr, num_events_in_wait_list, event_wait_list, event);
 	if (err != CL_SUCCESS) {
-		cout << "clEnqueueReadBuffer Failed: " << err << endl;
+		cerr << "clEnqueueReadBuffer Failed: " << err << endl;
 		exit(1);
 	}
 }
@@ -265,7 +265,7 @@ void clearbufvec(vector<cl_mem> *bufvec)
 		if ((*bufvec)[i] != 0) {
 			err = clReleaseMemObject((*bufvec)[i]);
 			if (err != CL_SUCCESS) {
-				cout << "clReleaseMemObject Failed: " << err << endl;
+				cerr << "clReleaseMemObject Failed: " << err << endl;
 				exit(1);
 			}
 		}

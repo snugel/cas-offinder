@@ -50,12 +50,14 @@ void Cas_OFFinder::initOpenCL(int maxdevnum) {
 
 	cl_device_id* devices = new cl_device_id[maxdevnum];
 	cl_uint device_cnt;
+	unsigned int platform_maxdevnum;
 
 	m_devnum = 0;
 	for (i = 0; i < platform_cnt; i++) {
-		if (maxdevnum - m_devnum > 0) {
-			oclGetDeviceIDs(platforms[i], m_devtype, maxdevnum - m_devnum, devices + m_devnum, &device_cnt);
-			m_devnum += device_cnt;
+		platform_maxdevnum = maxdevnum - m_devnum;
+		if (platform_maxdevnum > 0) {
+			oclGetDeviceIDs(platforms[i], m_devtype, platform_maxdevnum, devices + m_devnum, &device_cnt);
+			m_devnum += MIN(device_cnt, platform_maxdevnum);
 		}
 	}
 

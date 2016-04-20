@@ -49,7 +49,7 @@ void Cas_OFFinder::initOpenCL() {
 	unsigned int i;
 
 	cl_device_id devices[MAX_DEVICE_NUM];
-	cl_uint device_cnt = 0;
+	cl_uint device_cnt;
 
 	m_devnum = 0;
 	for (i = 0; i < platform_cnt; i++) {

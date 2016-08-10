@@ -109,7 +109,7 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 
 		if (rem) {
 			for (j=0; j<rem; j++)
-				chrbuf[chrlen-rem+j] = bit_to_seq((raw_chrbuf[rawlen-rem+j]>>((3-j)*2))&0x3);
+				chrbuf[chrlen-rem+j] = bit_to_seq((raw_chrbuf[rawlen-1]>>((3-j)*2))&0x3);
 		}
 
 		for (j=0; j<nblockcnt; j++) {

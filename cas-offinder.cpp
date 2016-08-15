@@ -8,6 +8,20 @@
 
 using namespace std;
 
+vector<string> split(string const &input) {
+    istringstream sbuffer(input);
+    vector<string> ret((istream_iterator<string>(sbuffer)), istream_iterator<string>());
+    return ret;
+}
+
+vector<string> split(string const &input, char delim) {
+    istringstream sbuffer(input);
+    vector<string> ret;
+    string item;
+    while (getline(sbuffer, item, delim)) ret.push_back(item);
+	return ret;
+}
+
 void Cas_OFFinder::set_complementary_sequence(cl_char* seq, size_t seqlen) {
 	size_t i, l = 0;
 	cl_char tmp;
@@ -45,20 +59,28 @@ void Cas_OFFinder::set_seq_flags(int* seq_flags, const cl_char* seq, size_t seql
 		seq_flags[n] = -1;
 }
 
-void Cas_OFFinder::initOpenCL() {
-	unsigned int i;
+void Cas_OFFinder::initOpenCL(vector<int> dev_ids) {
+	unsigned int i, j;
 
-	cl_device_id devices[MAX_DEVICE_NUM];
+	cl_device_id* found_devices = new cl_device_id[MAX_DEVICE_NUM];
 	cl_uint device_cnt;
+	unsigned int platform_maxdevnum;
 
-	m_devnum = 0;
+    unsigned int dev_id = 0;
+    vector<cl_device_id> devices;
+
 	for (i = 0; i < platform_cnt; i++) {
-		oclGetDeviceIDs(platforms[i], m_devtype, MAX_DEVICE_NUM - m_devnum, devices + m_devnum, &device_cnt);
-		m_devnum += device_cnt;
+	    oclGetDeviceIDs(platforms[i], m_devtype, MAX_DEVICE_NUM, found_devices, &device_cnt);
+        for (j = 0; j < device_cnt; j++) {
+            if (dev_ids.size() == 0 || (dev_ids.size() > 0 && find(dev_ids.begin(), dev_ids.end(), dev_id) != dev_ids.end()))
+                devices.push_back(found_devices[j]);
+            dev_id += 1;
+        }
 	}
+    m_devnum = devices.size();
 
 	if (m_devnum == 0) {
-		cout << "No OpenCL devices found." << endl;
+		cerr << "No OpenCL devices found." << endl;
 		exit(1);
 	}
 
@@ -83,12 +105,35 @@ void Cas_OFFinder::initOpenCL() {
 		MAX_ALLOC_MEMORY.push_back(0);
 		oclGetDeviceInfo(devices[i], CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(cl_ulong), &MAX_ALLOC_MEMORY[i], 0);
 	}
-	cout << "Total " << m_devnum << " device(s) found." << endl;
+	delete[] found_devices;
+	cerr << "Total " << m_devnum << " device(s) found." << endl;
 }
 
-Cas_OFFinder::Cas_OFFinder(cl_device_type devtype) {
+Cas_OFFinder::Cas_OFFinder(cl_device_type devtype, string devarg) {
+    unsigned int i, j;
+    int step;
+    vector<int> dev_ids;
+
     m_devtype = devtype;
-    initOpenCL();
+    vector<string> id_args = split(devarg, ',');
+    vector<string> id_indices;
+    for (i = 0; i < id_args.size(); i++) {
+        id_indices = split(id_args[i], ':');
+        if (id_indices.size() == 1) {
+            dev_ids.push_back(atoi(id_indices[0].c_str()));
+        }
+        else if (id_indices.size() == 2 || id_indices.size() == 3) {
+            step = 1;
+            if (id_indices.size() == 3) step = atoi(id_indices[2].c_str());
+            for (j = atoi(id_indices[0].c_str()); j < atoi(id_indices[1].c_str()); j += step) {
+                dev_ids.push_back(j);
+            }
+        }
+        else {
+            cerr << "Something wrong with the device ID argument. Use all available devices instead..." << endl;
+        }
+    }
+    initOpenCL(dev_ids);
 }
 
 Cas_OFFinder::~Cas_OFFinder() {
@@ -128,7 +173,7 @@ void Cas_OFFinder::setChrData() {
 			((m_chrdatasize / m_devnum) + ((m_chrdatasize%m_devnum == 0) ? 0 : 1))
 			)
 			); // No more than maximum allocation per device
-		// cout << "Dicesize: " << m_dicesizes[dev_index] << endl;
+		// cerr << "Dicesize: " << m_dicesizes[dev_index] << endl;
 		m_chrdatabufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), 0));
 		m_flagbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_dicesizes[dev_index], 0));
 		m_locibufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_dicesizes[dev_index], 0));
@@ -162,7 +207,7 @@ bool Cas_OFFinder::loadNextChunk() {
 			m_totalanalyzedsize += tailsize;
 			m_worksizes.push_back(tailsize);
 #ifdef DEBUG
-			cout << "Worksize: " << m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
+			cerr << "Worksize: " << m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
 #endif
 			break;
 		}
@@ -171,11 +216,11 @@ bool Cas_OFFinder::loadNextChunk() {
 			m_totalanalyzedsize += m_dicesizes[dev_index];
 			m_worksizes.push_back(m_dicesizes[dev_index]);
 #ifdef DEBUG
-			cout << "Worksize: " << m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
+			cerr << "Worksize: " << m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
 #endif
 		}
 	}
-	cout << m_activedevnum << " devices selected to analyze..." << endl;
+	cerr << m_activedevnum << " devices selected to analyze..." << endl;
 
 	return true;
 }
@@ -291,8 +336,14 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 		unsigned long long loci;
 
 		char comp_symbol[2] = { '+', '-' };
-        
-		ofstream fo(outfilename, ios::out | ios::app);
+		bool isfile = false;
+		ostream *fo;
+		if (strlen(outfilename) == 1 && outfilename[0] == '-') {
+			fo = &cout;
+		} else {
+			fo = new ofstream(outfilename, ios::out | ios::app);
+			isfile = true;
+		}
 		unsigned long long localanalyzedsize = 0;
 		unsigned int cnt = 0;
 		unsigned int idx;
@@ -311,15 +362,15 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 							strncpy(strbuf, (char *)(chrdata.c_str() + loci), m_patternlen);
 							if (m_directions[dev_index][i] == '-') set_complementary_sequence((cl_char *)strbuf, m_patternlen);
 							indicate_mismatches((cl_char*)strbuf, (cl_char*)m_compares[compcnt].c_str());
-							for (j = 0; ((j < chrpos.size()) && (loci > chrpos[j])); j++) idx = j;
-							fo << m_compares[compcnt] << "\t" << chrnames[idx] << "\t" << loci - chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
+							for (j = 0; ((j < chrpos.size()) && (loci >= chrpos[j])); j++) idx = j;
+							(*fo) << m_compares[compcnt] << "\t" << chrnames[idx] << "\t" << loci - chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
 						}
 					}
 				}
 			}
 			localanalyzedsize += m_worksizes[dev_index];
 		}
-		fo.close();
+		if (isfile) ((ofstream *)fo)->close();
 	}
 	delete [] strbuf;
 	delete [] cl_compare;
@@ -329,18 +380,18 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 void Cas_OFFinder::init_platforms() {
 	oclGetPlatformIDs(MAX_PLATFORM_NUM, platforms, &platform_cnt);
 	if (platform_cnt == 0) {
-		cout << "No OpenCL platforms found. Check OpenCL installation!" << endl;
+		cerr << "No OpenCL platforms found. Check OpenCL installation!" << endl;
 		exit(1);
 	}
 }
 void Cas_OFFinder::print_usage() {
 	unsigned int i, j;
-	cout << "Cas-OFFinder v2.3 (" << __DATE__ << ")" << endl <<
+	cout << "Cas-OFFinder v2.4 (" << __DATE__ << ")" << endl <<
 		endl <<
 		"Copyright (c) 2013 Jeongbin Park and Sangsu Bae" << endl <<
 		"Website: http://github.com/snugel/cas-offinder" << endl <<
 		endl <<
-		"Usage: cas-offinder {input_file} {C|G|A} {output_file}" << endl <<
+		"Usage: cas-offinder {input_file} {C|G|A}[device_id(s)] {output_file}" << endl <<
 		"(C: using CPUs, G: using GPUs, A: using accelerators)" << endl <<
 		endl <<
 		"Example input file:" << endl <<
@@ -356,30 +407,27 @@ void Cas_OFFinder::print_usage() {
 	cl_device_id devices_per_platform[MAX_DEVICE_NUM];
 	cl_uint device_cnt;
 	cl_char devname[255] = { 0, };
+    cl_char platformname[255] = { 0, };
+
+    unsigned int cpu_id = 0, gpu_id = 0, acc_id = 0;
 	for (i = 0; i < platform_cnt; i++) {
+        oclGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, 255, &platformname, 0);
 		oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_CPU, MAX_DEVICE_NUM, devices_per_platform, &device_cnt);
 		for (j = 0; j < device_cnt; j++) {
 			oclGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
-			cout << "Type: CPU, '" << devname << "'" << endl;
+			cout << "Type: CPU, ID: " << cpu_id++ << ", <" << devname << "> on <" << platformname << ">" << endl;
 		}
 		oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, MAX_DEVICE_NUM, devices_per_platform, &device_cnt);
 		for (j = 0; j < device_cnt; j++) {
 			oclGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
-			cout << "Type: GPU, '" << devname << "'" << endl;
+			cout << "Type: GPU, ID: " << gpu_id++ << ", <" << devname << "> on <" << platformname << ">" << endl;
 		}
 		oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ACCELERATOR, MAX_DEVICE_NUM, devices_per_platform, &device_cnt);
 		for (j = 0; j < device_cnt; j++) {
 			oclGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
-			cout << "Type: ACCELERATOR, '" << devname << "'" << endl;
+			cout << "Type: ACCELERATOR, ID: " << acc_id++ << ", <" << devname << "> on <" << platformname << ">" << endl;
 		}
 	}
-}
-
-vector<string> split(string const &input) {
-	istringstream sbuffer(input);
-	vector<string> ret((istream_iterator<string>(sbuffer)),
-		istream_iterator<string>());
-	return ret;	
 }
 
 void Cas_OFFinder::readInputFile(const char* inputfile) {

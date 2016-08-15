@@ -294,7 +294,7 @@ Changelog
   - Corrected bug (Cas-OFFinder does not follow symbolic links)
   - Now user can limit number of devices used by Cas-OFFinder.
   - Now Cas-OFFinder reports the name of platform.
-  - Now user can set '-' as output file, then the output will be redirected to stdout. All other messages from Cas-OFFinder will go to stderr.
+  - Now user can set '-' as output file, then the output will be redirected to stdout. All other messages from Cas-OFFinder will be directed to stderr.
 * 2.3
   - Removed cl.hpp due to lack of C++ binding support in the new OpenCL 2.0 standard.
   - Constant arguments are stored in constant or local memory, rather than global memory.

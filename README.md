@@ -39,9 +39,10 @@ Usage
 
 Cas-OFFinder can run with:
   
-    cas-offinder {input_file} {G|C|A} {output_file}
+    cas-offinder {input_file} {G|C|A}[device_id(s)] {output_file}
 
-G stands for using all available GPU devices, C for using all CPUs, and A for using all accelerators.
+G stands for using GPU devices, C for using CPUs, and A for using accelerators.
+Optionally, you can set device ID in addition to G/C/A to limit number of devices used by Cas-OFFinder.
 
 A short example may be helpful!
 
@@ -77,25 +78,25 @@ and save it to any directory you want.
 And just try running it for a short help:
 
     $> ./cas-offinder
-      Cas-OFFinder v2.2 (2014-10-22)
-      
-      Copyright (c) 2013 Jeongbin Park and Sangsu Bae
-      Website: http://github.com/snugel/cas-offinder
-      
-      Usage: cas-offinder {input_file} {C|G|A} {output_file}
-      (C: using CPUs, G: using GPUs, A: using accelerators)
-      
-      Example input file:
-      /var/chromosomes/human_hg19
-      NNNNNNNNNNNNNNNNNNNNNRG
-      GGCCGACCTGTCGCTGACGCNNN 5
-      CGCCAGCGTCAGCGACAGGTNNN 5
-      ACGGCGCCAGCGTCAGCGACNNN 5
-      GTCGCTGACGCTGGCGCCGTNNN 5
-      
-      Available device list:
-      Type: CPU, 'Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz'
-      Type: GPU, 'Pitcairn'
+    Cas-OFFinder v2.4 (Aug 15 2016)
+
+    Copyright (c) 2013 Jeongbin Park and Sangsu Bae
+    Website: http://github.com/snugel/cas-offinder
+
+    Usage: cas-offinder {input_file} {C|G|A}[device_id(s)] {output_file}
+    (C: using CPUs, G: using GPUs, A: using accelerators)
+
+    Example input file:
+    /var/chromosomes/human_hg19
+    NNNNNNNNNNNNNNNNNNNNNRG
+    GGCCGACCTGTCGCTGACGCNNN 5
+    CGCCAGCGTCAGCGACAGGTNNN 5
+    ACGGCGCCAGCGTCAGCGACNNN 5
+    GTCGCTGACGCTGGCGCCGTNNN 5
+
+    Available device list:
+    Type: GPU, ID: 0, <GeForce GTX 980> on <NVIDIA CUDA>
+    Type: GPU, ID: 1, <GeForce GTX 980> on <NVIDIA CUDA>
 
 Also it provides a list of all available OpenCL devices!
 
@@ -144,7 +145,21 @@ Now you can run Cas-OFFinder as following (using GPUs):
 
     $> ./cas-offinder input.txt G out.txt
     ...
+
+Optionally, you can set the ID of devices to limit the number of devices used by Cas-OFFinder:
+
+    $> ./cas-offinder input.txt G1 out.txt
+    ...
  
+You can use commas, or colons for setting range:
+
+    $> ./cas-offinder input.txt G0,1 out.txt
+    
+    or
+    
+    $> ./cas-offinder input.txt G0:2 out.txt
+    ...
+
 Then output file will be generated :
 - The first column of the output file indicates the given query sequence,
 - The second column is the FASTA title (if you downloaded it from UCSC or Ensembl, it is usually a chromosome name),
@@ -272,6 +287,13 @@ https://github.com/snugel/cas-offinder
 
 Changelog
 -------
+* 2.4
+  - Corrected critical bug (The last 3 bases of 2bit input could be wrong)
+  - Corrected bug (Segmentation fault if the match occurs at the very first location in chromosome)
+  - Corrected bug (Cas-OFFinder does not follow symbolic links)
+  - Now user can limit number of devices used by Cas-OFFinder.
+  - Now Cas-OFFinder reports the name of platform.
+  - Now user can set '-' as output file, then the output will be redirected to stdout. All other messages from Cas-OFFinder will go to stderr.
 * 2.3
   - Removed cl.hpp due to lack of C++ binding support in the new OpenCL 2.0 standard.
   - Constant arguments are stored in constant or local memory, rather than global memory.

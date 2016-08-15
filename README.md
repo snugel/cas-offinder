@@ -42,7 +42,8 @@ Cas-OFFinder can run with:
     cas-offinder {input_file} {G|C|A}[device_id(s)] {output_file}
 
 G stands for using GPU devices, C for using CPUs, and A for using accelerators.
-Optionally, you can set device ID in addition to G/C/A to limit number of devices used by Cas-OFFinder.
+
+(Optionally, you can set device ID in addition to G/C/A to limit number of devices used by Cas-OFFinder)
 
 A short example may be helpful!
 

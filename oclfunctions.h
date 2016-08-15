@@ -137,6 +137,19 @@ cl_command_queue oclCreateCommandQueue(cl_context context,
 	return command_queue;
 }
 
+void oclGetPlatformInfo(cl_platform_id platform,
+    cl_platform_info param_name,
+    size_t param_value_size,
+    void *param_value,
+    size_t *param_value_size_ret)
+{
+    cl_int err = clGetPlatformInfo(platform, param_name, param_value_size, param_value, param_value_size_ret);
+    if (err != CL_SUCCESS) {
+        cerr << "clGetDeviceInfo Failed: " << err << endl;
+        exit(1);
+    }
+}
+
 void oclGetDeviceInfo(cl_device_id device,
 	cl_device_info param_name,
 	size_t param_value_size,

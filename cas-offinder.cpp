@@ -205,7 +205,7 @@ bool Cas_OFFinder::loadNextChunk() {
 		if (tailsize <= m_dicesizes[dev_index]) {
 			oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_TRUE, 0, (size_t)(sizeof(cl_char)* (tailsize + m_patternlen - 1)), (cl_char *)chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 			m_totalanalyzedsize += tailsize;
-			m_worksizes.push_back(tailsize);
+			m_worksizes.push_back(tailsize - m_patternlen + 1);
 #ifdef DEBUG
 			cerr << "Worksize: " << m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
 #endif

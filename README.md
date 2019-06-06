@@ -198,6 +198,9 @@ Example input file for TALENs:
     TGGCCAATGTGACGCTGACGNNNNNNNNNNNNCTGGAGACTCCAGACTTCCA 5
     ....
 
+Cas-OFFinder can handle RNA/DNA bulges by using a small wrapper script, found
+[here](https://github.com/hyugel/cas-offinder-bulge).
+
 Installation
 ----------------
 

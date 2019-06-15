@@ -245,21 +245,21 @@ Compile
   CMake build system is used (more informations on http://www.cmake.org).
 
   First, download CMake here (http://www.cmake.org/cmake/resources/software.html).
-  If you use Ubuntu linux, you can also install it via apt-get.
-  (apt-get install cmake)
+  If you use Ubuntu linux, you can also install it via apt-get,
+  `apt-get install cmake`.
 
   Checkout the source code of Cas-OFFinder with Git client,
   or download it manually on github website.
 
 
-  In POSIX environment (g++ should be pre-installed), launch terminal and type the following to build Cas-OFFinder:
+  In POSIX environment (`g++` should be pre-installed), launch terminal and type the following to build Cas-OFFinder:
 
       cmake -G "Unix Makefiles"
       make
 
-  On Windows (Visual Studio should be pre-installed), launch 'Visual Studio Command Prompt'
-  (You can find it under 'Start menu' - 'Microsoft Visual Studio xxxx' - 'Visual Studio Tools')
-  and type the following (Assuming that the CMake binary is installed in 'C:\Program Files (x86)\CMake 2.8\bin'):
+  On Windows (Visual Studio should be pre-installed), launch 'Visual Studio Command Prompt'.
+  (You can find it under 'Start menu' - 'Microsoft Visual Studio xxxx' - 'Visual Studio Tools'.)
+  Assuming the CMake binary is installed in `C:\Program Files (x86)\CMake 2.8\bin`, type the following:
 
       "C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -G "NMake Makefiles"
       nmake
@@ -273,13 +273,13 @@ Module reference
 
   The library is distributed under MIT licence.
 
-  More informations on:
+  More information at:
   http://lh3lh3.users.sourceforge.net/parsefastq.shtml
 
 * For supporting Dirent API on Windows environment,
   Dirent API for Microsoft Visual Studio is used.
 
-  More informations on:
+  More information at:
   http://softagalleria.net/dirent.php
 
 Download & Source

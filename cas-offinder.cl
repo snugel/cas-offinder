@@ -15,10 +15,10 @@ __kernel void finder(__global char* chr,
 
 	unsigned int li = i - get_group_id(0)*get_local_size(0);
 	if (li == 0) {
-        for (k = 0; k < patternlen*2; k++) {
-    		l_pat[k] = pat[k];
-	    	l_pat_index[k] = pat_index[k];
-        }
+		for (k = 0; k < patternlen * 2; k++) {
+			l_pat[k] = pat[k];
+			l_pat_index[k] = pat_index[k];
+		}
 	}
 	barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -80,10 +80,10 @@ __kernel void comparer(__global char* chr, __global unsigned int* loci, __global
 
 	unsigned int li = i - get_group_id(0)*get_local_size(0);
 	if (li == 0) {
-        for (k = 0; k < patternlen*2; k++) {
-		    l_comp[k] = comp[k];
-		    l_comp_index[k] = comp_index[k];
-        }
+		for (k = 0; k < patternlen*2; k++) {
+			l_comp[k] = comp[k];
+			l_comp_index[k] = comp_index[k];
+		}
 	}
 	barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -118,7 +118,7 @@ __kernel void comparer(__global char* chr, __global unsigned int* loci, __global
 		}
 	}
 	if (flag[i] == 0 || flag[i] == 2) {
-	    lmm_count = 0;
+		lmm_count = 0;
 		for (j=0; j<patternlen; j++) {
 			k = l_comp_index[patternlen + j];
 			if (k == -1) break;
@@ -138,7 +138,7 @@ __kernel void comparer(__global char* chr, __global unsigned int* loci, __global
 				 (l_comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {
 				lmm_count++;
 				if (lmm_count > threshold) break;
-            }
+			}
 		}
 		if (lmm_count <= threshold) {
 			old = atomic_inc(entrycount);
@@ -244,7 +244,7 @@ __kernel void comparer_cpu(__global char* chr, __global unsigned int* loci, __gl
 		}
 	}
 	if (flag[i] == 0 || flag[i] == 2) {
-	    lmm_count = 0;
+		lmm_count = 0;
 		for (j=0; j<patternlen; j++) {
 			k = comp_index[patternlen + j];
 			if (k == -1) break;
@@ -264,7 +264,7 @@ __kernel void comparer_cpu(__global char* chr, __global unsigned int* loci, __gl
 				 (comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {
 				lmm_count++;
 				if (lmm_count > threshold) break;
-            }
+			}
 		}
 		if (lmm_count <= threshold) {
 			old = atomic_inc(entrycount);

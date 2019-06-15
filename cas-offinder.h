@@ -24,7 +24,7 @@ static cl_uint platform_cnt;
 
 class Cas_OFFinder {
 private:
-    cl_device_type m_devtype;
+	cl_device_type m_devtype;
 
 	vector<cl_command_queue> m_queues;
 	vector<cl_context> m_contexts;

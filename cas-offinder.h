@@ -36,7 +36,6 @@ private:
 	vector<cl_ushort> m_thresholds;
 	vector<unsigned long long> m_chrpos;
 	string m_chrdata;
-	cl_char* m_pattern;
 
 	cl_uint m_threshold;
 	cl_uint m_patternlen;

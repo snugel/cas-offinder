@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 		error_exit(2, "Unknown option: ", argv[2]);
 	}
 
-    string devarg = argv[2]+1;
+	string devarg = argv[2]+1;
 	Cas_OFFinder s(devtype, devarg);
 
 	cerr << "Loading input file..." << endl;

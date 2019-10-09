@@ -167,7 +167,7 @@ You can use commas, or colons for setting range:
 Then output file will be generated :
 - The first column is the given query sequence,
 - The second column is the FASTA title (if you downloaded it from UCSC or Ensembl, it is usually a chromosome name),
-- The third column is the 0-based position of the off-target site (same convention as Bowtie, not 1-based as IGV Viewer and others),
+- The third column is the 0-based position of the off-target site (same convention as [Bowtie](https://github.com/BenLangmead/bowtie), not 1-based as IGV Viewer and others),
 - The fourth column is the actual sequence from the position (mismatched bases noted in lowercase letters),
 - The fifth column is the forward strand(+) or reverse strand(-) of the found sequence,
 - The last column is the number of the mismatched bases.

@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 		error_exit(2, "Unknown option: ", argv[2]);
 	}
 
-    string devarg = argv[2]+1;
+	string devarg = argv[2]+1;
 	Cas_OFFinder s(devtype, devarg);
 
 	cerr << "Loading input file..." << endl;
@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
 		}
 	} else {
 		while ((ent = readdir(dir)) != NULL) {
-			if (ent->d_type == DT_REG) {
+			if (ent->d_type == DT_REG || ent->d_type == DT_LNK) {
 				filepath = s.chrdir + "/" + ent->d_name;
 				run_cas_offinder(s, filepath.c_str(), outfilename.c_str(), &cnum);
 			}

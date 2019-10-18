@@ -1,0 +1,8 @@
+# cmake and make generated files
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cas-offinder
+cmake_install.cmake
+config.h
+oclkernels.h

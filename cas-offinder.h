@@ -37,7 +37,7 @@ private:
 	vector<cl_ushort> m_thresholds;
 	vector<unsigned long long> m_chrpos;
 	string m_chrdata;
-	cl_char* m_pattern;
+	string m_pattern;
 
 	cl_uint m_threshold;
 	cl_uint m_patternlen;
@@ -82,6 +82,7 @@ private:
 	void set_complementary_sequence(cl_char* seq, size_t seqlen);
 	void set_seq_flags(int* seq_flags, const cl_char* seq, size_t seqlen);
 	void initOpenCL(vector<int> dev_ids);
+	void parseInput(istream& input);
 
 public:
 	vector<string> chrnames;

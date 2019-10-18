@@ -430,29 +430,26 @@ void Cas_OFFinder::print_usage() {
 	}
 }
 
-void Cas_OFFinder::readInputFile(const char* inputfile) {
-	unsigned int dev_index;
-	string pattern, line;
+void Cas_OFFinder::parseInput(istream& input) {
+	string line;
 	vector<string> sline;
-	cl_uint zero = 0;
 
-	ifstream fi(inputfile, ios::in);
-	if (!fi.good()) {
+	if (!input.good()) {
 		exit(0);
 	}
 
-	if (!fi.eof())
-		getline(fi, chrdir);
+	if (!input.eof())
+		getline(input, chrdir);
 	if (chrdir[chrdir.length()-1] == '\r')
 		chrdir = chrdir.substr(0, chrdir.length()-1);
 
-	if (!fi.eof())
-		getline(fi, pattern);
-	if (pattern[pattern.length()-1] == '\r')
-		pattern = pattern.substr(0, pattern.length()-1);
+	if (!input.eof())
+		getline(input, m_pattern);
+	if (m_pattern[m_pattern.length()-1] == '\r')
+		m_pattern = m_pattern.substr(0, m_pattern.length()-1);
+	transform(m_pattern.begin(), m_pattern.end(), m_pattern.begin(), ::toupper);
 
-	transform(pattern.begin(), pattern.end(), pattern.begin(), ::toupper);
-	while (getline(fi, line)) {
+	while (getline(input, line)) {
 		if (line.empty()) break;
 		if (line[line.length()-1] == '\r')
 			line = line.substr(0, line.length()-1);
@@ -461,14 +458,26 @@ void Cas_OFFinder::readInputFile(const char* inputfile) {
 		m_compares.push_back(sline[0]);
 		m_thresholds.push_back(atoi(sline[1].c_str()));
 	}
-	fi.close();
+}
+
+void Cas_OFFinder::readInputFile(const char* inputfile) {
+	unsigned int dev_index;
+	cl_uint zero = 0;
+
+	if (strlen(inputfile) == 1 && inputfile[0] == '-') {
+		parseInput(cin);
+	} else {
+		ifstream fi(inputfile, ios::in);
+		parseInput(fi);
+		fi.close();
+	}
 
 	m_totalcompcount = m_thresholds.size();
-	m_patternlen = (cl_uint)(pattern.size());
+	m_patternlen = (cl_uint)(m_pattern.size());
 	
-	cl_char *cl_pattern = new cl_char[m_patternlen * 2]; 
-	memcpy(cl_pattern, pattern.c_str(), m_patternlen);
-	memcpy(cl_pattern + m_patternlen, pattern.c_str(), m_patternlen);
+	cl_char *cl_pattern = new cl_char[m_patternlen * 2];
+	memcpy(cl_pattern, m_pattern.c_str(), m_patternlen);
+	memcpy(cl_pattern + m_patternlen, m_pattern.c_str(), m_patternlen);
 	set_complementary_sequence(cl_pattern+m_patternlen, m_patternlen);
 	cl_int *cl_pattern_flags = new cl_int[m_patternlen * 2];
 	set_seq_flags(cl_pattern_flags, cl_pattern, m_patternlen);

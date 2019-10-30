@@ -104,7 +104,7 @@ __kernel void comparer(__global char* chr, __global unsigned int* loci, __global
 			     (l_comp[k] == 'B' && (chr[loci[i]+k] == 'A')) ||
 			     (l_comp[k] == 'V' && (chr[loci[i]+k] == 'T')) ||
 			     (l_comp[k] == 'D' && (chr[loci[i]+k] == 'C')) ||
-				 (l_comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||
+			     (l_comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||
 			     (l_comp[k] == 'G' && (chr[loci[i]+k] != 'G')) ||
 			     (l_comp[k] == 'C' && (chr[loci[i]+k] != 'C')) ||
 			     (l_comp[k] == 'T' && (chr[loci[i]+k] != 'T'))) {
@@ -139,7 +139,7 @@ __kernel void comparer(__global char* chr, __global unsigned int* loci, __global
 			     (l_comp[k+patternlen] == 'A' && (chr[loci[i]+k] != 'A')) ||
 			     (l_comp[k+patternlen] == 'G' && (chr[loci[i]+k] != 'G')) ||
 			     (l_comp[k+patternlen] == 'C' && (chr[loci[i]+k] != 'C')) ||
-				 (l_comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {
+			     (l_comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {
 				lmm_count++;
 				if (lmm_count > threshold)
 					break;
@@ -235,7 +235,7 @@ __kernel void comparer_cpu(__global char* chr, __global unsigned int* loci, __gl
 			     (comp[k] == 'B' && (chr[loci[i]+k] == 'A')) ||
 			     (comp[k] == 'V' && (chr[loci[i]+k] == 'T')) ||
 			     (comp[k] == 'D' && (chr[loci[i]+k] == 'C')) ||
-				 (comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||
+			     (comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||
 			     (comp[k] == 'G' && (chr[loci[i]+k] != 'G')) ||
 			     (comp[k] == 'C' && (chr[loci[i]+k] != 'C')) ||
 			     (comp[k] == 'T' && (chr[loci[i]+k] != 'T'))) {
@@ -270,7 +270,7 @@ __kernel void comparer_cpu(__global char* chr, __global unsigned int* loci, __gl
 			     (comp[k+patternlen] == 'A' && (chr[loci[i]+k] != 'A')) ||
 			     (comp[k+patternlen] == 'G' && (chr[loci[i]+k] != 'G')) ||
 			     (comp[k+patternlen] == 'C' && (chr[loci[i]+k] != 'C')) ||
-				 (comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {
+			     (comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {
 				lmm_count++;
 				if (lmm_count > threshold)
 					break;

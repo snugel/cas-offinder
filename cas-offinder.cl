@@ -23,7 +23,7 @@ __kernel void finder(__global char* chr,
 	barrier(CLK_LOCAL_MEM_FENCE);
 
 	char localflag = 0;
-	for (j=0; j<patternlen; j++) {
+	for (j = 0; j < patternlen; j++) {
 		k = l_pat_index[j];
 		if (k == -1)
 			break;
@@ -62,7 +62,7 @@ __kernel void finder(__global char* chr,
 			break;
 	}
 	if (localflag != 3) {
-		for (j=0; j<patternlen; j++)
+		for (j = 0; j < patternlen; j++)
 			if (chr[i+j] == ';')
 				return;
 		old = atomic_inc(entrycount);
@@ -164,7 +164,7 @@ __kernel void finder_cpu(__global char* chr,
 	int k;
 
 	char localflag = 0;
-	for (j=0; j<patternlen; j++) {
+	for (j = 0; j < patternlen; j++) {
 		k = pat_index[j];
 		if (k == -1)
 			break;
@@ -203,7 +203,7 @@ __kernel void finder_cpu(__global char* chr,
 			break;
 	}
 	if (localflag != 3) {
-		for (j=0; j<patternlen; j++)
+		for (j = 0; j < patternlen; j++)
 			if (chr[i+j] == ';')
 				return;
 		old = atomic_inc(entrycount);
@@ -253,7 +253,7 @@ __kernel void comparer_cpu(__global char* chr, __global unsigned int* loci, __gl
 	}
 	if (flag[i] == 0 || flag[i] == 2) {
 		lmm_count = 0;
-		for (j=0; j<patternlen; j++) {
+		for (j = 0; j < patternlen; j++) {
 			k = comp_index[patternlen + j];
 			if (k == -1)
 				break;

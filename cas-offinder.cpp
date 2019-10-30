@@ -18,7 +18,8 @@ vector<string> split(string const &input, char delim) {
 	istringstream sbuffer(input);
 	vector<string> ret;
 	string item;
-	while (getline(sbuffer, item, delim)) ret.push_back(item);
+	while (getline(sbuffer, item, delim))
+		ret.push_back(item);
 	return ret;
 }
 
@@ -372,7 +373,8 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 			}
 			localanalyzedsize += m_worksizes[dev_index];
 		}
-		if (isfile) ((ofstream *)fo)->close();
+		if (isfile)
+			((ofstream *)fo)->close();
 	}
 	delete [] strbuf;
 	delete [] cl_compare;
@@ -436,9 +438,8 @@ void Cas_OFFinder::parseInput(istream& input) {
 	string line;
 	vector<string> sline;
 
-	if (!input.good()) {
+	if (!input.good())
 		exit(0);
-	}
 
 	if (!input.eof())
 		getline(input, chrdir);
@@ -452,7 +453,8 @@ void Cas_OFFinder::parseInput(istream& input) {
 	transform(m_pattern.begin(), m_pattern.end(), m_pattern.begin(), ::toupper);
 
 	while (getline(input, line)) {
-		if (line.empty()) break;
+		if (line.empty())
+			break;
 		if (line[line.length()-1] == '\r')
 			line = line.substr(0, line.length()-1);
 		sline = split(line);

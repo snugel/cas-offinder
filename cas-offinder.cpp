@@ -454,6 +454,10 @@ void Cas_OFFinder::parseInput(istream& input) {
 		if (line[line.length()-1] == '\r')
 			line = line.substr(0, line.length()-1);
 		sline = split(line);
+		if (sline.size() != 2) {
+			cout << "Skipping malformed input guide line." << endl;
+			break;
+		}
 		transform(sline[0].begin(), sline[0].end(), sline[0].begin(), ::toupper);
 		m_compares.push_back(sline[0]);
 		m_thresholds.push_back(atoi(sline[1].c_str()));

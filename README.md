@@ -87,7 +87,7 @@ And just try running it for a short help:
     Copyright (c) 2013 Jeongbin Park and Sangsu Bae
     Website: http://github.com/snugel/cas-offinder
 
-    Usage: cas-offinder {input_file} {C|G|A}[device_id(s)] {output_file}
+    Usage: cas-offinder {input_filename|-} {C|G|A}[device_id(s)] {output_filename|-}
     (C: using CPUs, G: using GPUs, A: using accelerators)
 
     Example input file:

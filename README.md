@@ -109,7 +109,7 @@ Redistributable Packages for Visual Studio 2013](http://www.microsoft.com/en-us/
 
 Now you should create an input file:
 
-- The first line of the input file gives directory path containing chromosomes FASTA files,
+- The first line of the input file gives directory path containing FASTA or 2BIT files,
 - The second line indicates the desired pattern including PAM site,
 - The remaining lines are the query sequences and maximum mismatch numbers, separated by spaces.
 (The length of the desired pattern and the query sequences should be the same!)
@@ -165,7 +165,7 @@ You can use commas, or colons for setting range:
 
 Then output file will be generated :
 - The first column is the given query sequence,
-- The second column is the FASTA title (if you downloaded it from UCSC or Ensembl, it is usually a chromosome name),
+- The second column is the sequence name (if you downloaded it from UCSC or Ensembl, it is usually a chromosome name),
 - The third column is the 0-based position of the off-target site (same convention as [Bowtie](https://github.com/BenLangmead/bowtie), not 1-based as IGV Viewer and others),
 - The fourth column is the actual sequence from the position (mismatched bases noted in lowercase letters),
 - The fifth column is the forward strand(+) or reverse strand(-) of the found sequence,

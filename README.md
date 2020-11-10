@@ -4,7 +4,7 @@ Cas-OFFinder
 Cas-OFFinder is OpenCL based, ultrafast and versatile program
 that searches for potential off-target sites of CRISPR/Cas-derived RNA-guided endonucleases (RGEN).
 
-Cas-OFFinder is not limited by the number of mismatches and allows variations in protospacer-adjacent motif (PAM) sequences recognized by Cas9, the essential protein com-ponent in RGENs.
+Cas-OFFinder is not limited by the number of mismatches and allows variations in protospacer-adjacent motif (PAM) sequences recognized by Cas9, the essential protein component in RGENs.
 
 Requires an OpenCL device to run properly.
 
@@ -114,8 +114,7 @@ Now you should create an input file:
 - The remaining lines are the query sequences and maximum mismatch numbers, separated by spaces.
 (The length of the desired pattern and the query sequences should be the same!)
 
-For the pattern and the query sequences,
-mixed bases are allowed to account for the degeneracy in PAM sequences.
+For the pattern and the query sequences, mixed bases are allowed to account for the degeneracy in PAM sequences.
 
 Also, the number of mismatched bases is not limited!
 

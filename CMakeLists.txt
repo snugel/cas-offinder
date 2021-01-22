@@ -1,8 +1,8 @@
 cmake_minimum_required (VERSION 2.6)
-project (CAS-OFFinder)
+project (Cas-OFFinder)
 
-set (CAS-OFFinder_VERSION_MAJOR 2)
-set (CAS-OFFinder_VERSION_MINOR 4)
+set (Cas-OFFinder_VERSION_MAJOR 2)
+set (Cas-OFFinder_VERSION_MINOR 4)
 
 set(CMAKE_BUILD_TYPE Release)
 
@@ -10,12 +10,10 @@ include (CheckIncludeFiles)
 check_include_files (dirent.h HAVE_DIRENT_H)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
-if (APPLE)
-	find_library(OPENCL_LIBRARY OpenCL)
-else (APPLE)
-	find_package (OpenCL REQUIRED)
-	include_directories ("${OPENCL_INCLUDE_DIR}")
-endif (APPLE)
+
+find_package (OpenCL REQUIRED)
+include_directories ("${OPENCL_INCLUDE_DIR}")
+
 include_directories ("${PROJECT_SOURCE_DIR}")
 if (NOT HAVE_DIRENT_H)
 	message ("Could not find dirent.h on your system.")
@@ -55,5 +53,9 @@ set (HEADERS
 )
 
 add_executable(cas-offinder ${SOURCES} ${HEADERS})
-target_link_libraries(cas-offinder ${OPENCL_LIBRARY})
+if (APPLE)
+	target_link_libraries(cas-offinder "-framework OpenCL")
+else (APPLE)
+	target_link_libraries(cas-offinder ${OPENCL_LIBRARY})
+endif (APPLE)
 add_custom_command(TARGET cas-offinder PRE_BUILD COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")

@@ -37,7 +37,7 @@ jobs:
           mingw-w64-x86_64-opencl-headers
     - name: Install APT packages
       if: matrix.os == 'ubuntu-latest'
-      run: apt-get install -y cmake opencl-headers
+      run: sudo apt-get install -y cmake opencl-headers
     - uses: actions/checkout@v2
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build

@@ -1,0 +1,49 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build_linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, osx-latest, windows-latest]
+        configuration: [Release, Debug]
+        include:
+          - shell: msys2 {0}
+            os: windows-latest
+          - shell: bash
+            os: ubuntu-latest
+          - shell: bash
+            os: osx-latest
+    env:
+      BUILD_TYPE: ${{ matrix.configuration }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+    steps:
+    - uses: msys2/setup-msys2@v2
+      name: Setup MSYS2
+      if: matrix.os == "windows-latest"
+      with:
+        update: true
+        install: >-
+          base-devel
+          cmake
+          mingw-w64-x86_64-opencl-headers
+    - name: Install APT packages
+      if: matrix.os == "ubuntu-latest"
+      run: apt-get install -y cmake opencl-headers
+    - uses: actions/checkout@v2
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{github.workspace}}/build
+    - name: Configure CMake
+      working-directory: ${{github.workspace}}/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+    - name: Build
+      working-directory: ${{github.workspace}}/build
+      run: cmake --build . --config $BUILD_TYPE

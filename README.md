@@ -291,6 +291,14 @@ And the source code is distributed from
 
 https://github.com/snugel/cas-offinder
 
+Publication
+-------
+
+Cas-OFFinder is discussed in a
+[paper](https://academic.oup.com/bioinformatics/article/30/10/1473/267560) published in the journal
+_Bioinformatics_, Volume 30, Issue 10, 15 May 2014, Pages 1473–1475,
+https://doi.org/10.1093/bioinformatics/btu048
+
 Changelog
 -------
 * 2.4

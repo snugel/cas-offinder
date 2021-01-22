@@ -36,6 +36,7 @@ jobs:
           base-devel
           cmake
           mingw-w64-x86_64-opencl-headers
+          mingw-w64-x86_64-opencl-icd-git
     - name: Install APT packages
       if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get install -y cmake opencl-headers ocl-icd-opencl-dev

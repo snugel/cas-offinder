@@ -30,7 +30,8 @@ jobs:
       name: Setup MSYS2
       if: matrix.os == 'windows-latest'
       with:
-        update: true
+        update: false
+        release: false
         install: >-
           base-devel
           cmake

@@ -4,10 +4,6 @@ project (Cas-OFFinder)
 set (Cas-OFFinder_VERSION_MAJOR 2)
 set (Cas-OFFinder_VERSION_MINOR 4)
 
-if(MINGW)
-set (CMAKE_GENERATOR "MSYS Makefiles")
-endif(MINGW)
-
 include (CheckIncludeFiles)
 check_include_files (dirent.h HAVE_DIRENT_H)
 

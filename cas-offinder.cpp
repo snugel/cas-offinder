@@ -391,7 +391,7 @@ void Cas_OFFinder::print_usage() {
 		"Copyright (c) 2013 Jeongbin Park and Sangsu Bae" << endl <<
 		"Website: http://github.com/snugel/cas-offinder" << endl <<
 		endl <<
-		"Usage: cas-offinder {input_file} {C|G|A}[device_id(s)] {output_file}" << endl <<
+		"Usage: cas-offinder {input_filename|-} {C|G|A}[device_id(s)] {output_filename|-}" << endl <<
 		"(C: using CPUs, G: using GPUs, A: using accelerators)" << endl <<
 		endl <<
 		"Example input file:" << endl <<

@@ -4,7 +4,7 @@ Cas-OFFinder
 Cas-OFFinder is OpenCL based, ultrafast and versatile program
 that searches for potential off-target sites of CRISPR/Cas-derived RNA-guided endonucleases (RGEN).
 
-Cas-OFFinder is not limited by the number of mismatches and allows variations in protospacer-adjacent motif (PAM) sequences recognized by Cas9, the essential protein com-ponent in RGENs.
+Cas-OFFinder is not limited by the number of mismatches and allows variations in protospacer-adjacent motif (PAM) sequences recognized by Cas9, the essential protein component in RGENs.
 
 Requires an OpenCL device to run properly.
 
@@ -87,7 +87,7 @@ And just try running it for a short help:
     Copyright (c) 2013 Jeongbin Park and Sangsu Bae
     Website: http://github.com/snugel/cas-offinder
 
-    Usage: cas-offinder {input_file} {C|G|A}[device_id(s)] {output_file}
+    Usage: cas-offinder {input_filename|-} {C|G|A}[device_id(s)] {output_filename|-}
     (C: using CPUs, G: using GPUs, A: using accelerators)
 
     Example input file:
@@ -109,13 +109,12 @@ Redistributable Packages for Visual Studio 2013](http://www.microsoft.com/en-us/
 
 Now you should create an input file:
 
-- The first line of the input file gives directory path containing chromosomes FASTA files,
+- The first line of the input file gives directory path containing FASTA or 2BIT files,
 - The second line indicates the desired pattern including PAM site,
 - The remaining lines are the query sequences and maximum mismatch numbers, separated by spaces.
 (The length of the desired pattern and the query sequences should be the same!)
 
-For the pattern and the query sequences,
-mixed bases are allowed to account for the degeneracy in PAM sequences.
+For the pattern and the query sequences, mixed bases are allowed to account for the degeneracy in PAM sequences.
 
 Also, the number of mismatched bases is not limited!
 
@@ -166,7 +165,7 @@ You can use commas, or colons for setting range:
 
 Then output file will be generated :
 - The first column is the given query sequence,
-- The second column is the FASTA title (if you downloaded it from UCSC or Ensembl, it is usually a chromosome name),
+- The second column is the sequence name (if you downloaded it from UCSC or Ensembl, it is usually a chromosome name),
 - The third column is the 0-based position of the off-target site (same convention as [Bowtie](https://github.com/BenLangmead/bowtie), not 1-based as IGV Viewer and others),
 - The fourth column is the actual sequence from the position (mismatched bases noted in lowercase letters),
 - The fifth column is the forward strand(+) or reverse strand(-) of the found sequence,

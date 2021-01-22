@@ -15,15 +15,15 @@ __kernel void finder(__global char* chr,
 
 	unsigned int li = i - get_group_id(0)*get_local_size(0);
 	if (li == 0) {
-        for (k = 0; k < patternlen*2; k++) {
-    		l_pat[k] = pat[k];
-	    	l_pat_index[k] = pat_index[k];
-        }
+		for (k = 0; k < patternlen * 2; k++) {
+			l_pat[k] = pat[k];
+			l_pat_index[k] = pat_index[k];
+		}
 	}
 	barrier(CLK_LOCAL_MEM_FENCE);
 
 	char localflag = 0;
-	for (j=0; j<patternlen; j++) {
+	for (j = 0; j < patternlen; j++) {
 		k = l_pat_index[j];
 		if (k == -1)
 			break;
@@ -62,8 +62,9 @@ __kernel void finder(__global char* chr,
 			break;
 	}
 	if (localflag != 3) {
-		for (j=0; j<patternlen; j++)
-			if (chr[i+j] == ';') return;
+		for (j = 0; j < patternlen; j++)
+			if (chr[i+j] == ';')
+				return;
 		old = atomic_inc(entrycount);
 		loci[old] = i;
 		flag[old] = localflag;
@@ -80,10 +81,10 @@ __kernel void comparer(__global char* chr, __global unsigned int* loci, __global
 
 	unsigned int li = i - get_group_id(0)*get_local_size(0);
 	if (li == 0) {
-        for (k = 0; k < patternlen*2; k++) {
-		    l_comp[k] = comp[k];
-		    l_comp_index[k] = comp_index[k];
-        }
+		for (k = 0; k < patternlen*2; k++) {
+			l_comp[k] = comp[k];
+			l_comp_index[k] = comp_index[k];
+		}
 	}
 	barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -91,7 +92,8 @@ __kernel void comparer(__global char* chr, __global unsigned int* loci, __global
 		lmm_count = 0;
 		for (j=0; j<patternlen; j++) {
 			k = l_comp_index[j];
-			if (k == -1) break;
+			if (k == -1)
+				break;
 			if ( (l_comp[k] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||
 			     (l_comp[k] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||
 			     (l_comp[k] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||
@@ -102,12 +104,13 @@ __kernel void comparer(__global char* chr, __global unsigned int* loci, __global
 			     (l_comp[k] == 'B' && (chr[loci[i]+k] == 'A')) ||
 			     (l_comp[k] == 'V' && (chr[loci[i]+k] == 'T')) ||
 			     (l_comp[k] == 'D' && (chr[loci[i]+k] == 'C')) ||
-				 (l_comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||
+			     (l_comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||
 			     (l_comp[k] == 'G' && (chr[loci[i]+k] != 'G')) ||
 			     (l_comp[k] == 'C' && (chr[loci[i]+k] != 'C')) ||
 			     (l_comp[k] == 'T' && (chr[loci[i]+k] != 'T'))) {
 				lmm_count++;
-				if (lmm_count > threshold) break;
+				if (lmm_count > threshold)
+					break;
 			}
 		}
 		if (lmm_count <= threshold) {
@@ -118,10 +121,11 @@ __kernel void comparer(__global char* chr, __global unsigned int* loci, __global
 		}
 	}
 	if (flag[i] == 0 || flag[i] == 2) {
-	    lmm_count = 0;
+		lmm_count = 0;
 		for (j=0; j<patternlen; j++) {
 			k = l_comp_index[patternlen + j];
-			if (k == -1) break;
+			if (k == -1)
+				break;
 			if ( (l_comp[k+patternlen] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||
 			     (l_comp[k+patternlen] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||
 			     (l_comp[k+patternlen] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||
@@ -135,10 +139,11 @@ __kernel void comparer(__global char* chr, __global unsigned int* loci, __global
 			     (l_comp[k+patternlen] == 'A' && (chr[loci[i]+k] != 'A')) ||
 			     (l_comp[k+patternlen] == 'G' && (chr[loci[i]+k] != 'G')) ||
 			     (l_comp[k+patternlen] == 'C' && (chr[loci[i]+k] != 'C')) ||
-				 (l_comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {
+			     (l_comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {
 				lmm_count++;
-				if (lmm_count > threshold) break;
-            }
+				if (lmm_count > threshold)
+					break;
+			}
 		}
 		if (lmm_count <= threshold) {
 			old = atomic_inc(entrycount);
@@ -159,7 +164,7 @@ __kernel void finder_cpu(__global char* chr,
 	int k;
 
 	char localflag = 0;
-	for (j=0; j<patternlen; j++) {
+	for (j = 0; j < patternlen; j++) {
 		k = pat_index[j];
 		if (k == -1)
 			break;
@@ -198,8 +203,9 @@ __kernel void finder_cpu(__global char* chr,
 			break;
 	}
 	if (localflag != 3) {
-		for (j=0; j<patternlen; j++)
-			if (chr[i+j] == ';') return;
+		for (j = 0; j < patternlen; j++)
+			if (chr[i+j] == ';')
+				return;
 		old = atomic_inc(entrycount);
 		loci[old] = i;
 		flag[old] = localflag;
@@ -217,7 +223,8 @@ __kernel void comparer_cpu(__global char* chr, __global unsigned int* loci, __gl
 		lmm_count = 0;
 		for (j=0; j<patternlen; j++) {
 			k = comp_index[j];
-			if (k == -1) break;
+			if (k == -1)
+				break;
 			if ( (comp[k] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||
 			     (comp[k] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||
 			     (comp[k] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||
@@ -228,12 +235,13 @@ __kernel void comparer_cpu(__global char* chr, __global unsigned int* loci, __gl
 			     (comp[k] == 'B' && (chr[loci[i]+k] == 'A')) ||
 			     (comp[k] == 'V' && (chr[loci[i]+k] == 'T')) ||
 			     (comp[k] == 'D' && (chr[loci[i]+k] == 'C')) ||
-				 (comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||
+			     (comp[k] == 'A' && (chr[loci[i]+k] != 'A')) ||
 			     (comp[k] == 'G' && (chr[loci[i]+k] != 'G')) ||
 			     (comp[k] == 'C' && (chr[loci[i]+k] != 'C')) ||
 			     (comp[k] == 'T' && (chr[loci[i]+k] != 'T'))) {
 				lmm_count++;
-				if (lmm_count > threshold) break;
+				if (lmm_count > threshold)
+					break;
 			}
 		}
 		if (lmm_count <= threshold) {
@@ -244,10 +252,11 @@ __kernel void comparer_cpu(__global char* chr, __global unsigned int* loci, __gl
 		}
 	}
 	if (flag[i] == 0 || flag[i] == 2) {
-	    lmm_count = 0;
-		for (j=0; j<patternlen; j++) {
+		lmm_count = 0;
+		for (j = 0; j < patternlen; j++) {
 			k = comp_index[patternlen + j];
-			if (k == -1) break;
+			if (k == -1)
+				break;
 			if ( (comp[k+patternlen] == 'R' && (chr[loci[i]+k] == 'C' || chr[loci[i]+k] == 'T')) ||
 			     (comp[k+patternlen] == 'Y' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'G')) ||
 			     (comp[k+patternlen] == 'K' && (chr[loci[i]+k] == 'A' || chr[loci[i]+k] == 'C')) ||
@@ -261,10 +270,11 @@ __kernel void comparer_cpu(__global char* chr, __global unsigned int* loci, __gl
 			     (comp[k+patternlen] == 'A' && (chr[loci[i]+k] != 'A')) ||
 			     (comp[k+patternlen] == 'G' && (chr[loci[i]+k] != 'G')) ||
 			     (comp[k+patternlen] == 'C' && (chr[loci[i]+k] != 'C')) ||
-				 (comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {
+			     (comp[k+patternlen] == 'T' && (chr[loci[i]+k] != 'T'))) {
 				lmm_count++;
-				if (lmm_count > threshold) break;
-            }
+				if (lmm_count > threshold)
+					break;
+			}
 		}
 		if (lmm_count <= threshold) {
 			old = atomic_inc(entrycount);

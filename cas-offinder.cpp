@@ -9,16 +9,17 @@
 using namespace std;
 
 vector<string> split(string const &input) {
-    istringstream sbuffer(input);
-    vector<string> ret((istream_iterator<string>(sbuffer)), istream_iterator<string>());
-    return ret;
+	istringstream sbuffer(input);
+	vector<string> ret((istream_iterator<string>(sbuffer)), istream_iterator<string>());
+	return ret;
 }
 
 vector<string> split(string const &input, char delim) {
-    istringstream sbuffer(input);
-    vector<string> ret;
-    string item;
-    while (getline(sbuffer, item, delim)) ret.push_back(item);
+	istringstream sbuffer(input);
+	vector<string> ret;
+	string item;
+	while (getline(sbuffer, item, delim))
+		ret.push_back(item);
 	return ret;
 }
 
@@ -66,18 +67,20 @@ void Cas_OFFinder::initOpenCL(vector<int> dev_ids) {
 	cl_uint device_cnt;
 	unsigned int platform_maxdevnum;
 
-    unsigned int dev_id = 0;
-    vector<cl_device_id> devices;
+	unsigned int dev_id = 0;
+	vector<cl_device_id> devices;
 
 	for (i = 0; i < platform_cnt; i++) {
-	    oclGetDeviceIDs(platforms[i], m_devtype, MAX_DEVICE_NUM, found_devices, &device_cnt);
-        for (j = 0; j < device_cnt; j++) {
-            if (dev_ids.size() == 0 || (dev_ids.size() > 0 && find(dev_ids.begin(), dev_ids.end(), dev_id) != dev_ids.end()))
-                devices.push_back(found_devices[j]);
-            dev_id += 1;
-        }
+		oclGetDeviceIDs(platforms[i], m_devtype, MAX_DEVICE_NUM, found_devices, &device_cnt);
+
+		for (j = 0; j < device_cnt; j++) {
+			if (dev_ids.size() == 0 || (dev_ids.size() > 0 && find(dev_ids.begin(), dev_ids.end(), dev_id) != dev_ids.end()))
+				devices.push_back(found_devices[j]);
+			dev_id += 1;
+		}
 	}
-    m_devnum = devices.size();
+
+	m_devnum = devices.size();
 
 	if (m_devnum == 0) {
 		cerr << "No OpenCL devices found." << endl;
@@ -95,12 +98,12 @@ void Cas_OFFinder::initOpenCL(vector<int> dev_ids) {
 		program = oclCreateProgramWithSource(context, 1, &program_src, &src_len);
 		oclBuildProgram(program, 1, &devices[i], "", 0, 0);
         if (m_devtype == CL_DEVICE_TYPE_CPU) {
-		    m_finderkernels.push_back(oclCreateKernel(program, "finder_cpu"));
-		    m_comparerkernels.push_back(oclCreateKernel(program, "comparer_cpu"));
-        } else {
-            m_finderkernels.push_back(oclCreateKernel(program, "finder"));
-            m_comparerkernels.push_back(oclCreateKernel(program, "comparer"));
-        }
+		m_finderkernels.push_back(oclCreateKernel(program, "finder_cpu"));
+		m_comparerkernels.push_back(oclCreateKernel(program, "comparer_cpu"));
+	} else {
+		m_finderkernels.push_back(oclCreateKernel(program, "finder"));
+		m_comparerkernels.push_back(oclCreateKernel(program, "comparer"));
+	}
 		m_queues.push_back(oclCreateCommandQueue(m_contexts[i], devices[i], 0));
 		MAX_ALLOC_MEMORY.push_back(0);
 		oclGetDeviceInfo(devices[i], CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(cl_ulong), &MAX_ALLOC_MEMORY[i], 0);
@@ -110,30 +113,30 @@ void Cas_OFFinder::initOpenCL(vector<int> dev_ids) {
 }
 
 Cas_OFFinder::Cas_OFFinder(cl_device_type devtype, string devarg) {
-    unsigned int i, j;
-    int step;
-    vector<int> dev_ids;
+	unsigned int i, j;
+	int step;
+	vector<int> dev_ids;
 
-    m_devtype = devtype;
-    vector<string> id_args = split(devarg, ',');
-    vector<string> id_indices;
-    for (i = 0; i < id_args.size(); i++) {
-        id_indices = split(id_args[i], ':');
-        if (id_indices.size() == 1) {
-            dev_ids.push_back(atoi(id_indices[0].c_str()));
-        }
-        else if (id_indices.size() == 2 || id_indices.size() == 3) {
-            step = 1;
-            if (id_indices.size() == 3) step = atoi(id_indices[2].c_str());
-            for (j = atoi(id_indices[0].c_str()); j < atoi(id_indices[1].c_str()); j += step) {
-                dev_ids.push_back(j);
-            }
-        }
-        else {
-            cerr << "Something wrong with the device ID argument. Use all available devices instead..." << endl;
-        }
-    }
-    initOpenCL(dev_ids);
+	m_devtype = devtype;
+	vector<string> id_args = split(devarg, ',');
+	vector<string> id_indices;
+	for (i = 0; i < id_args.size(); i++) {
+		id_indices = split(id_args[i], ':');
+		if (id_indices.size() == 1) {
+			dev_ids.push_back(atoi(id_indices[0].c_str()));
+		}
+		else if (id_indices.size() == 2 || id_indices.size() == 3) {
+			step = 1;
+			if (id_indices.size() == 3) step = atoi(id_indices[2].c_str());
+			for (j = atoi(id_indices[0].c_str()); j < atoi(id_indices[1].c_str()); j += step) {
+				dev_ids.push_back(j);
+			}
+		}
+		else {
+			cerr << "Something wrong with the device ID argument. Use all available devices instead..." << endl;
+		}
+	}
+	initOpenCL(dev_ids);
 }
 
 Cas_OFFinder::~Cas_OFFinder() {
@@ -169,10 +172,10 @@ void Cas_OFFinder::setChrData() {
 	for (dev_index = 0; dev_index < m_devnum; dev_index++) {
 		m_dicesizes.push_back(
 			(size_t)MIN(
-			(MAX_ALLOC_MEMORY[dev_index] - sizeof(cl_char)* (3 * m_patternlen - 1) - sizeof(cl_uint)* (2 * m_patternlen + 3) - sizeof(cl_ushort)) / (4 * sizeof(cl_char) + 3 * sizeof(cl_uint) + 2 * sizeof(cl_ushort)),
-			((m_chrdatasize / m_devnum) + ((m_chrdatasize%m_devnum == 0) ? 0 : 1))
+				(MAX_ALLOC_MEMORY[dev_index] - sizeof(cl_char)* (3 * m_patternlen - 1) - sizeof(cl_uint)* (2 * m_patternlen + 3) - sizeof(cl_ushort)) / (4 * sizeof(cl_char) + 3 * sizeof(cl_uint) + 2 * sizeof(cl_ushort)),
+				((m_chrdatasize / m_devnum) + ((m_chrdatasize%m_devnum == 0) ? 0 : 1))
 			)
-			); // No more than maximum allocation per device
+		); // No more than maximum allocation per device
 		// cerr << "Dicesize: " << m_dicesizes[dev_index] << endl;
 		m_chrdatabufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), 0));
 		m_flagbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_dicesizes[dev_index], 0));
@@ -370,7 +373,8 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 			}
 			localanalyzedsize += m_worksizes[dev_index];
 		}
-		if (isfile) ((ofstream *)fo)->close();
+		if (isfile)
+			((ofstream *)fo)->close();
 	}
 	delete [] strbuf;
 	delete [] cl_compare;
@@ -407,11 +411,11 @@ void Cas_OFFinder::print_usage() {
 	cl_device_id devices_per_platform[MAX_DEVICE_NUM];
 	cl_uint device_cnt;
 	cl_char devname[255] = { 0, };
-    cl_char platformname[255] = { 0, };
+	cl_char platformname[255] = { 0, };
 
-    unsigned int cpu_id = 0, gpu_id = 0, acc_id = 0;
+	unsigned int cpu_id = 0, gpu_id = 0, acc_id = 0;
 	for (i = 0; i < platform_cnt; i++) {
-        oclGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, 255, &platformname, 0);
+		oclGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, 255, &platformname, 0);
 		oclGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_CPU, MAX_DEVICE_NUM, devices_per_platform, &device_cnt);
 		for (j = 0; j < device_cnt; j++) {
 			oclGetDeviceInfo(devices_per_platform[j], CL_DEVICE_NAME, 255, &devname, 0);
@@ -434,9 +438,8 @@ void Cas_OFFinder::parseInput(istream& input) {
 	string line;
 	vector<string> sline;
 
-	if (!input.good()) {
+	if (!input.good())
 		exit(0);
-	}
 
 	if (!input.eof())
 		getline(input, chrdir);
@@ -450,7 +453,8 @@ void Cas_OFFinder::parseInput(istream& input) {
 	transform(m_pattern.begin(), m_pattern.end(), m_pattern.begin(), ::toupper);
 
 	while (getline(input, line)) {
-		if (line.empty()) break;
+		if (line.empty())
+			break;
 		if (line[line.length()-1] == '\r')
 			line = line.substr(0, line.length()-1);
 		sline = split(line);
@@ -478,7 +482,7 @@ void Cas_OFFinder::readInputFile(const char* inputfile) {
 
 	m_totalcompcount = m_thresholds.size();
 	m_patternlen = (cl_uint)(m_pattern.size());
-	
+
 	cl_char *cl_pattern = new cl_char[m_patternlen * 2];
 	memcpy(cl_pattern, m_pattern.c_str(), m_patternlen);
 	memcpy(cl_pattern + m_patternlen, m_pattern.c_str(), m_patternlen);
@@ -486,7 +490,7 @@ void Cas_OFFinder::readInputFile(const char* inputfile) {
 	cl_int *cl_pattern_flags = new cl_int[m_patternlen * 2];
 	set_seq_flags(cl_pattern_flags, cl_pattern, m_patternlen);
 	set_seq_flags(cl_pattern_flags + m_patternlen, cl_pattern + m_patternlen, m_patternlen);
-	
+
 	for (dev_index = 0; dev_index < m_devnum; dev_index++) {
 		m_patternbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char) * m_patternlen * 2, 0));
 		m_patternflagbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_int) * m_patternlen * 2, 0));
@@ -510,13 +514,13 @@ void Cas_OFFinder::readInputFile(const char* inputfile) {
 		oclSetKernelArg(m_comparerkernels[dev_index], 5, sizeof(cl_uint), &m_patternlen);
 		oclSetKernelArg(m_comparerkernels[dev_index], 10, sizeof(cl_mem), &m_entrycountbufs[dev_index]);
 
-        if (m_devtype != CL_DEVICE_TYPE_CPU) {
-            oclSetKernelArg(m_finderkernels[dev_index], 7, sizeof(cl_char) * m_patternlen * 2, 0);
-            oclSetKernelArg(m_finderkernels[dev_index], 8, sizeof(cl_int) * m_patternlen * 2, 0);
-            oclSetKernelArg(m_comparerkernels[dev_index], 11, sizeof(cl_char) * m_patternlen * 2, 0);
-            oclSetKernelArg(m_comparerkernels[dev_index], 12, sizeof(cl_int) * m_patternlen * 2, 0);
-        }
-    }
+		if (m_devtype != CL_DEVICE_TYPE_CPU) {
+			oclSetKernelArg(m_finderkernels[dev_index], 7, sizeof(cl_char) * m_patternlen * 2, 0);
+			oclSetKernelArg(m_finderkernels[dev_index], 8, sizeof(cl_int) * m_patternlen * 2, 0);
+			oclSetKernelArg(m_comparerkernels[dev_index], 11, sizeof(cl_char) * m_patternlen * 2, 0);
+			oclSetKernelArg(m_comparerkernels[dev_index], 12, sizeof(cl_int) * m_patternlen * 2, 0);
+		}
+	}
 
 	delete[] cl_pattern;
 	delete[] cl_pattern_flags;

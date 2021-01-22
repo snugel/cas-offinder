@@ -34,7 +34,7 @@ jobs:
         release: false
         install: >-
           base-devel
-          cmake
+          mingw-w64-x86_64-cmake
           mingw-w64-x86_64-opencl-headers
           mingw-w64-x86_64-opencl-icd-git
     - name: Install APT packages
@@ -44,4 +44,4 @@ jobs:
     - name: Create Build Environment
       run: mkdir build
     - name: Build
-      run: cd build && cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE && make
+      run: cd build && cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE  && make

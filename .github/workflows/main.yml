@@ -44,4 +44,9 @@ jobs:
     - name: Create Build Environment
       run: mkdir build
     - name: Build
-      run: cd build && cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE  && make
+      run: |
+        cd build
+        CMAKE_ARGS="-DCMAKE_BUILD_TYPE=$BUILD_TYPE"
+        if [[ `uname -a` == "MSYS"* ]]; then CMAKE_ARGS="$CMAKE_ARGS -GMSYS Makefiles"; fi
+        cmake .. $CMAKE_ARGS
+        make

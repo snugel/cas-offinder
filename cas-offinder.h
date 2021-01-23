@@ -32,12 +32,9 @@ private:
 	vector<size_t> MAX_LOCAL_SIZE;
 
 	unsigned long long m_chrdatasize;
-	vector<string> m_chrnames;
 	vector<string> m_compares;
 	vector<string> m_ids;
 	vector<cl_ushort> m_thresholds;
-	vector<unsigned long long> m_chrpos;
-	string m_chrdata;
 	string m_pattern;
 
 	cl_uint m_threshold;
@@ -78,7 +75,6 @@ private:
 
 	unsigned long long m_linenum;
 	unsigned long long m_filenum;
-	size_t m_totalcompcount;
 
 	void set_complementary_sequence(cl_char* seq, size_t seqlen);
 	void set_seq_flags(int* seq_flags, const cl_char* seq, size_t seqlen);
@@ -86,11 +82,10 @@ private:
 	void parseInput(istream& input);
 
 public:
-	vector<string> chrnames;
-	string chrdata;
-	vector<unsigned long long> chrpos;
-
-	string chrdir;
+	string m_chrdir;
+	string m_chrdata;
+	vector<string> m_chrnames;
+	vector<unsigned long long> m_chrpos;
 
 	Cas_OFFinder(cl_device_type devtype, string devarg);
 	~Cas_OFFinder();

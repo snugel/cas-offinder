@@ -43,8 +43,8 @@ void run_cas_offinder(Cas_OFFinder &s, const char* chromfilename, const char* ou
 
 	cerr << "Reading " << filepath << "..." << endl;
 	
-	if (read_fasta(filepath, s.chrnames, s.chrdata, s.chrpos)) {
-		if (read_twobit(filepath, s.chrnames, s.chrdata, s.chrpos)) {
+	if (read_fasta(filepath, s.m_chrnames, s.m_chrdata, s.m_chrpos)) {
+		if (read_twobit(filepath, s.m_chrnames, s.m_chrdata, s.m_chrpos)) {
 			cerr << "Skipping non-acceptable file " << filepath << "..." << endl;
 			return;
 		}
@@ -108,17 +108,17 @@ int main(int argc, char *argv[]) {
 	outfilename = argv[3]; remove(argv[3]);
 
 	int cnum = 0;
-	if ((dir = opendir(s.chrdir.c_str())) == NULL) {
-		if (check_file(s.chrdir.c_str())) {
-			run_cas_offinder(s, s.chrdir.c_str(), outfilename.c_str(), &cnum);
+	if ((dir = opendir(s.m_chrdir.c_str())) == NULL) {
+		if (check_file(s.m_chrdir.c_str())) {
+			run_cas_offinder(s, s.m_chrdir.c_str(), outfilename.c_str(), &cnum);
 		} else {
-			error_exit(2, "An error has occured while opening directory: ", s.chrdir.c_str());
+			error_exit(2, "An error has occured while opening directory: ", s.m_chrdir.c_str());
 			exit(1);
 		}
 	} else {
 		while ((ent = readdir(dir)) != NULL) {
 			if (ent->d_type == DT_REG || ent->d_type == DT_LNK) {
-				filepath = s.chrdir + "/" + ent->d_name;
+				filepath = s.m_chrdir + "/" + ent->d_name;
 				run_cas_offinder(s, filepath.c_str(), outfilename.c_str(), &cnum);
 			}
 		}

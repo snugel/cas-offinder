@@ -159,7 +159,7 @@ Cas_OFFinder::~Cas_OFFinder() {
 void Cas_OFFinder::setChrData() {
 	unsigned int dev_index;
 
-	m_chrdatasize = chrdata.size();
+	m_chrdatasize = m_chrdata.size();
 	m_totalanalyzedsize = 0;
 	m_lasttotalanalyzedsize = 0;
 	m_lastloci = 0;
@@ -172,7 +172,7 @@ void Cas_OFFinder::setChrData() {
 	for (dev_index = 0; dev_index < m_devnum; dev_index++) {
 		m_dicesizes.push_back(
 			(size_t)MIN(
-				(MAX_ALLOC_MEMORY[dev_index] - sizeof(cl_char)* (3 * m_patternlen - 1) - sizeof(cl_uint) * (2 * m_patternlen + 3) - sizeof(cl_ushort)) / (4 * sizeof(cl_char) + 3 * sizeof(cl_uint) + 2 * sizeof(cl_ushort)),
+				(MAX_ALLOC_MEMORY[dev_index] - sizeof(cl_char) * (3 * m_patternlen - 1) - sizeof(cl_uint) * (2 * m_patternlen + 3) - sizeof(cl_ushort)) / (4 * sizeof(cl_char) + 3 * sizeof(cl_uint) + 2 * sizeof(cl_ushort)),
 				((m_chrdatasize / m_devnum) + ((m_chrdatasize%m_devnum == 0) ? 0 : 1))
 			)
 		); // No more than maximum allocation per device
@@ -212,7 +212,7 @@ bool Cas_OFFinder::loadNextChunk() {
 				m_worksizes.push_back(0);
 				break;
 			}
-			oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_TRUE, 0, sizeof(cl_char) * tailsize, (cl_char *)chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
+			oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_TRUE, 0, sizeof(cl_char) * tailsize, (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 			m_totalanalyzedsize += tailsize;
 			m_worksizes.push_back(tailsize - m_patternlen + 1);
 #ifdef DEBUG
@@ -222,7 +222,7 @@ bool Cas_OFFinder::loadNextChunk() {
 		}
 		else {
             overlap = MIN(m_patternlen - 1, tailsize - m_dicesizes[dev_index]);
-			oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_TRUE, 0, sizeof(cl_char) * (m_dicesizes[dev_index] + overlap), (cl_char *)chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
+			oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_TRUE, 0, sizeof(cl_char) * (m_dicesizes[dev_index] + overlap), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 			m_totalanalyzedsize += m_dicesizes[dev_index];
 			m_worksizes.push_back(m_dicesizes[dev_index] - m_patternlen + overlap + 1);
 #ifdef DEBUG
@@ -254,7 +254,7 @@ void Cas_OFFinder::findPattern() {
 		}
 		if (m_locicnts[dev_index] > 0) {
 			m_flags.push_back((cl_char *)malloc(sizeof(cl_char) * m_locicnts[dev_index]));
-			oclEnqueueReadBuffer(m_queues[dev_index], m_flagbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)*m_locicnts[dev_index], m_flags[dev_index], 0, 0, 0);
+			oclEnqueueReadBuffer(m_queues[dev_index], m_flagbufs[dev_index], CL_TRUE, 0, sizeof(cl_char) * m_locicnts[dev_index], m_flags[dev_index], 0, 0, 0);
 
 			m_mmcounts.push_back((cl_ushort *)malloc(sizeof(cl_ushort) * m_locicnts[dev_index] * 2)); // Maximum numbers of mismatch counts
 			m_directions.push_back((cl_char *)malloc(sizeof(cl_char) * m_locicnts[dev_index] * 2));
@@ -263,7 +263,7 @@ void Cas_OFFinder::findPattern() {
 			m_mmlocibufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint) * m_locicnts[dev_index] * 2, 0));
 			m_mmcountbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_ushort) * m_locicnts[dev_index] * 2, 0));
 			m_directionbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char) * m_locicnts[dev_index] * 2, 0));
-
+s
 			oclSetKernelArg(m_comparerkernels[dev_index], 2, sizeof(cl_mem), &m_mmlocibufs[dev_index]);
 			oclSetKernelArg(m_comparerkernels[dev_index], 8, sizeof(cl_mem), &m_mmcountbufs[dev_index]);
 			oclSetKernelArg(m_comparerkernels[dev_index], 9, sizeof(cl_mem), &m_directionbufs[dev_index]);
@@ -328,7 +328,7 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 
 	char *strbuf = new char[m_patternlen + 1]; strbuf[m_patternlen] = 0;
 
-	for (compcnt = 0; compcnt < m_totalcompcount; compcnt++) {
+	for (compcnt = 0; compcnt < m_compares.size(); compcnt++) {
 		memcpy(cl_compare, m_compares[compcnt].c_str(), m_patternlen);
 		memcpy(cl_compare + m_patternlen, m_compares[compcnt].c_str(), m_patternlen);
 		set_complementary_sequence(cl_compare + m_patternlen, m_patternlen);
@@ -366,18 +366,18 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 				oclFinish(m_queues[dev_index]);
 				oclEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &cnt, 0, 0, 0);
 				if (cnt > 0) {
-					oclEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_FALSE, 0, sizeof(cl_ushort)* cnt, m_mmcounts[dev_index], 0, 0, 0);
-					oclEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_FALSE, 0, sizeof(cl_char)* cnt, m_directions[dev_index], 0, 0, 0);
-					oclEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_FALSE, 0, sizeof(cl_uint)* cnt, m_mmlocis[dev_index], 0, 0, 0);
+					oclEnqueueReadBuffer(m_queues[dev_index], m_mmcountbufs[dev_index], CL_FALSE, 0, sizeof(cl_ushort) * cnt, m_mmcounts[dev_index], 0, 0, 0);
+					oclEnqueueReadBuffer(m_queues[dev_index], m_directionbufs[dev_index], CL_FALSE, 0, sizeof(cl_char) * cnt, m_directions[dev_index], 0, 0, 0);
+					oclEnqueueReadBuffer(m_queues[dev_index], m_mmlocibufs[dev_index], CL_FALSE, 0, sizeof(cl_uint) * cnt, m_mmlocis[dev_index], 0, 0, 0);
 					oclFinish(m_queues[dev_index]);
 					for (i = 0; i < cnt; i++) {
 						loci = m_mmlocis[dev_index][i] + m_lasttotalanalyzedsize + localanalyzedsize;
 						if (m_mmcounts[dev_index][i] <= m_thresholds[compcnt]) {
-							strncpy(strbuf, (char *)(chrdata.c_str() + loci), m_patternlen);
+							strncpy(strbuf, (char *)(m_chrdata.c_str() + loci), m_patternlen);
 							if (m_directions[dev_index][i] == '-') set_complementary_sequence((cl_char *)strbuf, m_patternlen);
 							indicate_mismatches((cl_char*)strbuf, (cl_char*)m_compares[compcnt].c_str());
-							for (j = 0; ((j < chrpos.size()) && (loci >= chrpos[j])); j++) idx = j;
-							(*fo) << m_compares[compcnt] << "\t" << chrnames[idx] << "\t" << loci - chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i];
+							for (j = 0; ((j < m_chrpos.size()) && (loci >= m_chrpos[j])); j++) idx = j;
+							(*fo) << m_compares[compcnt] << "\t" << m_chrnames[idx] << "\t" << loci - m_chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i];
 							if (m_ids.size() > 0)
 								(*fo) << "\t" << m_ids[compcnt];
 							(*fo) << endl;
@@ -448,34 +448,39 @@ void Cas_OFFinder::print_usage() {
 	}
 }
 
+static inline bool parseLine(istream& input, string& line, bool expect_line = true) {
+	if (expect_line && input.eof()) {
+		throw runtime_error("Unexpected end of file.");
+	} else {
+		if (!getline(input, line))
+			return false;
+		if (line[line.length()-1] == '\r')
+			line = line.substr(0, line.length()-1);
+	}
+	return true;
+}
+
 void Cas_OFFinder::parseInput(istream& input) {
 	string line;
 	vector<string> sline;
 
-	if (!input.good())
-		exit(0);
-
-	if (!input.eof())
-		getline(input, chrdir);
-	if (chrdir[chrdir.length()-1] == '\r')
-		chrdir = chrdir.substr(0, chrdir.length()-1);
-
-	if (!input.eof())
-		getline(input, m_pattern);
-	if (m_pattern[m_pattern.length()-1] == '\r')
-		m_pattern = m_pattern.substr(0, m_pattern.length()-1);
-	transform(m_pattern.begin(), m_pattern.end(), m_pattern.begin(), ::toupper);
-
 	try {
+		if (!input.good())
+			throw runtime_error("Cannot read input file.");
+
+		parseLine(input, m_chrdir);
+		parseLine(input, line);
+
+		parseLine(input, m_pattern);
+		transform(m_pattern.begin(), m_pattern.end(), m_pattern.begin(), ::toupper);
+
 		int entrycnt = 0;
-		while (getline(input, line)) {
+		while (parseLine(input, line, false)) {
 			if (line.empty())
 				break;
-			if (line[line.length()-1] == '\r')
-				line = line.substr(0, line.length()-1);
 			sline = split(line);
 			if (sline.size() != 2 && sline.size() != 3) {
-				cout << "Skipping malformed input guide line." << endl;
+				throw runtime_error("Malformed input file.");
 				break;
 			}
 			if (sline[0].length() != m_pattern.length()) {
@@ -510,7 +515,6 @@ void Cas_OFFinder::readInputFile(const char* inputfile) {
 		fi.close();
 	}
 
-	m_totalcompcount = m_thresholds.size();
 	m_patternlen = (cl_uint)(m_pattern.size());
 
 	cl_char *cl_pattern = new cl_char[m_patternlen * 2];

@@ -5,7 +5,6 @@ set (Cas-OFFinder_VERSION_MAJOR 2)
 set (Cas-OFFinder_VERSION_MINOR 4)
 
 include (CheckIncludeFiles)
-check_include_files (dirent.h HAVE_DIRENT_H)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 
@@ -15,10 +14,9 @@ link_directories (${OpenCL_LIBRARY})
 
 include_directories ("${PROJECT_SOURCE_DIR}")
 if (WIN32)
-	message ("Windows system detected. Could not find proper dirent.h on your system.")
+	message ("Windows system detected, assume no proper dirent.h is available.")
 	message ("As a workaround, a custom dirent.h for Windows (by Toni Ronkko) will be used.")
 	message ("For more information, please visit https://github.com/tronkko/dirent")
-	include_directories ("${PROJECT_SOURCE_DIR}/ext")
 endif (WIN32)
 
 find_package(OpenMP)

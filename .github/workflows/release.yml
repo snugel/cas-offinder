@@ -1,0 +1,33 @@
+name: release
+
+on:
+  push:
+    tags:
+    - '**'
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download Latest Build Artifacts
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: main.yml
+          workflow_conclusion: success
+      - name: Compress Binaries
+        run: |
+          zip -j cas-offinder_linux_x86-64.zip "Cas-OFFinder Binary (ubuntu-latest, Release)/cas-offinder"
+          zip -j cas-offinder_macos_x86-64.zip "Cas-OFFinder Binary (macos-latest, Release)/cas-offinder"
+          zip -j cas-offinder_windows_x86-64.zip "Cas-OFFinder Binary (windows-latest, Release)/cas-offinder.exe"
+      - name: Create Release
+        run: |
+          assets=()
+          for asset in ./*.zip; do
+            assets+=("-a" "$asset")
+          done
+          tag_name="${GITHUB_REF##*/}"
+          hub release create "${assets[@]}" -m "Cas-OFFinder $tag_name" "$tag_name"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

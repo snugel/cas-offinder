@@ -377,7 +377,10 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 							if (m_directions[dev_index][i] == '-') set_complementary_sequence((cl_char *)strbuf, m_patternlen);
 							indicate_mismatches((cl_char*)strbuf, (cl_char*)m_compares[compcnt].c_str());
 							for (j = 0; ((j < chrpos.size()) && (loci >= chrpos[j])); j++) idx = j;
-							(*fo) << m_compares[compcnt] << "\t" << chrnames[idx] << "\t" << loci - chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << endl;
+							(*fo) << m_compares[compcnt] << "\t" << chrnames[idx] << "\t" << loci - chrpos[idx] << "\t" << strbuf << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i];
+							if (m_ids.size() > 0)
+								(*fo) << "\t" << m_ids[compcnt];
+							(*fo) << endl;
 						}
 					}
 				}
@@ -401,7 +404,7 @@ void Cas_OFFinder::init_platforms() {
 }
 void Cas_OFFinder::print_usage() {
 	unsigned int i, j;
-	cout << "Cas-OFFinder v2.4 (" << __DATE__ << ")" << endl <<
+	cout << "Cas-OFFinder v2.4.1 (" << __DATE__ << ")" << endl <<
 		endl <<
 		"Copyright (c) 2013 Jeongbin Park and Sangsu Bae" << endl <<
 		"Website: http://github.com/snugel/cas-offinder" << endl <<
@@ -463,19 +466,35 @@ void Cas_OFFinder::parseInput(istream& input) {
 		m_pattern = m_pattern.substr(0, m_pattern.length()-1);
 	transform(m_pattern.begin(), m_pattern.end(), m_pattern.begin(), ::toupper);
 
-	while (getline(input, line)) {
-		if (line.empty())
-			break;
-		if (line[line.length()-1] == '\r')
-			line = line.substr(0, line.length()-1);
-		sline = split(line);
-		if (sline.size() != 2) {
-			cout << "Skipping malformed input guide line." << endl;
-			break;
+	try {
+		int entrycnt = 0;
+		while (getline(input, line)) {
+			if (line.empty())
+				break;
+			if (line[line.length()-1] == '\r')
+				line = line.substr(0, line.length()-1);
+			sline = split(line);
+			if (sline.size() != 2 && sline.size() != 3) {
+				cout << "Skipping malformed input guide line." << endl;
+				break;
+			}
+			if (sline[0].length() != m_pattern.length()) {
+				throw runtime_error("The length of target sequences should match with the length of pattern sequence.");
+			}
+			transform(sline[0].begin(), sline[0].end(), sline[0].begin(), ::toupper);
+			m_compares.push_back(sline[0]);
+			m_thresholds.push_back(atoi(sline[1].c_str()));
+			if (entrycnt == 0) {
+				entrycnt = sline.size();
+			} else if (entrycnt != sline.size()) {
+				throw runtime_error("The number of entries below 2nd line should be consistent.");
+			}
+			if (sline.size() == 3)
+				m_ids.push_back(sline[2]);
 		}
-		transform(sline[0].begin(), sline[0].end(), sline[0].begin(), ::toupper);
-		m_compares.push_back(sline[0]);
-		m_thresholds.push_back(atoi(sline[1].c_str()));
+	} catch (const exception& e) {
+		cerr << "Critical error! " << e.what() << endl;
+		exit(1);
 	}
 }
 

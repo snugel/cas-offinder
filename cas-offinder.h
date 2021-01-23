@@ -34,6 +34,7 @@ private:
 	unsigned long long m_chrdatasize;
 	vector<string> m_chrnames;
 	vector<string> m_compares;
+	vector<string> m_ids;
 	vector<cl_ushort> m_thresholds;
 	vector<unsigned long long> m_chrpos;
 	string m_chrdata;

@@ -46,7 +46,9 @@ jobs:
     - name: Build
       run: |
         cd build
-        CMAKE_ARGS="-DCMAKE_BUILD_TYPE=$BUILD_TYPE"
-        if [[ `uname` == "MINGW"* ]]; then CMAKE_ARGS="$CMAKE_ARGS -GMSYS Makefiles"; fi
-        cmake .. "$CMAKE_ARGS"
+        if [[ `uname` == "MINGW"* ]]; then
+          cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G"MSYS Makefiles"
+        else
+          cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        fi
         make

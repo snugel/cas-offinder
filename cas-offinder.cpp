@@ -469,8 +469,6 @@ void Cas_OFFinder::parseInput(istream& input) {
 			throw runtime_error("Cannot read input file.");
 
 		parseLine(input, m_chrdir);
-		parseLine(input, line);
-
 		parseLine(input, m_pattern);
 		transform(m_pattern.begin(), m_pattern.end(), m_pattern.begin(), ::toupper);
 

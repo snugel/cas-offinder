@@ -55,5 +55,5 @@ jobs:
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2.2.1
       with:
-        name: Cas-OFFinder Binary (${{ matrix.os }}, ${{ matrix.configuration }}
+        name: Cas-OFFinder Binary (${{ matrix.os }}, ${{ matrix.configuration }})
         path: build/cas-offinder*

@@ -21,7 +21,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         uses: actions/checkout@v2
         with:
-          name: intel/clGPU
+          repository: intel/clGPU
       - name: Setup Developer Command Prompt for MSVC
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1

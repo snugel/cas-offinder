@@ -18,9 +18,9 @@ jobs:
           workflow_conclusion: success
       - name: Compress Binaries
         run: |
-          zip cas-offinder_linux_x86-64.zip "Cas-OFFinder Binary (ubuntu-latest, Release)/cas-offinder"
-          zip cas-offinder_macos_x86-64.zip "Cas-OFFinder Binary (macos-latest, Release)/cas-offinder"
-          zip cas-offinder_windows_x86-64.zip "Cas-OFFinder Binary (windows-latest, Release)/cas-offinder.exe"
+          zip -j cas-offinder_linux_x86-64.zip "Cas-OFFinder Binary (ubuntu-latest, Release)/cas-offinder"
+          zip -j cas-offinder_macos_x86-64.zip "Cas-OFFinder Binary (macos-latest, Release)/cas-offinder"
+          zip -j cas-offinder_windows_x86-64.zip "Cas-OFFinder Binary (windows-latest, Release)/cas-offinder.exe"
       - name: Create Release
         run: |
           assets=()

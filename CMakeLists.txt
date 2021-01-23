@@ -4,10 +4,6 @@ project (Cas-OFFinder)
 set (Cas-OFFinder_VERSION_MAJOR 2)
 set (Cas-OFFinder_VERSION_MINOR 4)
 
-if(MINGW)
-set (CMAKE_GENERATOR "MSYS Makefiles")
-endif(MINGW)
-
 include (CheckIncludeFiles)
 check_include_files (dirent.h HAVE_DIRENT_H)
 
@@ -17,12 +13,12 @@ find_package (OpenCL REQUIRED)
 include_directories ("${OPENCL_INCLUDE_DIR}")
 
 include_directories ("${PROJECT_SOURCE_DIR}")
-if (NOT HAVE_DIRENT_H)
-	message ("Could not find dirent.h on your system.")
-	message ("For workaround, using a custom dirent.h written for MS system (by Toni Ronkko).")
-	message ("More information, visit http://softagalleria.net/dirent.php")
+if (WIN32)
+	message ("Windows system detected. Could not find proper dirent.h on your system.")
+	message ("As a workaround, a custom dirent.h for Windows (by Toni Ronkko) will be used.")
+	message ("For more information, please visit https://github.com/tronkko/dirent")
 	include_directories ("${PROJECT_SOURCE_DIR}/ext")
-endif (NOT HAVE_DIRENT_H)
+endif (WIN32)
 
 find_package(OpenMP)
 if (OPENMP_FOUND)

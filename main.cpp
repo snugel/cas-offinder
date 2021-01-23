@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <ctime>
 #else
 #include <sys/time.h>
@@ -63,7 +63,7 @@ void run_cas_offinder(Cas_OFFinder &s, const char* chromfilename, const char* ou
 }
 
 int main(int argc, char *argv[]) {
-#ifdef _MSC_VER
+#ifdef _WIN32
 	clock_t start, end;
 	start = clock();
 #else
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
-#ifdef _MSC_VER
+#ifdef _WIN32
 	end = clock();
 	seconds = (float)(end - start) / CLOCKS_PER_SEC;
 #else

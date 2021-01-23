@@ -9,6 +9,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Download Latest Build Artifacts
         uses: dawidd6/action-download-artifact@v2
         with:

@@ -3,7 +3,7 @@ name: build
 on:
   push:
     tags-ignore:
-      - '*'
+      - 'v*'
   pull_request:
   workflow_dispatch:
 

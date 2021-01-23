@@ -23,7 +23,6 @@ jobs:
           zip cas-offinder_windows_x86-64.zip "Cas-OFFinder Binary (windows-latest, Release)/cas-offinder.exe"
       - name: Create Release
         run: |
-          set -x
           assets=()
           for asset in ./*.zip; do
             assets+=("-a" "$asset")

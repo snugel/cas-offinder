@@ -19,7 +19,7 @@ jobs:
           - shell: bash
             os: ubuntu-latest
           - shell: bash
-            os: osx-latest
+            os: macos-latest
     env:
       BUILD_TYPE: ${{ matrix.configuration }}
     defaults:

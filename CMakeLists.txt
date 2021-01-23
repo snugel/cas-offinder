@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.1)
 project (Cas-OFFinder)
 
 set (Cas-OFFinder_VERSION_MAJOR 2)
@@ -10,7 +10,8 @@ check_include_files (dirent.h HAVE_DIRENT_H)
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 
 find_package (OpenCL REQUIRED)
-include_directories ("${OPENCL_INCLUDE_DIR}")
+include_directories ("${OpenCL_INCLUDE_DIRS}")
+link_directories (${OpenCL_LIBRARY})
 
 include_directories ("${PROJECT_SOURCE_DIR}")
 if (WIN32)
@@ -54,6 +55,6 @@ add_executable(cas-offinder ${SOURCES} ${HEADERS})
 if (APPLE)
 	target_link_libraries(cas-offinder "-framework OpenCL")
 else (APPLE)
-	target_link_libraries(cas-offinder ${OPENCL_LIBRARY})
+	target_link_libraries(cas-offinder ${OpenCL_LIBRARY})
 endif (APPLE)
 add_custom_command(TARGET cas-offinder PRE_BUILD COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")

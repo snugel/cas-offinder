@@ -12,4 +12,8 @@ jobs:
         with:
           workflow: main.yml
           workflow_conclusion: success
-      - run: ls -al
+      - run: |
+          zip cas-offinder_linux_x86-64_${GITHUB_REF}.zip "Cas-OFFinder Binary (ubuntu-latest, Release)/cas-offinder"
+          zip cas-offinder_macos_x86-64_${GITHUB_REF}.zip "Cas-OFFinder Binary (macos-latest, Release)/cas-offinder"
+          zip cas-offinder_windows_x86-64_${GITHUB_REF}.zip "Cas-OFFinder Binary (windows-latest, Release)/cas-offinder.exe"
+          ls -al

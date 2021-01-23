@@ -22,6 +22,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: intel/clGPU
+          path: 'clGPU'
       - name: Setup Developer Command Prompt for MSVC
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
@@ -37,8 +38,8 @@ jobs:
       - name: Build (Windows)
         if: matrix.os == 'windows-latest'
         run: cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G"NMake Makefiles" \
-             -DOpenCL_INCLUDE_DIR="../../clGPU/common/intel_ocl_icd/windows/include" \
-             -DOpenCL_LIBRARY="../../clGPU/common/intel_ocl_icd/windows/Release/lib/x64/OpenCL.lib" \
+             -DOpenCL_INCLUDE_DIR="../clGPU/common/intel_ocl_icd/windows/include" \
+             -DOpenCL_LIBRARY="../clGPU/common/intel_ocl_icd/windows/Release/lib/x64/OpenCL.lib" \
              && nmake
         working-directory: build
       - name: Upload Build Artifact

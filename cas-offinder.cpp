@@ -172,14 +172,14 @@ void Cas_OFFinder::setChrData() {
 	for (dev_index = 0; dev_index < m_devnum; dev_index++) {
 		m_dicesizes.push_back(
 			(size_t)MIN(
-				(MAX_ALLOC_MEMORY[dev_index] - sizeof(cl_char)* (3 * m_patternlen - 1) - sizeof(cl_uint)* (2 * m_patternlen + 3) - sizeof(cl_ushort)) / (4 * sizeof(cl_char) + 3 * sizeof(cl_uint) + 2 * sizeof(cl_ushort)),
+				(MAX_ALLOC_MEMORY[dev_index] - sizeof(cl_char)* (3 * m_patternlen - 1) - sizeof(cl_uint) * (2 * m_patternlen + 3) - sizeof(cl_ushort)) / (4 * sizeof(cl_char) + 3 * sizeof(cl_uint) + 2 * sizeof(cl_ushort)),
 				((m_chrdatasize / m_devnum) + ((m_chrdatasize%m_devnum == 0) ? 0 : 1))
 			)
 		); // No more than maximum allocation per device
 		// cerr << "Dicesize: " << m_dicesizes[dev_index] << endl;
-		m_chrdatabufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), 0));
-		m_flagbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_dicesizes[dev_index], 0));
-		m_locibufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_dicesizes[dev_index], 0));
+		m_chrdatabufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_READ_ONLY, sizeof(cl_char) * (m_dicesizes[dev_index] + m_patternlen - 1), 0));
+		m_flagbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char) * m_dicesizes[dev_index], 0));
+		m_locibufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint) * m_dicesizes[dev_index], 0));
 
 		oclSetKernelArg(m_finderkernels[dev_index], 0, sizeof(cl_mem), &m_chrdatabufs[dev_index]);
 		oclSetKernelArg(m_finderkernels[dev_index], 4, sizeof(cl_mem), &m_flagbufs[dev_index]);
@@ -207,8 +207,11 @@ bool Cas_OFFinder::loadNextChunk() {
 		tailsize = m_chrdatasize - m_totalanalyzedsize;
 		m_activedevnum++;
 		if (tailsize <= m_dicesizes[dev_index]) {
-			if (tailsize < m_patternlen)
-				return false;
+			if (tailsize < m_patternlen) {
+				m_totalanalyzedsize += tailsize;
+				m_worksizes.push_back(0);
+				break;
+			}
 			oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_TRUE, 0, sizeof(cl_char) * tailsize, (cl_char *)chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 			m_totalanalyzedsize += tailsize;
 			m_worksizes.push_back(tailsize - m_patternlen + 1);
@@ -237,25 +240,29 @@ void Cas_OFFinder::findPattern() {
 	cl_uint zero = 0;
 	for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
 		const size_t worksize = (size_t)m_worksizes[dev_index];
+		if (worksize == 0)
+			continue;
 		oclEnqueueWriteBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &zero, 0, 0, 0);
 		oclEnqueueNDRangeKernel(m_queues[dev_index], m_finderkernels[dev_index], 1, 0, &worksize, 0, 0, 0, 0);
 	}
 
 	for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
-		oclFinish(m_queues[dev_index]);
 		m_locicnts.push_back(0);
-		oclEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &m_locicnts[dev_index], 0, 0, 0);
+		if (m_worksizes[dev_index] > 0) {
+			oclFinish(m_queues[dev_index]);
+			oclEnqueueReadBuffer(m_queues[dev_index], m_entrycountbufs[dev_index], CL_TRUE, 0, sizeof(cl_uint), &m_locicnts[dev_index], 0, 0, 0);
+		}
 		if (m_locicnts[dev_index] > 0) {
-			m_flags.push_back((cl_char *)malloc(sizeof(cl_char)* m_locicnts[dev_index]));
+			m_flags.push_back((cl_char *)malloc(sizeof(cl_char) * m_locicnts[dev_index]));
 			oclEnqueueReadBuffer(m_queues[dev_index], m_flagbufs[dev_index], CL_TRUE, 0, sizeof(cl_char)*m_locicnts[dev_index], m_flags[dev_index], 0, 0, 0);
 
-			m_mmcounts.push_back((cl_ushort *)malloc(sizeof(cl_ushort)* m_locicnts[dev_index] * 2)); // Maximum numbers of mismatch counts
-			m_directions.push_back((cl_char *)malloc(sizeof(cl_char)* m_locicnts[dev_index] * 2));
-			m_mmlocis.push_back((cl_uint *)malloc(sizeof(cl_uint)* m_locicnts[dev_index] * 2));
+			m_mmcounts.push_back((cl_ushort *)malloc(sizeof(cl_ushort) * m_locicnts[dev_index] * 2)); // Maximum numbers of mismatch counts
+			m_directions.push_back((cl_char *)malloc(sizeof(cl_char) * m_locicnts[dev_index] * 2));
+			m_mmlocis.push_back((cl_uint *)malloc(sizeof(cl_uint) * m_locicnts[dev_index] * 2));
 
-			m_mmlocibufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint)* m_locicnts[dev_index] * 2, 0));
-			m_mmcountbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_ushort)* m_locicnts[dev_index] * 2, 0));
-			m_directionbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char)* m_locicnts[dev_index] * 2, 0));
+			m_mmlocibufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_uint) * m_locicnts[dev_index] * 2, 0));
+			m_mmcountbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_ushort) * m_locicnts[dev_index] * 2, 0));
+			m_directionbufs.push_back(oclCreateBuffer(m_contexts[dev_index], CL_MEM_WRITE_ONLY, sizeof(cl_char) * m_locicnts[dev_index] * 2, 0));
 
 			oclSetKernelArg(m_comparerkernels[dev_index], 2, sizeof(cl_mem), &m_mmlocibufs[dev_index]);
 			oclSetKernelArg(m_comparerkernels[dev_index], 8, sizeof(cl_mem), &m_mmcountbufs[dev_index]);

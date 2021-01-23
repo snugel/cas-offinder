@@ -52,3 +52,8 @@ jobs:
           cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
         fi
         make
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v2.2.1
+      with:
+        name: Cas-OFFinder Binary (${{ matrix.os }}, ${{ matrix.configuration }}
+        path: build/cas-offinder*

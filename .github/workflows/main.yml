@@ -13,47 +13,36 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         configuration: [Release, Debug]
-        include:
-          - shell: msys2 {0}
-            os: windows-latest
-          - shell: bash
-            os: ubuntu-latest
-          - shell: bash
-            os: macos-latest
     env:
       BUILD_TYPE: ${{ matrix.configuration }}
-    defaults:
-      run:
-        shell: ${{ matrix.shell }}
     steps:
-    - uses: msys2/setup-msys2@v2
-      name: Setup MSYS2
-      if: matrix.os == 'windows-latest'
-      with:
-        update: false
-        release: false
-        install: >-
-          base-devel
-          mingw-w64-x86_64-cmake
-          mingw-w64-x86_64-opencl-headers
-          mingw-w64-x86_64-opencl-icd-git
-    - name: Install APT packages
-      if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get install -y cmake opencl-headers ocl-icd-opencl-dev
-    - uses: actions/checkout@v2
-    - name: Create Build Environment
-      run: mkdir build
-    - name: Build
-      run: |
-        cd build
-        if [[ `uname` == "MINGW"* ]]; then
-          cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G"MSYS Makefiles"
-        else
-          cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-        fi
-        make
-    - name: Upload Build Artifact
-      uses: actions/upload-artifact@v2.2.1
-      with:
-        name: Cas-OFFinder Binary (${{ matrix.os }}, ${{ matrix.configuration }})
-        path: build/cas-offinder*
+      - uses: actions/checkout@v2
+      - name: Download OpenCL Library
+        if: matrix.os == 'windows-latest'
+        uses: actions/checkout@v2
+        with:
+          name: intel/clGPU
+      - name: Setup Developer Command Prompt for MSVC
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Install APT packages
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install -y cmake opencl-headers ocl-icd-opencl-dev
+      - name: Create Build Environment
+        run: mkdir build
+      - name: Build (Linux or macOS)
+        if: matrix.os != 'windows-latest'
+        run: cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE && make
+        working-directory: build
+      - name: Build (Windows)
+        if: matrix.os == 'windows-latest'
+        run: cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G"NMake Makefiles" \
+             -DOpenCL_INCLUDE_DIRS="../clGPU/common/intel_ocl_icd/windows/include" \
+             -DOpenCL_LIBRARY="../clGPU/common/intel_ocl_icd/windows/Release/lib/x64/OpenCL.lib" \
+             && nmake
+        working-directory: build
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v2.2.1
+        with:
+          name: Cas-OFFinder Binary (${{ matrix.os }}, ${{ matrix.configuration }})
+          path: build/cas-offinder*

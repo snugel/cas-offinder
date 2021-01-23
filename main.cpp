@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <ctime>
 #else
 #include <sys/time.h>
@@ -63,7 +63,7 @@ void run_cas_offinder(Cas_OFFinder &s, const char* chromfilename, const char* ou
 }
 
 int main(int argc, char *argv[]) {
-#ifdef _MSC_VER
+#ifdef _WIN32
 	clock_t start, end;
 	start = clock();
 #else
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 		error_exit(2, "Unknown option: ", argv[2]);
 	}
 
-    string devarg = argv[2]+1;
+	string devarg = argv[2]+1;
 	Cas_OFFinder s(devtype, devarg);
 
 	cerr << "Loading input file..." << endl;
@@ -117,13 +117,13 @@ int main(int argc, char *argv[]) {
 		}
 	} else {
 		while ((ent = readdir(dir)) != NULL) {
-			if (ent->d_type == DT_REG) {
+			if (ent->d_type == DT_REG || ent->d_type == DT_LNK) {
 				filepath = s.chrdir + "/" + ent->d_name;
 				run_cas_offinder(s, filepath.c_str(), outfilename.c_str(), &cnum);
 			}
 		}
 	}
-#ifdef _MSC_VER
+#ifdef _WIN32
 	end = clock();
 	seconds = (float)(end - start) / CLOCKS_PER_SEC;
 #else

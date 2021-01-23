@@ -8,7 +8,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+      - uses: dawidd6/action-download-artifact@v2
         with:
+          workflow: main.yml
           name: Cas-OFFinder Binary (windows-latest, Release)
+          workflow_conclusion: success
+          path: windows
+      - uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: main.yml
+          workflow_conclusion: success
+      - run: ls -al

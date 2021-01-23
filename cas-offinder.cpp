@@ -194,6 +194,7 @@ bool Cas_OFFinder::loadNextChunk() {
 
 	unsigned int dev_index;
 	unsigned long long tailsize;
+    size_t overlap;
 
 	m_activedevnum = 0;
 	m_worksizes.clear();
@@ -203,7 +204,9 @@ bool Cas_OFFinder::loadNextChunk() {
 		tailsize = m_chrdatasize - m_totalanalyzedsize;
 		m_activedevnum++;
 		if (tailsize <= m_dicesizes[dev_index]) {
-			oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_TRUE, 0, (size_t)(sizeof(cl_char)* (tailsize + m_patternlen - 1)), (cl_char *)chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
+			if (tailsize < m_patternlen)
+				return false;
+			oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_TRUE, 0, sizeof(cl_char) * tailsize, (cl_char *)chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 			m_totalanalyzedsize += tailsize;
 			m_worksizes.push_back(tailsize - m_patternlen + 1);
 #ifdef DEBUG
@@ -212,9 +215,10 @@ bool Cas_OFFinder::loadNextChunk() {
 			break;
 		}
 		else {
-			oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_TRUE, 0, sizeof(cl_char)* (m_dicesizes[dev_index] + m_patternlen - 1), (cl_char *)chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
+            overlap = MIN(m_patternlen - 1, tailsize - m_dicesizes[dev_index]);
+			oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_TRUE, 0, sizeof(cl_char) * (m_dicesizes[dev_index] + overlap), (cl_char *)chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 			m_totalanalyzedsize += m_dicesizes[dev_index];
-			m_worksizes.push_back(m_dicesizes[dev_index]);
+			m_worksizes.push_back(m_dicesizes[dev_index] - m_patternlen + overlap + 1);
 #ifdef DEBUG
 			cerr << "Worksize: " << m_worksizes[dev_index] << ", Tailsize: " << tailsize << endl;
 #endif

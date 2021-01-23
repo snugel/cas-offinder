@@ -455,7 +455,7 @@ void Cas_OFFinder::parseInput(istream& input) {
 		m_pattern = m_pattern.substr(0, m_pattern.length()-1);
 	transform(m_pattern.begin(), m_pattern.end(), m_pattern.begin(), ::toupper);
 
-	int linecnt = 0;
+	int entrycnt = 0;
 	while (getline(input, line)) {
 		linecnt++;
 		if (line.empty())
@@ -473,6 +473,11 @@ void Cas_OFFinder::parseInput(istream& input) {
 		transform(sline[0].begin(), sline[0].end(), sline[0].begin(), ::toupper);
 		m_compares.push_back(sline[0]);
 		m_thresholds.push_back(atoi(sline[1].c_str()));
+		if (entrycnt == 0) {
+			entrycnt = sline.size();
+		} else if (entrycnt != sline.size()) {
+			throw "Critical error! The number of entries below 2nd line should be consistent.";
+		}
 		if (sline.size() == 3)
 			m_ids.push_back(sline[2]);
 	}

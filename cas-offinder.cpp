@@ -457,7 +457,6 @@ void Cas_OFFinder::parseInput(istream& input) {
 
 	int entrycnt = 0;
 	while (getline(input, line)) {
-		linecnt++;
 		if (line.empty())
 			break;
 		if (line[line.length()-1] == '\r')

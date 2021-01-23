@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, osx-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         configuration: [Release, Debug]
         include:
           - shell: msys2 {0}

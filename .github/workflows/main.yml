@@ -48,6 +48,5 @@ jobs:
         cd build
         CMAKE_ARGS="-DCMAKE_BUILD_TYPE=$BUILD_TYPE"
         if [[ `uname` == "MINGW"* ]]; then CMAKE_ARGS="$CMAKE_ARGS -GMSYS Makefiles"; fi
-        uname
-        cmake .. $CMAKE_ARGS
+        cmake .. "$CMAKE_ARGS"
         make

@@ -482,7 +482,8 @@ void Cas_OFFinder::parseInput(istream& input) {
 				m_ids.push_back(sline[2]);
 		}
 	} catch (const exception& e) {
-		std::cerr << "Critical error! " << e.what() << std::endl;
+		cerr << "Critical error! " << e.what() << endl;
+		exit(1);
 	}
 }
 

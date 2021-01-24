@@ -6,7 +6,9 @@
 #include <cstdlib>
 #include <cstring> // memset
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <assert.h>
+#else
 #include <unistd.h> // readlink
 #include <limits.h> // PATH_MAX
 #endif
@@ -40,12 +42,9 @@ inline char bit_to_seq(unsigned char b) {
 }
 
 int read_twobit(string &filepath, vector<string> &chrnames, string &content, vector<unsigned long long> &chrpos) {
-	unsigned int i, k, chrcnt, chrlen, nblockcnt, maskblockcnt, rawlen, rem, cnt;
-#ifdef _MSC_VER
-	int j;
-#else
-	unsigned int j;
-#endif
+	unsigned int i, j, k, chrcnt, chrlen, nblockcnt, maskblockcnt, rawlen, rem, cnt;
+	int jj;
+
 	size_t readsize;
 	char len_chrname;
 	char chrname[256];
@@ -53,7 +52,8 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 	vector<unsigned int> nblocksizes;
 
 #ifdef _WIN32
-	FILE *input = fopen(filepath.c_str(), "rb");
+	FILE *input = 0;
+	assert(fopen_s(&input, filepath.c_str(), "rb") == 0);
 #else
 	FILE *input;
 	char path_buf[PATH_MAX + 1]; memset(path_buf, 0, PATH_MAX + 1);
@@ -100,10 +100,10 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 		readsize = fread(raw_chrbuf, 1, rawlen, input);
 		cnt = 0;
 
-		#pragma omp parallel for private(j, k)
-		for (j=0; j<chrlen/4; j++) {
+		#pragma omp parallel for private(jj, k)
+		for (jj=0; jj<(int)chrlen/4; jj++) {
 			for (k=0; k<4; k++) {
-				chrbuf[j*4+k] = bit_to_seq((raw_chrbuf[j]>>((3-k)*2))&0x3);
+				chrbuf[jj*4+k] = bit_to_seq((raw_chrbuf[jj]>>((3-k)*2))&0x3);
 			}
 		}
 

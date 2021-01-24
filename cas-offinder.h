@@ -1,10 +1,12 @@
 #include "oclkernels.h"
 
+#include <map>
 #include <vector>
 #include <string>
 #include <cstring>
 #include <fstream>
 #include <algorithm>
+#include <utility>
 
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #ifdef __APPLE__
@@ -22,6 +24,14 @@ using namespace std;
 static cl_platform_id platforms[MAX_PLATFORM_NUM];
 static cl_uint platform_cnt;
 
+typedef pair<string, cl_ushort> compareinfo;
+typedef pair<string, int> bulgeinfo;
+typedef map<string, pair<compareinfo, vector<bulgeinfo> > > m_compare_t;
+
+static inline bool isnumeric(string s) {
+	return s.find_first_not_of("0123456789") == std::string::npos;
+}
+
 class Cas_OFFinder {
 private:
 	cl_device_type m_devtype;
@@ -32,10 +42,10 @@ private:
 	vector<size_t> MAX_LOCAL_SIZE;
 
 	unsigned long long m_chrdatasize;
-	vector<string> m_compares;
-	vector<string> m_ids;
-	vector<cl_ushort> m_thresholds;
+	m_compare_t m_compares;
 	string m_pattern;
+	unsigned int m_dnabulgesize;
+	unsigned int m_rnabulgesize;
 
 	cl_uint m_threshold;
 	cl_uint m_patternlen;
@@ -69,7 +79,7 @@ private:
 	unsigned long long m_totalanalyzedsize;
 	unsigned long long m_lasttotalanalyzedsize;
 	vector<unsigned long long> m_worksizes;
-	cl_uint m_devnum;
+	size_t m_devnum;
 	unsigned int m_activedevnum;
 	unsigned long long m_lastloci;
 
@@ -78,7 +88,7 @@ private:
 
 	void set_complementary_sequence(cl_char* seq, size_t seqlen);
 	void set_seq_flags(int* seq_flags, const cl_char* seq, size_t seqlen);
-	void initOpenCL(vector<int> dev_ids);
+	void initOpenCL(vector<unsigned int> dev_ids);
 	void parseInput(istream& input);
 
 public:

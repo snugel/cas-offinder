@@ -4,6 +4,8 @@ project (Cas-OFFinder)
 set (Cas-OFFinder_VERSION_MAJOR 2)
 set (Cas-OFFinder_VERSION_MINOR 4)
 
+set (CMAKE_CXX_STANDARD 11)
+
 include (CheckIncludeFiles)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
@@ -21,9 +23,12 @@ endif (WIN32)
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
-	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif(OPENMP_FOUND)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-attributes")
+endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
 configure_file (
 	"${PROJECT_SOURCE_DIR}/config.h.in"

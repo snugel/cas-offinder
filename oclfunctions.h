@@ -91,7 +91,7 @@ void oclBuildProgram(cl_program program,
 	if (err != CL_SUCCESS) {
 		cerr << "clBuildProgram Failed: " << err << endl;
         if (err == CL_BUILD_PROGRAM_FAILURE) {
-            for (int i = 0; i < num_devices; i++) {
+            for (unsigned int i = 0; i < num_devices; i++) {
                 // Determine the size of the log
                 size_t log_size;
                 clGetProgramBuildInfo(program, device_list[i], CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);

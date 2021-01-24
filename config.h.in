@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS 1
 
 #cmakedefine HAVE_DIRENT_H
 #cmakedefine BUILD_FOR_SNUCL

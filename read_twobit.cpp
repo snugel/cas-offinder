@@ -52,8 +52,7 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 	vector<unsigned int> nblocksizes;
 
 #ifdef _WIN32
-	FILE *input = 0;
-	assert(fopen_s(&input, filepath.c_str(), "rb") == 0);
+	FILE *input = fopen(filepath.c_str(), "rb");
 #else
 	FILE *input;
 	char path_buf[PATH_MAX + 1]; memset(path_buf, 0, PATH_MAX + 1);

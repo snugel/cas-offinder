@@ -313,6 +313,8 @@ Changelog
   - Update output format to display bulge information
 * 2.4.1
   - Corrected warings, code cleanups, and document updates (@richardkmichael)
+  - Follow symlinks (@richardkmichael)
+  - Allow stdin for input (@richardkmichael)
   - Tagging of input sequences (#28)
   - Github Actions based CI & automatic release
 * 2.4

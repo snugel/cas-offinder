@@ -105,7 +105,7 @@ And just try running it for a short help:
 Also it provides a list of all available OpenCL devices!
 
 On Windows, if you encountered a missing .dll error, you may need to download and install [Visual C++
-Redistributable Packages for Visual Studio 2013](http://www.microsoft.com/en-us/download/details.aspx?id=40784).
+Redistributable Packages for Visual Studio 2015, 2017 and 2019](https://support.microsoft.com/en-us/topic/the-latest-supported-visual-c-downloads-2647da03-1eea-4433-9aff-95f26a218cc0).
 
 Now you should create an input file:
 
@@ -113,6 +113,7 @@ Now you should create an input file:
 - The second line indicates the desired pattern including PAM site,
 - The remaining lines are the query sequences and maximum mismatch numbers, separated by spaces.
 (The length of the desired pattern and the query sequences should be the same!)
+- Optinally, you can spacify labels per each query sequence, it will be annotated in the output file.
 
 For the pattern and the query sequences, mixed bases are allowed to account for the degeneracy in PAM sequences.
 
@@ -154,7 +155,7 @@ Optionally, you can set the ID of devices to limit the number of devices used by
     $> ./cas-offinder input.txt G1 out.txt
     ...
 
-You can use commas, or colons for setting range:
+You can use commas, or colons to select range of devices:
 
     $> ./cas-offinder input.txt G0,1 out.txt
 
@@ -339,7 +340,7 @@ License
 -------
 Cas-OFFinder (except dirent.h) is licensed under the new BSD licence.
 
-Copyright (c) 2013, Jeongbin Park and Sangsu Bae
+Copyright (c) 2021, Jeongbin Park and Sangsu Bae
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,

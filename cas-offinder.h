@@ -90,6 +90,7 @@ private:
 	void set_seq_flags(int* seq_flags, const cl_char* seq, size_t seqlen);
 	void initOpenCL(vector<unsigned int> dev_ids);
 	void parseInput(istream& input);
+	void indicate_mismatches(cl_char* seq, cl_char* comp);
 
 public:
 	string m_chrdir;
@@ -100,13 +101,12 @@ public:
 	Cas_OFFinder(cl_device_type devtype, string devarg);
 	~Cas_OFFinder();
 
+	void writeHeaders(const char* outfilename);
 	void setChrData();
 
 	bool loadNextChunk();
 	void findPattern();
 	void releaseLociinfo();
-
-	void indicate_mismatches(cl_char* seq, cl_char* comp);
 
 	void compareAll(const char* outfilename);
 	void readInputFile(const char* inputfile);

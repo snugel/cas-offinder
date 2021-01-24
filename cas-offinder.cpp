@@ -324,6 +324,16 @@ void Cas_OFFinder::indicate_mismatches(cl_char* seq, cl_char* comp) {
 			seq[k] += 32;
 }
 
+void Cas_OFFinder::writeHeaders(const char* outfilename) {
+	ostream *fo;
+	if (strlen(outfilename) == 1 && outfilename[0] == '-') {
+		fo = &cout;
+	} else {
+		fo = new ofstream(outfilename, ios::out | ios::trunc);
+	}
+	(*fo) << "#Id\tBulge type\tcrRNA\tDNA\tChromosome\tLocation\tDirection\tMismatches\tBulge Size" << endl;
+}
+
 void Cas_OFFinder::compareAll(const char* outfilename) {
 	unsigned int i, j, dev_index;
 	unsigned int bulge_size;
@@ -349,8 +359,6 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 		fo = new ofstream(outfilename, ios::out | ios::app);
 		isfile = true;
 	}
-	(*fo) << "#Id\tBulge type\tcrRNA\tDNA\tChromosome\tLocation\tDirection\tMismatches\tBulge Size" << endl;
-
 	for (auto &ci: m_compares) {
 		compare = ci.first;
 		id = ci.second.first.first;
@@ -543,7 +551,7 @@ void Cas_OFFinder::parseInput(istream& input) {
 			transform(sline[0].begin(), sline[0].end(), sline[0].begin(), ::toupper);
 			threshold = atoi(sline[1].c_str());
 			if (sline.size() == 3)
-				id = line[2];
+				id = sline[2];
 			else
 				id = to_string(linecnt);
 			ci = make_pair(id, threshold);

@@ -15,6 +15,13 @@ Cas-OFFinder has been tested on the platforms below:
 - GNU/Linux (CentOS, OpenSUSE, Debian, Ubuntu/Elementary OS)
 - Mac OS X (Mavericks)
 
+Download
+-------
+
+Cas-OFFinder binaries are available at: https://github.com/snugel/cas-offinder/releases
+
+For further information about installation, check out below `Installation` section.
+
 CRISPR/Cas-derived RNA-guided endonucleases (RGEN)
 -------
 
@@ -233,7 +240,7 @@ Installation
 
 * Download Cas-OFFinder binary here,
 
-  https://sourceforge.net/projects/cas-offinder/files/Binaries
+  https://github.com/snugel/cas-offinder/releases
 
   or compile it from its source code (below section).
 

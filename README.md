@@ -82,17 +82,17 @@ and save it to any directory you want.
 And just try running it for a short help:
 
     $> ./cas-offinder
-    Cas-OFFinder v2.4 (Aug 15 2016)
+    Cas-OFFinder 3.0.0 beta (Jan 24 2021)
 
-    Copyright (c) 2013 Jeongbin Park and Sangsu Bae
+    Copyright (c) 2021 Jeongbin Park and Sangsu Bae
     Website: http://github.com/snugel/cas-offinder
 
     Usage: cas-offinder {input_filename|-} {C|G|A}[device_id(s)] {output_filename|-}
     (C: using CPUs, G: using GPUs, A: using accelerators)
 
-    Example input file:
-    /var/chromosomes/human_hg19
-    NNNNNNNNNNNNNNNNNNNNNRG
+    Example input file (DNA bulge 2, RNA bulge 1):
+    /var/chromosomes/human_hg38
+    NNNNNNNNNNNNNNNNNNNNNRG 2 1
     GGCCGACCTGTCGCTGACGCNNN 5
     CGCCAGCGTCAGCGACAGGTNNN 5
     ACGGCGCCAGCGTCAGCGACNNN 5
@@ -105,7 +105,7 @@ And just try running it for a short help:
 Also it provides a list of all available OpenCL devices!
 
 On Windows, if you encountered a missing .dll error, you may need to download and install [Visual C++
-Redistributable Packages for Visual Studio 2013](http://www.microsoft.com/en-us/download/details.aspx?id=40784).
+Redistributable Packages for Visual Studio 2015, 2017 and 2019](https://support.microsoft.com/en-us/topic/the-latest-supported-visual-c-downloads-2647da03-1eea-4433-9aff-95f26a218cc0).
 
 Now you should create an input file:
 
@@ -113,6 +113,7 @@ Now you should create an input file:
 - The second line indicates the desired pattern including PAM site,
 - The remaining lines are the query sequences and maximum mismatch numbers, separated by spaces.
 (The length of the desired pattern and the query sequences should be the same!)
+- Optinally, you can spacify labels per each query sequence, it will be annotated in the output file (`Id` field).
 
 For the pattern and the query sequences, mixed bases are allowed to account for the degeneracy in PAM sequences.
 
@@ -134,8 +135,8 @@ Following codes are supported:
 
 An example of input file:
 
-    /var/chromosomes/human_hg19
-    NNNNNNNNNNNNNNNNNNNNNRG
+    /var/chromosomes/human_hg38
+    NNNNNNNNNNNNNNNNNNNNNRG 2 1
     GGCCGACCTGTCGCTGACGCNNN 5
     CGCCAGCGTCAGCGACAGGTNNN 5
     ACGGCGCCAGCGTCAGCGACNNN 5
@@ -154,7 +155,7 @@ Optionally, you can set the ID of devices to limit the number of devices used by
     $> ./cas-offinder input.txt G1 out.txt
     ...
 
-You can use commas, or colons for setting range:
+You can use commas, or colons to select range of devices:
 
     $> ./cas-offinder input.txt G0,1 out.txt
 
@@ -163,26 +164,32 @@ You can use commas, or colons for setting range:
     $> ./cas-offinder input.txt G0:2 out.txt
     ...
 
-Then output file will be generated :
-- The first column is the given query sequence,
-- The second column is the sequence name (if you downloaded it from UCSC or Ensembl, it is usually a chromosome name),
-- The third column is the 0-based position of the off-target site (same convention as [Bowtie](https://github.com/BenLangmead/bowtie), not 1-based as IGV Viewer and others),
-- The fourth column is the actual sequence from the position (mismatched bases noted in lowercase letters),
-- The fifth column is the forward strand(+) or reverse strand(-) of the found sequence,
-- The last column is the number of the mismatched bases.
+Then output file will be generated:
+- The first column is the sequence id, by default line numbers, or given labels from the input file.
+- The second columns is the type of bulge, the value is one of `X`, `DNA`, or `RNA`.
+- The third column is the given query sequence (including gaps in case of DNA bulge).
+- The fourth column is the actual sequence at the location (including gaps in case of RNA bulge; mismatched bases are noted in lowercase letters),
+- The fifth column is the sequence name (if you downloaded it from UCSC or Ensembl, it is usually a chromosome name),
+- The sixth column is the 0-based location of the off-target site (same convention as [Bowtie](https://github.com/BenLangmead/bowtie), not 1-based as IGV Viewer and others),
+- The seventh column is the direction of sequence, either forward (+) or reverse (-) strand of the found sequence,
+- The eighth column is the number of the mismatched bases.
+- The last column is the size of bulge.
 
 out.txt:
 
-    GGCCGACCTGTCGCTGACGCNNN chr8    49679        GGgCatCCTGTCGCaGACaCAGG +       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    517739       GcCCtgCaTGTgGCTGACGCAGG +       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    599935       tGCCGtCtTcTCcCTGACGCCAG -       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    5308348      GGCaGgCCTGgCttTGACGCAGG -       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    9525579      GGCCcAgCTGTtGCTGAtGaAAG +       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    12657177     GGCCcACCTGTgGCTGcCcaTAG -       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    12808911     GGCCGACCaGgtGCTccCGCCGG +       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    21351922     GGCCcACCTGaCtCTGAgGaCAG -       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    21965064     GGCCGtCCTGcgGCTGctGCAGG -       5
-    GGCCGACCTGTCGCTGACGCNNN chr8    22409058     GcCCGACCccTCcCcGACGCCAG +       5
+    #Id	Bulge type	crRNA	DNA	Chromosome	Location	Direction	Mismatches	Bulge Size
+    0	X	CAGCAACTCCAGGGGGCCGCNGG	CAGCAACTCCAGaaGGCCGCTGG	chr8	37610874	-	2	0
+    0	DNA	C-AGCAACTCCAGGGGGCCGCNGG	CCAGCAACTCCAGaaGGCCGCTGG	chr8	37610874	-	2	1
+    0	DNA	CA-GCAACTCCAGGGGGCCGCNGG	CcAGCAACTCCAGaaGGCCGCTGG	chr8	37610874	-	3	1
+    0	DNA	CAG-CAACTCCAGGGGGCCGCNGG	CAGACcACTCCAGGGaGCtGCCGG	chr8	1540629	+	3	1
+    0	DNA	CAGCAACTCCAG-GGGGCCGCNGG	CAGCcACTtCAGAGGGGCtGCAGG	chr8	11566198	-	3	1
+    0	DNA	CAGCAACTCCAG-GGGGCCGCNGG	CAGCAgCTgCAGAGGGGgCGCCGG	chr8	111758967	-	3	1
+    ...
+    0	RNA	CAGCAACTCCAGGGGGCCGCNGG	C-aCAACTCCAGGGGGgCcCAGG	chr8	23557969	-	3	1
+    0	RNA	CAGCAACTCCAGGGGGCCGCNGG	a-GCAACTCCAGaaGGCCGCTGG	chr8	37610874	-	3	1
+    0	RNA	CAGCAACTCCAGGGGGCCGCNGG	C-GCAAacCCAGGGGGCCGaGGG	chr8	143431127	-	3	1
+    0	RNA	CAGCAACTCCAGGGGGCCGCNGG	CA-CAACTCCAGGGGGgCcCAGG	chr8	23557969	-	2	1
+    0	RNA	CAGCAACTCCAGGGGGCCGCNGG	CA-aAgCTCCAGGGGGCaGCAGG	chr8	130421607	+	3	1
     ...
 
 Advanced Usage
@@ -191,7 +198,7 @@ Cas-OFFinder is mainly designed for CRISPR/Cas9 derived RGENs, however, it is al
 
 Example input file for TALENs:
 
-    /var/chromosomes/human_hg19
+    /var/chromosomes/human_hg38
     NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
     TTCTGGAGGTGCCTGAGGCCNNNNNNNNNNNNGAGGCCACCTTTCCAGTCCA 5
     TGGCCAATGTGACGCTGACGNNNNNNNNNNNNCTGGAGACTCCAGACTTCCA 5
@@ -301,6 +308,13 @@ https://doi.org/10.1093/bioinformatics/btu048
 
 Changelog
 -------
+* 3.0.0
+  - Native support of DNA/RNA bulges
+  - Update output format to display bulge information
+* 2.4.1
+  - Corrected warings, code cleanups, and document updates (@richardkmichael)
+  - Tagging of input sequences (#28)
+  - Github Actions based CI & automatic release
 * 2.4
   - Corrected critical bug (The last 3 bases of 2bit input could be wrong)
   - Corrected bug (Segmentation fault if the match occurs at the very first location in chromosome)
@@ -333,7 +347,7 @@ License
 -------
 Cas-OFFinder (except dirent.h) is licensed under the new BSD licence.
 
-Copyright (c) 2013, Jeongbin Park and Sangsu Bae
+Copyright (c) 2021, Jeongbin Park and Sangsu Bae
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,

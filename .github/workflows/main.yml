@@ -15,8 +15,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         configuration: [Release, Debug]
-    env:
-      BUILD_TYPE: ${{ matrix.configuration }}
     steps:
       - uses: actions/checkout@v2
       - name: Download OpenCL Library
@@ -35,11 +33,11 @@ jobs:
         run: mkdir build
       - name: Build (Linux or macOS)
         if: matrix.os != 'windows-latest'
-        run: cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE && make
+        run: cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} && make
         working-directory: build
       - name: Build (Windows)
         if: matrix.os == 'windows-latest'
-        run: cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G"NMake Makefiles" \
+        run: cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} -G"NMake Makefiles" \
              -DOpenCL_INCLUDE_DIR="../clGPU/common/intel_ocl_icd/windows/include" \
              -DOpenCL_LIBRARY="../clGPU/common/intel_ocl_icd/windows/Release/lib/x64/OpenCL.lib" \
              && nmake

@@ -301,6 +301,12 @@ https://doi.org/10.1093/bioinformatics/btu048
 
 Changelog
 -------
+* 2.4.1
+  - Corrected warings, code cleanups, and document updates (@richardkmichael)
+  - Follow symlinks (@richardkmichael)
+  - Allow stdin for input (@richardkmichael)
+  - Tagging of input sequences (#28)
+  - Github Actions based CI & automatic release
 * 2.4
   - Corrected critical bug (The last 3 bases of 2bit input could be wrong)
   - Corrected bug (Segmentation fault if the match occurs at the very first location in chromosome)

@@ -150,9 +150,9 @@ Now you can run Cas-OFFinder as following (using GPUs):
     $> ./cas-offinder input.txt G out.txt
     ...
 
-Optionally, you can set the ID of devices to limit the number of devices used by Cas-OFFinder:
+Optionally, you can set the ID of devices to select a specific device used by Cas-OFFinder:
 
-    $> ./cas-offinder input.txt G1 out.txt
+    $ ./cas-offinder input.txt G1 out.txt # use second GPU device (0-based)
     ...
 
 You can use commas, or colons to select range of devices:

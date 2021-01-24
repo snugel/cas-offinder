@@ -137,35 +137,33 @@ An example of input file:
 
     /var/chromosomes/human_hg38
     NNNNNNNNNNNNNNNNNNNNNRG 2 1
-    GGCCGACCTGTCGCTGACGCNNN 5
-    CGCCAGCGTCAGCGACAGGTNNN 5
-    ACGGCGCCAGCGTCAGCGACNNN 5
-    GTCGCTGACGCTGGCGCCGTNNN 5
+    GGCCGACCTGTCGCTGACGCNNN 3 Seq1
+    CGCCAGCGTCAGCGACAGGTNNN 3 Seq2
     ...
 
 Save it as 'input.txt'.
 
 Now you can run Cas-OFFinder as following (using GPUs):
 
-    $> ./cas-offinder input.txt G out.txt
+    $ ./cas-offinder input.txt G out.txt
     ...
 
-Optionally, you can set the ID of devices to limit the number of devices used by Cas-OFFinder:
+Optionally, you can set the ID of devices to select a specific device used by Cas-OFFinder:
 
-    $> ./cas-offinder input.txt G1 out.txt
+    $ ./cas-offinder input.txt G1 out.txt # use second GPU device (0-based)
     ...
 
 You can use commas, or colons to select range of devices:
 
-    $> ./cas-offinder input.txt G0,1 out.txt
+    $ ./cas-offinder input.txt G0,1 out.txt
 
     or
 
-    $> ./cas-offinder input.txt G0:2 out.txt
+    $ ./cas-offinder input.txt G0:2 out.txt
     ...
 
 Then output file will be generated:
-- The first column is the sequence id, by default line numbers, or given labels from the input file.
+- The first column is the sequence id, by default line numbers (0 based), or given labels from the input file.
 - The second columns is the type of bulge, the value is one of `X`, `DNA`, or `RNA`.
 - The third column is the given query sequence (including gaps in case of DNA bulge).
 - The fourth column is the actual sequence at the location (including gaps in case of RNA bulge; mismatched bases are noted in lowercase letters),
@@ -178,18 +176,25 @@ Then output file will be generated:
 out.txt:
 
     #Id	Bulge type	crRNA	DNA	Chromosome	Location	Direction	Mismatches	Bulge Size
-    0	X	CAGCAACTCCAGGGGGCCGCNGG	CAGCAACTCCAGaaGGCCGCTGG	chr8	37610874	-	2	0
-    0	DNA	C-AGCAACTCCAGGGGGCCGCNGG	CCAGCAACTCCAGaaGGCCGCTGG	chr8	37610874	-	2	1
-    0	DNA	CA-GCAACTCCAGGGGGCCGCNGG	CcAGCAACTCCAGaaGGCCGCTGG	chr8	37610874	-	3	1
-    0	DNA	CAG-CAACTCCAGGGGGCCGCNGG	CAGACcACTCCAGGGaGCtGCCGG	chr8	1540629	+	3	1
-    0	DNA	CAGCAACTCCAG-GGGGCCGCNGG	CAGCcACTtCAGAGGGGCtGCAGG	chr8	11566198	-	3	1
-    0	DNA	CAGCAACTCCAG-GGGGCCGCNGG	CAGCAgCTgCAGAGGGGgCGCCGG	chr8	111758967	-	3	1
+    Seq2	DNA	CGCCAGCGTCAGCGACAGG--TNNN	CcCCAGtGTCAGCcACAGGGCTCAG	chr1	34978273	-	3	2
+    Seq2	DNA	CGC--CAGCGTCAGCGACAGGTNNN	CaCTCCAGCcTCAGCGACAGGcAAG	chr1	18173251	+	3	2
+    Seq2	DNA	CG--CCAGCGTCAGCGACAGGTNNN	CaCTCCAGCcTCAGCGACAGGcAAG	chr1	18173251	+	3	2
+    Seq2	DNA	C--GCCAGCGTCAGCGACAGGTNNN	CACtCCAGCcTCAGCGACAGGcAAG	chr1	18173251	+	3	2
+    Seq1	DNA	GGCCGACC--TGTCGCTGACGCNNN	GGCCcAgCTCTGTCGCTGACGgGAG	chr1	40979785	+	3	2
+    Seq1	DNA	GGCCGACCTGTCGCTGA--CGCNNN	GGCCGtCCTGTtGCTGAGACtCGGG	chr1	17408102	-	3	2
+    Seq1	DNA	GGCCGACCTGTCGCTG--ACGCNNN	GGCCGtCCTGTtGCTGAGACtCGGG	chr1	17408102	-	3	2
+    Seq1	DNA	GGCCGACCTGTCGCT--GACGCNNN	GGCCGtCCTGTtGCTGAGACtCGGG	chr1	17408102	-	3	2
     ...
-    0	RNA	CAGCAACTCCAGGGGGCCGCNGG	C-aCAACTCCAGGGGGgCcCAGG	chr8	23557969	-	3	1
-    0	RNA	CAGCAACTCCAGGGGGCCGCNGG	a-GCAACTCCAGaaGGCCGCTGG	chr8	37610874	-	3	1
-    0	RNA	CAGCAACTCCAGGGGGCCGCNGG	C-GCAAacCCAGGGGGCCGaGGG	chr8	143431127	-	3	1
-    0	RNA	CAGCAACTCCAGGGGGCCGCNGG	CA-CAACTCCAGGGGGgCcCAGG	chr8	23557969	-	2	1
-    0	RNA	CAGCAACTCCAGGGGGCCGCNGG	CA-aAgCTCCAGGGGGCaGCAGG	chr8	130421607	+	3	1
+    Seq2	X	CGCCAGCGTCAGCGACAGGTNNN	CtCCAGCcTCAGCGACAGGcAAG	chr1	18173253	+	3	0
+    Seq2	RNA	CGNCCCAGCGTCAGCGACAGGTNNN	C-CCCCAGtGTCActGACAGGTGGG	chr1	5502832	-	3	1
+    Seq2	RNA	CGNCCCAGCGTCAGCGACAGGTNNN	t-CtCCAGCcTCAGCGACAGGcAAG	chr1	18173254	+	3	1
+    Seq2	RNA	CGCCGCAGCGTCAGCGACAGGTNNN	CG-CGCAGCGaCAGgGAgAGGTGAG	chr1	1273663	-	3	1
+    Seq2	RNA	CGCCGCAGCGTCAGCGACAGGTNNN	CGC-GCAGCGaCAGgGAgAGGTGAG	chr1	1273663	-	3	1
+    Seq2	RNA	CGCCAGCGTCGCAGCGACAGGTNNN	CGCCtGCG-CGgAGCtACAGGTGAG	chr1	18888560	+	3	1
+    Seq2	RNA	CGCCAGCGTCGCAGCGACAGGTNNN	aGCCAGCt-CtCAGCGACAGcTGAG	chr1	91631879	+	3	1
+    Seq2	RNA	CGCCAGCGTCGTAGCGACAGGTNNN	CGCCtGCGg-GgAGCtACAGGTGAG	chr1	18888560	+	3	1
+    Seq2	RNA	CGCCAGCGTCAGCGGCACAGGTNNN	CcCCAGaGTCAGC-GCACAGaTGGG	chr1	4006295	-	3	1
+    Seq2	RNA	CGCCAGCGTCAGCGACGAAGGTNNN	tGCCAGCGgCAGCGA-GAAGtTTAG	chr1	8462729	+	3	1
     ...
 
 Advanced Usage

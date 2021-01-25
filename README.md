@@ -121,11 +121,12 @@ Redistributable Packages for Visual Studio 2015, 2017 and 2019](https://support.
 
 Now you should create an input file:
 
-- The first line of the input file gives directory path containing FASTA or 2BIT files,
+- The first line of the input file gives a directory path containing FASTA or 2BIT files,
 - The second line indicates the desired pattern including PAM site,
-- The remaining lines are the query sequences and maximum mismatch numbers, separated by spaces.
-(The length of the desired pattern and the query sequences should be the same!)
-- Optinally, you can spacify labels per each query sequence, it will be annotated in the output file (`Id` field).
+- The remaining lines are the query sequences and maximum mismatch numbers, separated by spaces,
+- Optionally, you can specify labels per each query sequence, it will be annotated in the output file (`Id` field).
+
+The length of the desired pattern and the query sequences should be the same!
 
 For the pattern and the query sequences, mixed bases are allowed to account for the degeneracy in PAM sequences.
 

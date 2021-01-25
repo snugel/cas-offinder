@@ -285,25 +285,6 @@ void Cas_OFFinder::findPattern() {
 	}
 }
 
-void Cas_OFFinder::releaseLociinfo() {
-	unsigned int dev_index;
-
-	for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
-		free((void *)m_mmcounts[dev_index]);
-		free((void *)m_flags[dev_index]);
-		free((void *)m_directions[dev_index]);
-		free((void *)m_mmlocis[dev_index]);
-	}
-	m_directions.clear();
-	m_mmlocis.clear();
-	m_mmcounts.clear();
-	m_locicnts.clear();
-	clearbufvec(&m_mmlocibufs);
-	m_flags.clear();
-	clearbufvec(&m_mmcountbufs);
-	clearbufvec(&m_directionbufs);
-}
-
 void Cas_OFFinder::indicate_mismatches(cl_char* seq, cl_char* comp) {
 	unsigned int k;
 	for (k = 0; k < m_patternlen; k++)
@@ -438,6 +419,25 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 	delete [] strbuf;
 	delete [] cl_compare;
 	delete [] cl_compare_flags;
+}
+
+void Cas_OFFinder::releaseLociinfo() {
+	unsigned int dev_index;
+
+	for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
+		free((void *)m_mmcounts[dev_index]);
+		free((void *)m_flags[dev_index]);
+		free((void *)m_directions[dev_index]);
+		free((void *)m_mmlocis[dev_index]);
+	}
+	m_directions.clear();
+	m_mmlocis.clear();
+	m_mmcounts.clear();
+	m_locicnts.clear();
+	clearbufvec(&m_mmlocibufs);
+	m_flags.clear();
+	clearbufvec(&m_mmcountbufs);
+	clearbufvec(&m_directionbufs);
 }
 
 void Cas_OFFinder::init_platforms() {

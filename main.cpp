@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
 	s.readInputFile(argv[1]);
 
 	outfilename = argv[3];
-	s.writeHeaders(outfilename);
+	s.writeHeaders(outfilename.c_str());
 
 	int cnum = 0;
 	if ((dir = opendir(s.m_chrdir.c_str())) == NULL) {

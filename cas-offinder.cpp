@@ -66,6 +66,14 @@ void Cas_OFFinder::set_seq_flags(int* seq_flags, const cl_char* seq, size_t seql
 		seq_flags[n] = -1;
 }
 
+void Cas_OFFinder::initOpenCLPlatforms() {
+	oclGetPlatformIDs(MAX_PLATFORM_NUM, platforms, &platform_cnt);
+	if (platform_cnt == 0) {
+		cerr << "No OpenCL platforms found. Check OpenCL installation!" << endl;
+		exit(1);
+	}
+}
+
 void Cas_OFFinder::initOpenCLDevices(vector<unsigned int> dev_ids) {
 	unsigned int i, j;
 
@@ -440,13 +448,6 @@ void Cas_OFFinder::releaseLociinfo() {
 	clearbufvec(&m_directionbufs);
 }
 
-void Cas_OFFinder::init_platforms() {
-	oclGetPlatformIDs(MAX_PLATFORM_NUM, platforms, &platform_cnt);
-	if (platform_cnt == 0) {
-		cerr << "No OpenCL platforms found. Check OpenCL installation!" << endl;
-		exit(1);
-	}
-}
 void Cas_OFFinder::print_usage() {
 	unsigned int i, j;
 	cout << "Cas-OFFinder " << CAS_OFFINDER_VERSION << " (Compiled on: " << __DATE__ << ")" << endl <<

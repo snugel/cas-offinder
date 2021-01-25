@@ -112,5 +112,5 @@ public:
 	void readInputFile(const char* inputfile);
 
 	static void print_usage();
-	static void init_platforms();
+	static void initOpenCLPlatforms();
 };

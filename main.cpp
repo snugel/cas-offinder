@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
 	DIR* dir;
 	dirent *ent;
 
-	Cas_OFFinder::init_platforms();
+	Cas_OFFinder::initOpenCLPlatforms();
 
 	if (argc < 4) { // Not all option specified
 		Cas_OFFinder::print_usage();

@@ -51,7 +51,6 @@ void run_cas_offinder(Cas_OFFinder &s, const char* chromfilename, const char* ou
 	}
 	cerr << "Sending data to devices..." << endl;
 	s.setChrData();
-	s.writeHeaders(outfilename);
 	cerr << "Chunk load started." << endl;
 	while (s.loadNextChunk()) {
 		// Find patterns in the chunk
@@ -107,6 +106,7 @@ int main(int argc, char *argv[]) {
 	s.readInputFile(argv[1]);
 
 	outfilename = argv[3];
+	s.writeHeaders(outfilename);
 
 	int cnum = 0;
 	if ((dir = opendir(s.m_chrdir.c_str())) == NULL) {

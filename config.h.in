@@ -1,6 +1,10 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #cmakedefine HAVE_DIRENT_H
+
+// SNUCL is OpenCL for heterogeneous clusters - multiple vendor platforms as a single platform.
+//   i.e., Use a Xeon CPU, AMD GPU, NVIDIA GPU as a single platform, sharing buffers, events, etc.
+// See: http://snucl.snu.ac.kr/
 #cmakedefine BUILD_FOR_SNUCL
 
 #ifdef BUILD_FOR_SNUCL

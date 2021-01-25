@@ -66,7 +66,7 @@ void Cas_OFFinder::set_seq_flags(int* seq_flags, const cl_char* seq, size_t seql
 		seq_flags[n] = -1;
 }
 
-void Cas_OFFinder::initOpenCL(vector<unsigned int> dev_ids) {
+void Cas_OFFinder::initOpenCLDevices(vector<unsigned int> dev_ids) {
 	unsigned int i, j;
 
 	cl_device_id* found_devices = new cl_device_id[MAX_DEVICE_NUM];
@@ -141,7 +141,7 @@ Cas_OFFinder::Cas_OFFinder(cl_device_type devtype, string devarg) {
 			cerr << "Something wrong with the device ID argument. Use all available devices instead..." << endl;
 		}
 	}
-	initOpenCL(dev_ids);
+	initOpenCLDevices(dev_ids);
 }
 
 Cas_OFFinder::~Cas_OFFinder() {

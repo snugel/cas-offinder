@@ -88,7 +88,7 @@ private:
 
 	void set_complementary_sequence(cl_char* seq, size_t seqlen);
 	void set_seq_flags(int* seq_flags, const cl_char* seq, size_t seqlen);
-	void initOpenCL(vector<unsigned int> dev_ids);
+	void initOpenCLDevices(vector<unsigned int> dev_ids);
 	void parseInput(istream& input);
 	void indicate_mismatches(cl_char* seq, cl_char* comp);
 

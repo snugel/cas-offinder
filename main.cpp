@@ -76,8 +76,6 @@ int main(int argc, char *argv[]) {
 	DIR* dir;
 	dirent *ent;
 
-	int maxdevnum = MAX_DEVICE_NUM;
-
 	Cas_OFFinder::init_platforms();
 
 	if (argc < 4) { // Not all option specified

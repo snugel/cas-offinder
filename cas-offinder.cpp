@@ -499,12 +499,20 @@ static inline bool parseLine(istream& input, string& line, bool expect_line = tr
 	} else {
 		if (!getline(input, line))
 			return false;
+
+		// Remove possible Windows-only '\r'.
 		if (line[line.size()-1] == '\r')
 			line = line.substr(0, line.size()-1);
 	}
 	return true;
 }
 
+/*
+ * Reads the input file and configures this Cas_OFFinder instance.
+ *
+ * Sets public members: m_chrdir
+ * Sets private members: m_dnabulgesize, m_rnabulgesize, m_pattern
+ */
 void Cas_OFFinder::parseInput(istream& input) {
 	string line;
 	vector<string> sline;

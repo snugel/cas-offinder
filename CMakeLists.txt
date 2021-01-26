@@ -4,6 +4,25 @@ project (Cas-OFFinder)
 set (Cas-OFFinder_VERSION_MAJOR 2)
 set (Cas-OFFinder_VERSION_MINOR 4)
 
+set (SOURCES
+	main.cpp
+	cas-offinder.cpp
+	read_fasta.cpp
+	read_twobit.cpp
+	cas-offinder.cl
+)
+
+set (HEADERS
+	config.h
+	cas-offinder.h
+	read_fasta.h
+	read_twobit.h
+	oclfunctions.h
+	oclkernels.h
+)
+
+add_executable(cas-offinder ${SOURCES} ${HEADERS})
+
 include (CheckIncludeFiles)
 check_include_files (dirent.h HAVE_DIRENT_H)
 
@@ -23,8 +42,7 @@ endif (WIN32)
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
-	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+	target_link_libraries(cas-offinder OpenMP::OpenMP_CXX)
 endif(OPENMP_FOUND)
 
 configure_file (
@@ -34,24 +52,6 @@ configure_file (
 
 execute_process(COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
 
-set (SOURCES
-	main.cpp
-	cas-offinder.cpp
-	read_fasta.cpp
-	read_twobit.cpp
-	cas-offinder.cl
-)
-
-set (HEADERS
-	config.h
-	cas-offinder.h
-	read_fasta.h
-	read_twobit.h
-	oclfunctions.h
-	oclkernels.h
-)
-
-add_executable(cas-offinder ${SOURCES} ${HEADERS})
 if (APPLE)
 	target_link_libraries(cas-offinder "-framework OpenCL")
 else (APPLE)

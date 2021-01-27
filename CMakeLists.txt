@@ -25,9 +25,6 @@ set (HEADERS
 
 add_executable (cas-offinder ${SOURCES} ${HEADERS})
 
-include (CheckIncludeFiles)
-
-
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-attributes")
 endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

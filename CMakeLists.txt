@@ -28,6 +28,9 @@ add_executable (cas-offinder ${SOURCES} ${HEADERS})
 include (CheckIncludeFiles)
 
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-attributes")
+endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
 if (WIN32)
 	message ("Windows system detected, assume no proper dirent.h is available.")
@@ -43,9 +46,6 @@ if (OPENMP_FOUND)
 	target_link_libraries(cas-offinder OpenMP::OpenMP_CXX)
 endif (OPENMP_FOUND)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-attributes")
-endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
 configure_file (
 	"${PROJECT_SOURCE_DIR}/config.h.in"

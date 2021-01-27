@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
     
 jobs:
-  create_release:
-    name: Create release (if needed)
+  preamble:
+    name: Preamble
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -23,7 +23,8 @@ jobs:
           release_name: Release ${{ github.ref }}
 
   build:
-    needs: create_release
+    name: Build Cas-OFFinder ({{ $matrix.name }}, {{ $matrix.configuration }}, {{ $matrix.arch }})
+    needs: preamble
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

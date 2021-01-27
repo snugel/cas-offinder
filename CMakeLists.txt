@@ -29,8 +29,6 @@ include (CheckIncludeFiles)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 
-find_package (OpenCL REQUIRED)
-target_link_libraries(cas-offinder OpenCL::OpenCL)
 
 
 if (WIN32)
@@ -38,6 +36,9 @@ if (WIN32)
 	message ("As a workaround, a custom dirent.h for Windows (by Toni Ronkko) will be used.")
 	message ("For more information, please visit https://github.com/tronkko/dirent")
 endif (WIN32)
+
+find_package (OpenCL REQUIRED)
+target_link_libraries(cas-offinder OpenCL::OpenCL)
 
 find_package (OpenMP)
 if (OPENMP_FOUND)

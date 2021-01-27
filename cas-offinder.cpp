@@ -449,7 +449,7 @@ void Cas_OFFinder::init_platforms() {
 }
 void Cas_OFFinder::print_usage() {
 	unsigned int i, j;
-	cout << "Cas-OFFinder 3.0.0b (" << __DATE__ << ")" << endl <<
+	cout << "Cas-OFFinder " << CAS_OFFINDER_VERSION << " (Compiled on: " << __DATE__ << ")" << endl <<
 		endl <<
 		"Copyright (c) 2021 Jeongbin Park and Sangsu Bae" << endl <<
 		"Website: http://github.com/snugel/cas-offinder" << endl <<

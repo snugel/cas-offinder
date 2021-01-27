@@ -16,3 +16,5 @@
 
 #define MAX_PLATFORM_NUM 10
 #define MAX_DEVICE_NUM 1000
+
+#define CAS_OFFINDER_VERSION "@Cas-OFFinder_VERSION@"

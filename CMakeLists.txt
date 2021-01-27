@@ -1,8 +1,8 @@
 cmake_minimum_required (VERSION 3.1)
-project (Cas-OFFinder)
 
-set (Cas-OFFinder_VERSION_MAJOR 3)
-set (Cas-OFFinder_VERSION_MINOR 0)
+project (Cas-OFFinder
+         VERSION 3.0.0
+)
 
 set (CMAKE_CXX_STANDARD 11)
 

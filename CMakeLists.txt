@@ -30,8 +30,8 @@ include (CheckIncludeFiles)
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 
 find_package (OpenCL REQUIRED)
-include_directories ("${OpenCL_INCLUDE_DIRS}")
-link_directories (${OpenCL_LIBRARY})
+target_link_libraries(cas-offinder OpenCL::OpenCL)
+
 
 include_directories ("${PROJECT_SOURCE_DIR}")
 if (WIN32)
@@ -56,9 +56,4 @@ configure_file (
 
 execute_process(COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
 
-if (APPLE)
-	target_link_libraries(cas-offinder "-framework OpenCL")
-else (APPLE)
-	target_link_libraries(cas-offinder ${OpenCL_LIBRARY})
-endif (APPLE)
 add_custom_command(TARGET cas-offinder PRE_BUILD COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")

@@ -6,6 +6,25 @@ set (Cas-OFFinder_VERSION_MINOR 0)
 
 set (CMAKE_CXX_STANDARD 11)
 
+set (SOURCES
+	main.cpp
+	cas-offinder.cpp
+	read_fasta.cpp
+	read_twobit.cpp
+	cas-offinder.cl
+)
+
+set (HEADERS
+	config.h
+	cas-offinder.h
+	read_fasta.h
+	read_twobit.h
+	oclfunctions.h
+	oclkernels.h
+)
+
+add_executable(cas-offinder ${SOURCES} ${HEADERS})
+
 include (CheckIncludeFiles)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
@@ -37,24 +56,6 @@ configure_file (
 
 execute_process(COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
 
-set (SOURCES
-	main.cpp
-	cas-offinder.cpp
-	read_fasta.cpp
-	read_twobit.cpp
-	cas-offinder.cl
-)
-
-set (HEADERS
-	config.h
-	cas-offinder.h
-	read_fasta.h
-	read_twobit.h
-	oclfunctions.h
-	oclkernels.h
-)
-
-add_executable(cas-offinder ${SOURCES} ${HEADERS})
 if (APPLE)
 	target_link_libraries(cas-offinder "-framework OpenCL")
 else (APPLE)

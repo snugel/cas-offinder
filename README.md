@@ -288,6 +288,11 @@ Compile
 
   Then cas-offinder binary will be generated. Copy it wherever you want.
 
+  If you have difficulty compiling cas-offinder, cmake can output system information to a file.
+  Please open a GitHub issue and attach the file.
+
+      $ cmake --system-information cmake-sys-info.log
+
 Module reference
 ----------------
 

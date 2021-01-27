@@ -23,7 +23,7 @@ set (HEADERS
 	oclkernels.h
 )
 
-add_executable(cas-offinder ${SOURCES} ${HEADERS})
+add_executable (cas-offinder ${SOURCES} ${HEADERS})
 
 include (CheckIncludeFiles)
 
@@ -39,10 +39,10 @@ if (WIN32)
 	message ("For more information, please visit https://github.com/tronkko/dirent")
 endif (WIN32)
 
-find_package(OpenMP)
+find_package (OpenMP)
 if (OPENMP_FOUND)
 	target_link_libraries(cas-offinder OpenMP::OpenMP_CXX)
-endif(OPENMP_FOUND)
+endif (OPENMP_FOUND)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-attributes")

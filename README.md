@@ -259,6 +259,8 @@ Compile
 -------
   The OpenCL library is required to compile Cas-OFFinder.
 
+  The OpenMP library is optional, for faster processing of 2BIT files.
+
   To support cross-platform compilation on various operating systems,
   CMake build system is used (more informations on http://www.cmake.org).
 

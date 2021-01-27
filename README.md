@@ -16,14 +16,14 @@ Cas-OFFinder has been tested on the platforms below:
 - Mac OS X (Mavericks)
 
 Download
--------
+--------
 
 Cas-OFFinder binaries are available at: https://github.com/snugel/cas-offinder/releases
 
 For further information about installation, check out below `Installation` section.
 
 CRISPR/Cas-derived RNA-guided endonucleases (RGEN)
--------
+--------------------------------------------------
 
 RGENs use complementary base pairing to recognize target sites.
 
@@ -42,7 +42,7 @@ PAM sites:
 * __SaCas9__ from *Staphylococcus aureus*: 5’-NNGRRT-3’ (R = A or G)
 
 Usage
--------
+-----
 
 Cas-OFFinder can run with:
 
@@ -148,7 +148,7 @@ An example of input file:
     CGCCAGCGTCAGCGACAGGTNNN 3 Seq2
     ...
 
-Save it as 'input.txt'.
+Save it as `input.txt`.
 
 Now you can run Cas-OFFinder as following (using GPUs):
 
@@ -205,7 +205,7 @@ out.txt:
     ...
 
 Advanced Usage
-----------------
+--------------
 Cas-OFFinder is mainly designed for CRISPR/Cas9 derived RGENs, however, it is also can be used for searching off-targets of other nucleases, e.g. TALENs(Transcription activator-like effector nucleases) or ZFNs(Zinc-finger nucleases), by specifying pattern sequence as all 'N's.
 
 Example input file for TALENs:
@@ -220,7 +220,7 @@ Cas-OFFinder can handle RNA/DNA bulges by using a small wrapper script, found
 [here](https://github.com/hyugel/cas-offinder-bulge).
 
 Installation
-----------------
+------------
 
 * Cas-OFFinder requires an OpenCL-enabled device and corresponding runtime API pre-installed to run properly.
 
@@ -256,8 +256,8 @@ Installation
   or compile it from its source code (below section).
 
 Compile
-----------------
-  OpenCL library is required to compile Cas-OFFinder.
+-------
+  The OpenCL library is required to compile Cas-OFFinder.
 
   To support cross-platform compilation on various operating systems,
   CMake build system is used (more informations on http://www.cmake.org).
@@ -324,7 +324,7 @@ Changelog
   - Native support of DNA/RNA bulges
   - Update output format to display bulge information
 * 2.4.1
-  - Corrected warings, code cleanups, and document updates (@richardkmichael)
+  - Corrected warnings, code cleanups, and document updates (@richardkmichael)
   - Follow symlinks (@richardkmichael)
   - Allow stdin for input (@richardkmichael)
   - Tagging of input sequences (#28)

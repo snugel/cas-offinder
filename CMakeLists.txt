@@ -33,7 +33,6 @@ find_package (OpenCL REQUIRED)
 target_link_libraries(cas-offinder OpenCL::OpenCL)
 
 
-include_directories ("${PROJECT_SOURCE_DIR}")
 if (WIN32)
 	message ("Windows system detected, assume no proper dirent.h is available.")
 	message ("As a workaround, a custom dirent.h for Windows (by Toni Ronkko) will be used.")

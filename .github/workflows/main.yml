@@ -7,7 +7,7 @@ on:
     
 jobs:
   create_release:
-    name: Create release
+    name: Create release (if needed)
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -65,6 +65,7 @@ jobs:
              -DOpenCL_INCLUDE_DIR="../clGPU/common/intel_ocl_icd/windows/include" \
              -DOpenCL_LIBRARY="../clGPU/common/intel_ocl_icd/windows/Release/lib/x64/OpenCL.lib" \
              && nmake
+        working-directory: build
       - name: Compress Binary
         shell: bash
         run: zip -j cas-offinder_${{ matrix.name }}_${{ matrix.arch }}.zip build/cas-offinder${{ matrix.extension }}

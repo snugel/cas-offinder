@@ -13,6 +13,7 @@ set (SOURCES
 	read_fasta.cpp
 	read_twobit.cpp
 	cas-offinder.cl
+	oclfunctions.cpp
 )
 
 set (HEADERS

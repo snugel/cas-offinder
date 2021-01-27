@@ -1,5 +1,3 @@
-#include "oclkernels.h"
-
 #include <map>
 #include <vector>
 #include <string>
@@ -8,16 +6,7 @@
 #include <algorithm>
 #include <utility>
 
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
-#ifdef __APPLE__
-#  include <OpenCL/cl.h>
-#else
-#  include <CL/cl.h>
-#endif
-
-#ifndef MIN
-#define MIN(a,b) ( ((a)<(b))?(a):(b) )
-#endif
+#include "oclfunctions.h"
 
 using namespace std;
 

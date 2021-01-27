@@ -1,8 +1,11 @@
 #include "config.h"
 
+#include "oclkernels.h"
 #include "cas-offinder.h"
-#include "oclfunctions.h"
 
+#ifndef MIN
+#define MIN(a,b) ( ((a)<(b))?(a):(b) )
+#endif
 #include <sstream>
 #include <iterator>
 

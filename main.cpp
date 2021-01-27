@@ -1,6 +1,7 @@
 #include "config.h"
 
 #include "cas-offinder.h"
+#include "oclfunctions.h"
 #include "read_fasta.h"
 #include "read_twobit.h"
 

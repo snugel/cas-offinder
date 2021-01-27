@@ -289,15 +289,16 @@ Compile
   In POSIX environment (`g++` should be pre-installed), launch terminal and type
   the following to build Cas-OFFinder:
 
-      cmake -G "Unix Makefiles"
+      cmake -G "Unix Makefiles" .
       make
 
   On Windows (Visual Studio should be pre-installed), launch 'Visual Studio
   Command Prompt'.  (You can find it under 'Start menu' - 'Microsoft Visual
   Studio xxxx' - 'Visual Studio Tools'.)
-  Assuming the CMake binary is installed in `C:\Program Files (x86)\CMake 2.8\bin`, type the following:
 
-      "C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -G "NMake Makefiles"
+  Assuming the CMake binary is installed in `C:\Program Files (x86)\CMake 3.19\bin`, type the following:
+
+      "C:\Program Files (x86)\CMake 3.19\bin\cmake.exe" -G "NMake Makefiles" .
       nmake
 
   Then cas-offinder binary will be generated. Copy it wherever you want.

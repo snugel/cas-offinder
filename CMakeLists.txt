@@ -42,7 +42,7 @@ endif (WIN32)
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
-	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+	target_link_libraries(cas-offinder OpenMP::OpenMP_CXX)
 endif(OPENMP_FOUND)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

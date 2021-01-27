@@ -53,9 +53,6 @@ jobs:
       - name: Install APT packages
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install -y cmake opencl-headers ocl-icd-opencl-dev
-      - name: Install zip
-        if: matrix.os == 'windows-latest'
-        run: choco install zip
       - name: Create Build Environment
         run: mkdir build
       - name: Build (Linux/macOS)
@@ -69,6 +66,7 @@ jobs:
              -DOpenCL_LIBRARY="../clGPU/common/intel_ocl_icd/windows/Release/lib/x64/OpenCL.lib" \
              && nmake
       - name: Compress Binary
+        shell: bash
         run: zip -j cas-offinder_${{ matrix.name }}_${{ matrix.arch }}.zip build/cas-offinder${{ matrix.extension }}
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v2.2.1

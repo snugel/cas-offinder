@@ -68,8 +68,9 @@ jobs:
              && nmake
         working-directory: build
       - name: Compress Binary
-        shell: bash
-        run: zip -j cas-offinder_${{ matrix.name }}_${{ matrix.arch }}.zip build/cas-offinder${{ matrix.extension }}
+        uses: montudor/action-zip@v0.1.1
+        with:
+          args: zip -j cas-offinder_${{ matrix.name }}_${{ matrix.arch }}.zip build/cas-offinder${{ matrix.extension }}
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v2.2.1
         with:

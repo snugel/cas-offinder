@@ -261,12 +261,14 @@ Compile
 
   The OpenMP library is optional, for faster processing of 2BIT files.
 
-  To support cross-platform compilation on various operating systems,
-  CMake build system is used (more informations on http://www.cmake.org).
+  To support cross-platform compilation on various operating systems, the
+  CMake build system is used. See http://www.cmake.org for more information.
 
-  First, download CMake here (http://www.cmake.org/cmake/resources/software.html).
-  If you use Ubuntu linux, you can also install it via apt-get,
-  `apt-get install cmake`.
+  If you use Ubuntu linux, you can also install it via apt-get, `apt-get install cmake`.
+
+  If you use macOS and homebrew, you can also install it via brew, `brew install cmake`.
+
+  Otherwise, download CMake [here](http://www.cmake.org/cmake/resources/software.html).
 
   Checkout the source code of Cas-OFFinder with Git client,
   or download it manually on github website.

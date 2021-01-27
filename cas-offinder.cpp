@@ -450,7 +450,7 @@ void Cas_OFFinder::releaseLociinfo() {
 
 void Cas_OFFinder::print_usage() {
 	unsigned int i, j;
-	cout << "Cas-OFFinder " << CAS_OFFINDER_VERSION << " (Compiled on: " << __DATE__ << ")" << endl <<
+	cout << "Cas-OFFinder " << CAS_OFFINDER_VERSION << " (" << __DATE__ << ")" << endl <<
 		endl <<
 		"Copyright (c) 2021 Jeongbin Park and Sangsu Bae" << endl <<
 		"Website: " << CAS_OFFINDER_HOMEPAGE_URL << endl <<

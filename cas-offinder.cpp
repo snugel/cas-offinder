@@ -452,7 +452,7 @@ void Cas_OFFinder::print_usage() {
 	cout << "Cas-OFFinder " << CAS_OFFINDER_VERSION << " (Compiled on: " << __DATE__ << ")" << endl <<
 		endl <<
 		"Copyright (c) 2021 Jeongbin Park and Sangsu Bae" << endl <<
-		"Website: http://github.com/snugel/cas-offinder" << endl <<
+		"Website: " << CAS_OFFINDER_HOMEPAGE_URL << endl <<
 		endl <<
 		"Usage: cas-offinder {input_filename|-} {C|G|A}[device_id(s)] {output_filename|-}" << endl <<
 		"(C: using CPUs, G: using GPUs, A: using accelerators)" << endl <<

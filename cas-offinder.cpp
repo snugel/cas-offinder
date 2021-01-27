@@ -12,7 +12,7 @@ using namespace std;
 	if ((it = m_compares.find(a)) == m_compares.end())\
 		m_compares[a] = make_pair(b, vector<bulgeinfo>{c});\
 	else\
-	    (it->second).second.push_back(c);
+		(it->second).second.push_back(c);
 
 vector<string> split(string const &input) {
 	istringstream sbuffer(input);

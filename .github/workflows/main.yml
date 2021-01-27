@@ -67,13 +67,14 @@ jobs:
              -DOpenCL_LIBRARY="../clGPU/common/intel_ocl_icd/windows/Release/lib/x64/OpenCL.lib" \
              && nmake
         working-directory: build
-      - name: Compress Binary
-        run: 7z a cas-offinder_${{ matrix.name }}_${{ matrix.arch }}.zip build/cas-offinder${{ matrix.extension }}
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v2.2.1
         with:
           name: Cas-OFFinder Binary (${{ matrix.os }}, ${{ matrix.configuration }})
           path: build/cas-offinder${{ matrix.extension }}
+      - name: Compress Binary
+        if: startswith(github.ref, 'refs/tags/')
+        run: 7z a cas-offinder_${{ matrix.name }}_${{ matrix.arch }}.zip build/cas-offinder${{ matrix.extension }}
       - name: Upload Release Asset
         if: startswith(github.ref, 'refs/tags/')
         uses: actions/upload-release-asset@v1

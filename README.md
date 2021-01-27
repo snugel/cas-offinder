@@ -71,10 +71,10 @@ Extract all FASTA files in a directory.
 
 For example (human chromosomes, in POSIX environment):
 
-    $> wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz
-    $> mkdir -p /var/chromosome/human_hg19
-    $> tar zxf chromFa.tar.gz -C /var/chromosome/human_hg19
-    $> ls -al /var/chromosome/human_hg19
+    $ wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz
+    $ mkdir -p /var/chromosome/human_hg19
+    $ tar zxf chromFa.tar.gz -C /var/chromosome/human_hg19
+    $ ls -al /var/chromosome/human_hg19
       drwxrwxr-x.  2 user group      4096 2013-10-18 11:49 .
       drwxrwxr-x. 16 user group      4096 2013-11-12 12:44 ..
       -rw-rw-r--.  1 user group 254235640 2009-03-21 00:58 chr1.fa
@@ -93,7 +93,7 @@ and save it to any directory you want.
 
 And just try running it for a short help:
 
-    $> ./cas-offinder
+    $ ./cas-offinder
     Cas-OFFinder 3.0.0 beta (Jan 24 2021)
 
     Copyright (c) 2021 Jeongbin Park and Sangsu Bae
@@ -348,6 +348,7 @@ Changelog
 * 3.0.0
   - Native support of DNA/RNA bulges
   - Update output format to display bulge information
+  - Code cleanup / Better library handling by CMake (@richardkmichael)
 * 2.4.1
   - Corrected warnings, code cleanups, and document updates (@richardkmichael)
   - Follow symlinks (@richardkmichael)

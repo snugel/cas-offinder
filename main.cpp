@@ -10,12 +10,13 @@
 #include <vector>
 
 #ifdef _WIN32
-#include <ctime>
+	#include <ctime>
 #else
-#include <sys/time.h>
-#include <unistd.h>
-#include <sys/stat.h>
+	#include <sys/time.h>
+	#include <unistd.h>
+	#include <sys/stat.h>
 #endif
+
 #include <cstdlib>
 #include <cstdarg>
 
@@ -75,9 +76,7 @@ int main(int argc, char *argv[]) {
 	DIR* dir;
 	dirent *ent;
 
-	int maxdevnum = MAX_DEVICE_NUM;
-
-	Cas_OFFinder::init_platforms();
+	Cas_OFFinder::initOpenCLPlatforms();
 
 	if (argc < 4) { // Not all option specified
 		Cas_OFFinder::print_usage();

@@ -1,10 +1,13 @@
 Cas-OFFinder
 ==================================
 
-Cas-OFFinder is OpenCL based, ultrafast and versatile program
-that searches for potential off-target sites of CRISPR/Cas-derived RNA-guided endonucleases (RGEN).
+Cas-OFFinder is OpenCL based, ultrafast and versatile program that searches for
+potential off-target sites of CRISPR/Cas-derived RNA-guided endonucleases
+(RGEN).
 
-Cas-OFFinder is not limited by the number of mismatches and allows variations in protospacer-adjacent motif (PAM) sequences recognized by Cas9, the essential protein component in RGENs.
+Cas-OFFinder is not limited by the number of mismatches and allows variations in
+protospacer-adjacent motif (PAM) sequences recognized by Cas9, the essential
+protein component in RGENs.
 
 Requires an OpenCL device to run properly.
 
@@ -16,14 +19,14 @@ Cas-OFFinder has been tested on the platforms below:
 - Mac OS X (Mavericks)
 
 Download
--------
+--------
 
 Cas-OFFinder binaries are available at: https://github.com/snugel/cas-offinder/releases
 
 For further information about installation, check out below `Installation` section.
 
 CRISPR/Cas-derived RNA-guided endonucleases (RGEN)
--------
+--------------------------------------------------
 
 RGENs use complementary base pairing to recognize target sites.
 
@@ -42,7 +45,7 @@ PAM sites:
 * __SaCas9__ from *Staphylococcus aureus*: 5’-NNGRRT-3’ (R = A or G)
 
 Usage
--------
+-----
 
 Cas-OFFinder can run with:
 
@@ -50,14 +53,16 @@ Cas-OFFinder can run with:
 
 G stands for using GPU devices, C for using CPUs, and A for using accelerators.
 
-(Optionally, you can set device ID in addition to G/C/A to limit number of devices used by Cas-OFFinder)
+(Optionally, you can set device ID in addition to G/C/A to limit number of
+devices used by Cas-OFFinder)
 
-The special filename `-` may be used in place of the input and output filename to read and write
-from `stdin` and `stdout`, respectively.
+The special filename `-` may be used in place of the input and output filename
+to read and write from `stdin` and `stdout`, respectively.
 
 A short example may be helpful!
 
-First, download any target organism's chromosome FASTA files. You can find one in below links:
+First, download any target organism's chromosome FASTA files. You can find one
+in below links:
 
 - http://hgdownload.soe.ucsc.edu/downloads.html (UCSC genome sequences library)
 - http://ensembl.org/info/data/ftp/index.html (Ensembl sequence library)
@@ -116,11 +121,12 @@ Redistributable Packages for Visual Studio 2015, 2017 and 2019](https://support.
 
 Now you should create an input file:
 
-- The first line of the input file gives directory path containing FASTA or 2BIT files,
+- The first line of the input file gives a directory path containing FASTA or 2BIT files,
 - The second line indicates the desired pattern including PAM site,
-- The remaining lines are the query sequences and maximum mismatch numbers, separated by spaces.
-(The length of the desired pattern and the query sequences should be the same!)
-- Optinally, you can spacify labels per each query sequence, it will be annotated in the output file (`Id` field).
+- The remaining lines are the query sequences and maximum mismatch numbers, separated by spaces,
+- Optionally, you can specify labels per each query sequence, it will be annotated in the output file (`Id` field).
+
+The length of the desired pattern and the query sequences should be the same!
 
 For the pattern and the query sequences, mixed bases are allowed to account for the degeneracy in PAM sequences.
 
@@ -148,7 +154,7 @@ An example of input file:
     CGCCAGCGTCAGCGACAGGTNNN 3 Seq2
     ...
 
-Save it as 'input.txt'.
+Save it as `input.txt`.
 
 Now you can run Cas-OFFinder as following (using GPUs):
 
@@ -205,8 +211,11 @@ out.txt:
     ...
 
 Advanced Usage
-----------------
-Cas-OFFinder is mainly designed for CRISPR/Cas9 derived RGENs, however, it is also can be used for searching off-targets of other nucleases, e.g. TALENs(Transcription activator-like effector nucleases) or ZFNs(Zinc-finger nucleases), by specifying pattern sequence as all 'N's.
+--------------
+Cas-OFFinder is mainly designed for CRISPR/Cas9 derived RGENs, however, it can
+also be used for searching off-targets of other nucleases, e.g.
+TALENs(Transcription activator-like effector nucleases) or ZFNs(Zinc-finger
+nucleases), by specifying pattern sequence as all 'N's.
 
 Example input file for TALENs:
 
@@ -220,12 +229,14 @@ Cas-OFFinder can handle RNA/DNA bulges by using a small wrapper script, found
 [here](https://github.com/hyugel/cas-offinder-bulge).
 
 Installation
-----------------
+------------
 
-* Cas-OFFinder requires an OpenCL-enabled device and corresponding runtime API pre-installed to run properly.
+* Cas-OFFinder requires an OpenCL-enabled device and corresponding runtime API
+    pre-installed to run properly.
 
-  OpenCL is supported on various platforms, including many Intel/AMD CPUs and NVidia/AMD graphic cards!
-  Before installing Cas-OFFinder, please check whether your device is an OpenCL-supported one.
+  OpenCL is supported on various platforms, including many Intel/AMD CPUs and
+  NVidia/AMD graphic cards!  Before installing Cas-OFFinder, please check
+  whether your device is an OpenCL-supported one.
 
   Khronos group provides an extensive list of supported devices here:
 
@@ -238,12 +249,14 @@ Installation
   - https://compubench.com/result.jsp
   - http://www.luxrender.net/luxmark/top/top20/Room/GPU/1
 
-  Recently, the OpenCL runtime binaries are already shipped with the device drivers in many cases -
-  so you don't have to install anything to run Cas-OFFinder.
+  Recently, the OpenCL runtime binaries are already shipped with the device
+  drivers in many cases - so you don't have to install anything to run
+  Cas-OFFinder.
 
-  But if it wasn't, you should download and install a proper OpenCL SDK to install runtime APIs.
-  In that case, download an OpenCL SDK among the links below.
-  If you know your device's vendor name, it is enough to install only your vendor's one.
+  But if it wasn't, you should download and install a proper OpenCL SDK to
+  install runtime APIs.  In that case, download an OpenCL SDK among the links
+  below.  If you know your device's vendor name, it is enough to install only
+  your vendor's one.
 
   - AMD: http://developer.amd.com/tools-and-sdks/heterogeneous-computing/amd-accelerated-parallel-processing-app-sdk/downloads/
   - Intel: http://software.intel.com/en-us/vcsource/tools/opencl-sdk
@@ -256,33 +269,45 @@ Installation
   or compile it from its source code (below section).
 
 Compile
-----------------
-  OpenCL library is required to compile Cas-OFFinder.
+-------
+  The OpenCL library is required to compile Cas-OFFinder.
 
-  To support cross-platform compilation on various operating systems,
-  CMake build system is used (more informations on http://www.cmake.org).
+  The OpenMP library is optional, for faster processing of 2BIT files.
 
-  First, download CMake here (http://www.cmake.org/cmake/resources/software.html).
-  If you use Ubuntu linux, you can also install it via apt-get,
-  `apt-get install cmake`.
+  To support cross-platform compilation on various operating systems, the CMake
+  build system is used. See http://www.cmake.org for more information.
+
+  If you use Ubuntu linux, you can also install it via apt-get, `apt-get install cmake`.
+
+  If you use macOS and homebrew, you can also install it via brew, `brew install cmake`.
+
+  Otherwise, download CMake [here](http://www.cmake.org/cmake/resources/software.html).
 
   Checkout the source code of Cas-OFFinder with Git client,
   or download it manually on github website.
 
 
-  In POSIX environment (`g++` should be pre-installed), launch terminal and type the following to build Cas-OFFinder:
+  In POSIX environment (`g++` should be pre-installed), launch terminal and type
+  the following to build Cas-OFFinder:
 
-      cmake -G "Unix Makefiles"
+      cmake -G "Unix Makefiles" .
       make
 
-  On Windows (Visual Studio should be pre-installed), launch 'Visual Studio Command Prompt'.
-  (You can find it under 'Start menu' - 'Microsoft Visual Studio xxxx' - 'Visual Studio Tools'.)
-  Assuming the CMake binary is installed in `C:\Program Files (x86)\CMake 2.8\bin`, type the following:
+  On Windows (Visual Studio should be pre-installed), launch 'Visual Studio
+  Command Prompt'.  (You can find it under 'Start menu' - 'Microsoft Visual
+  Studio xxxx' - 'Visual Studio Tools'.)
 
-      "C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -G "NMake Makefiles"
+  Assuming the CMake binary is installed in `C:\Program Files (x86)\CMake 3.19\bin`, type the following:
+
+      "C:\Program Files (x86)\CMake 3.19\bin\cmake.exe" -G "NMake Makefiles" .
       nmake
 
   Then cas-offinder binary will be generated. Copy it wherever you want.
+
+  If you have difficulty compiling cas-offinder, cmake can output system
+  information to a file.  Please open a GitHub issue and attach the file.
+
+      $ cmake --system-information cmake-sys-info.log
 
 Module reference
 ----------------
@@ -324,7 +349,7 @@ Changelog
   - Native support of DNA/RNA bulges
   - Update output format to display bulge information
 * 2.4.1
-  - Corrected warings, code cleanups, and document updates (@richardkmichael)
+  - Corrected warnings, code cleanups, and document updates (@richardkmichael)
   - Follow symlinks (@richardkmichael)
   - Allow stdin for input (@richardkmichael)
   - Tagging of input sequences (#28)

@@ -12,7 +12,7 @@ using namespace std;
 	if ((it = m_compares.find(a)) == m_compares.end())\
 		m_compares[a] = make_pair(b, vector<bulgeinfo>{c});\
 	else\
-	    (it->second).second.push_back(c);
+		(it->second).second.push_back(c);
 
 vector<string> split(string const &input) {
 	istringstream sbuffer(input);
@@ -66,7 +66,15 @@ void Cas_OFFinder::set_seq_flags(int* seq_flags, const cl_char* seq, size_t seql
 		seq_flags[n] = -1;
 }
 
-void Cas_OFFinder::initOpenCL(vector<unsigned int> dev_ids) {
+void Cas_OFFinder::initOpenCLPlatforms() {
+	oclGetPlatformIDs(MAX_PLATFORM_NUM, platforms, &platform_cnt);
+	if (platform_cnt == 0) {
+		cerr << "No OpenCL platforms found. Check OpenCL installation!" << endl;
+		exit(1);
+	}
+}
+
+void Cas_OFFinder::initOpenCLDevices(vector<unsigned int> dev_ids) {
 	unsigned int i, j;
 
 	cl_device_id* found_devices = new cl_device_id[MAX_DEVICE_NUM];
@@ -141,7 +149,7 @@ Cas_OFFinder::Cas_OFFinder(cl_device_type devtype, string devarg) {
 			cerr << "Something wrong with the device ID argument. Use all available devices instead..." << endl;
 		}
 	}
-	initOpenCL(dev_ids);
+	initOpenCLDevices(dev_ids);
 }
 
 Cas_OFFinder::~Cas_OFFinder() {
@@ -202,7 +210,7 @@ bool Cas_OFFinder::loadNextChunk() {
 
 	unsigned int dev_index;
 	unsigned long long tailsize;
-    size_t overlap;
+	size_t overlap;
 
 	m_activedevnum = 0;
 	m_worksizes.clear();
@@ -226,7 +234,7 @@ bool Cas_OFFinder::loadNextChunk() {
 			break;
 		}
 		else {
-            overlap = MIN(m_patternlen - 1, tailsize - m_dicesizes[dev_index]);
+			overlap = MIN(m_patternlen - 1, tailsize - m_dicesizes[dev_index]);
 			oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_TRUE, 0, sizeof(cl_char) * (m_dicesizes[dev_index] + overlap), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 			m_totalanalyzedsize += m_dicesizes[dev_index];
 			m_worksizes.push_back(m_dicesizes[dev_index] - m_patternlen + overlap + 1);
@@ -283,25 +291,6 @@ void Cas_OFFinder::findPattern() {
 			m_directionbufs.push_back(0);
 		}
 	}
-}
-
-void Cas_OFFinder::releaseLociinfo() {
-	unsigned int dev_index;
-
-	for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
-		free((void *)m_mmcounts[dev_index]);
-		free((void *)m_flags[dev_index]);
-		free((void *)m_directions[dev_index]);
-		free((void *)m_mmlocis[dev_index]);
-	}
-	m_directions.clear();
-	m_mmlocis.clear();
-	m_mmcounts.clear();
-	m_locicnts.clear();
-	clearbufvec(&m_mmlocibufs);
-	m_flags.clear();
-	clearbufvec(&m_mmcountbufs);
-	clearbufvec(&m_directionbufs);
 }
 
 void Cas_OFFinder::indicate_mismatches(cl_char* seq, cl_char* comp) {
@@ -440,19 +429,31 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 	delete [] cl_compare_flags;
 }
 
-void Cas_OFFinder::init_platforms() {
-	oclGetPlatformIDs(MAX_PLATFORM_NUM, platforms, &platform_cnt);
-	if (platform_cnt == 0) {
-		cerr << "No OpenCL platforms found. Check OpenCL installation!" << endl;
-		exit(1);
+void Cas_OFFinder::releaseLociinfo() {
+	unsigned int dev_index;
+
+	for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
+		free((void *)m_mmcounts[dev_index]);
+		free((void *)m_flags[dev_index]);
+		free((void *)m_directions[dev_index]);
+		free((void *)m_mmlocis[dev_index]);
 	}
+	m_directions.clear();
+	m_mmlocis.clear();
+	m_mmcounts.clear();
+	m_locicnts.clear();
+	clearbufvec(&m_mmlocibufs);
+	m_flags.clear();
+	clearbufvec(&m_mmcountbufs);
+	clearbufvec(&m_directionbufs);
 }
+
 void Cas_OFFinder::print_usage() {
 	unsigned int i, j;
-	cout << "Cas-OFFinder 3.0.0b (" << __DATE__ << ")" << endl <<
+	cout << "Cas-OFFinder " << CAS_OFFINDER_VERSION << " (Compiled on: " << __DATE__ << ")" << endl <<
 		endl <<
 		"Copyright (c) 2021 Jeongbin Park and Sangsu Bae" << endl <<
-		"Website: http://github.com/snugel/cas-offinder" << endl <<
+		"Website: " << CAS_OFFINDER_HOMEPAGE_URL << endl <<
 		endl <<
 		"Usage: cas-offinder {input_filename|-} {C|G|A}[device_id(s)] {output_filename|-}" << endl <<
 		"(C: using CPUs, G: using GPUs, A: using accelerators)" << endl <<
@@ -499,12 +500,20 @@ static inline bool parseLine(istream& input, string& line, bool expect_line = tr
 	} else {
 		if (!getline(input, line))
 			return false;
+
+		// Remove possible Windows-only '\r'.
 		if (line[line.size()-1] == '\r')
 			line = line.substr(0, line.size()-1);
 	}
 	return true;
 }
 
+/*
+ * Reads the input file and configures this Cas_OFFinder instance.
+ *
+ * Sets public members: m_chrdir
+ * Sets private members: m_dnabulgesize, m_rnabulgesize, m_pattern
+ */
 void Cas_OFFinder::parseInput(istream& input) {
 	string line;
 	vector<string> sline;

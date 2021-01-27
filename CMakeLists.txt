@@ -1,41 +1,11 @@
 cmake_minimum_required (VERSION 3.1)
-project (Cas-OFFinder)
 
-set (Cas-OFFinder_VERSION_MAJOR 3)
-set (Cas-OFFinder_VERSION_MINOR 0)
-
-set (CMAKE_CXX_STANDARD 11)
-
-include (CheckIncludeFiles)
-
-set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
-
-find_package (OpenCL REQUIRED)
-include_directories ("${OpenCL_INCLUDE_DIRS}")
-link_directories (${OpenCL_LIBRARY})
-
-include_directories ("${PROJECT_SOURCE_DIR}")
-if (WIN32)
-	message ("Windows system detected, assume no proper dirent.h is available.")
-	message ("As a workaround, a custom dirent.h for Windows (by Toni Ronkko) will be used.")
-	message ("For more information, please visit https://github.com/tronkko/dirent")
-endif (WIN32)
-
-find_package(OpenMP)
-if (OPENMP_FOUND)
-	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif(OPENMP_FOUND)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-attributes")
-endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-
-configure_file (
-	"${PROJECT_SOURCE_DIR}/config.h.in"
-	"${PROJECT_SOURCE_DIR}/config.h"
+project (Cas-OFFinder
+         VERSION 3.0.0
+         HOMEPAGE_URL http://github.com/snugel/cas-offinder
 )
 
-execute_process(COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
+set (CMAKE_CXX_STANDARD 11)
 
 set (SOURCES
 	main.cpp
@@ -54,10 +24,31 @@ set (HEADERS
 	oclkernels.h
 )
 
-add_executable(cas-offinder ${SOURCES} ${HEADERS})
-if (APPLE)
-	target_link_libraries(cas-offinder "-framework OpenCL")
-else (APPLE)
-	target_link_libraries(cas-offinder ${OpenCL_LIBRARY})
-endif (APPLE)
-add_custom_command(TARGET cas-offinder PRE_BUILD COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
+add_executable (cas-offinder ${SOURCES} ${HEADERS})
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-attributes")
+endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+
+if (WIN32)
+	message ("Windows system detected, assume no proper dirent.h is available.")
+	message ("As a workaround, a custom dirent.h for Windows (by Toni Ronkko) will be used.")
+	message ("For more information, please visit https://github.com/tronkko/dirent")
+endif (WIN32)
+
+find_package (OpenCL REQUIRED)
+target_link_libraries(cas-offinder OpenCL::OpenCL)
+
+find_package (OpenMP)
+if (OPENMP_FOUND)
+	target_link_libraries(cas-offinder OpenMP::OpenMP_CXX)
+endif (OPENMP_FOUND)
+
+set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
+execute_process(COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
+add_custom_command (TARGET cas-offinder PRE_BUILD COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
+
+configure_file (
+	"${PROJECT_SOURCE_DIR}/config.h.in"
+	"${PROJECT_SOURCE_DIR}/config.h"
+)

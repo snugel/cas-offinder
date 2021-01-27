@@ -1,15 +1,19 @@
 #ifdef __APPLE__
-#  include <OpenCL/cl.h>
-#  define CL_CALLBACK
+#	include <OpenCL/cl.h>
+#	define CL_CALLBACK
 #else
-#  include <CL/cl.h>
+#	include <CL/cl.h>
 #endif
+
 #include <iostream>
 #include <vector>
+
 #pragma warning (disable : 4996)
+
 using namespace std;
 
-cl_mem oclCreateBuffer(cl_context context,
+cl_mem oclCreateBuffer(
+	cl_context context,
 	cl_mem_flags flags,
 	size_t size,
 	void *host_ptr)
@@ -23,7 +27,8 @@ cl_mem oclCreateBuffer(cl_context context,
 	return mem;
 }
 
-void oclGetPlatformIDs(cl_uint num_entries,
+void oclGetPlatformIDs(
+	cl_uint num_entries,
 	cl_platform_id *platforms,
 	cl_uint *num_platforms)
 {
@@ -34,7 +39,8 @@ void oclGetPlatformIDs(cl_uint num_entries,
 	}
 }
 
-void oclGetDeviceIDs(cl_platform_id platform,
+void oclGetDeviceIDs(
+	cl_platform_id platform,
 	cl_device_type device_type, cl_uint num_entries,
 	cl_device_id *devices,
 	cl_uint *num_devices)
@@ -47,14 +53,15 @@ void oclGetDeviceIDs(cl_platform_id platform,
 	}
 }
 
-cl_context oclCreateContext(cl_context_properties *properties,
+cl_context oclCreateContext(
+	cl_context_properties *properties,
 	cl_uint num_devices,
 	const cl_device_id *devices,
 	void (CL_CALLBACK *pfn_notify)(
-	const char *errinfo,
-	const void *private_info,
-	size_t cb,
-	void *user_data
+		const char *errinfo,
+		const void *private_info,
+		size_t cb,
+		void *user_data
 	),
 	void *user_data)
 {
@@ -67,7 +74,8 @@ cl_context oclCreateContext(cl_context_properties *properties,
 	return context;
 }
 
-cl_program oclCreateProgramWithSource(cl_context context,
+cl_program oclCreateProgramWithSource(
+	cl_context context,
 	cl_uint count,
 	const char **strings,
 	const size_t *lengths)
@@ -81,38 +89,41 @@ cl_program oclCreateProgramWithSource(cl_context context,
 	return program;
 }
 
-void oclBuildProgram(cl_program program,
+void oclBuildProgram(
+	cl_program program,
 	cl_uint num_devices,
 	const cl_device_id *device_list,
 	const char *options,
 	void(CL_CALLBACK *pfn_notify)(cl_program, void *user_data),
-	void *user_data) {
+	void *user_data)
+{
 	cl_int err = clBuildProgram(program, num_devices, device_list, options, pfn_notify, user_data);
 	if (err != CL_SUCCESS) {
 		cerr << "clBuildProgram Failed: " << err << endl;
-        if (err == CL_BUILD_PROGRAM_FAILURE) {
-            for (unsigned int i = 0; i < num_devices; i++) {
-                // Determine the size of the log
-                size_t log_size;
-                clGetProgramBuildInfo(program, device_list[i], CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
-
-                // Allocate memory for the log
-                char *log = (char *)malloc(log_size);
-
-                // Get the log
-                clGetProgramBuildInfo(program, device_list[i], CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
-
-                // Print the log
-                printf("Log from device %d:\n", i);
-                printf("%s\n", log);
-                free(log);
-            }
-        }
-        exit(1);
+		if (err == CL_BUILD_PROGRAM_FAILURE) {
+			for (unsigned int i = 0; i < num_devices; i++) {
+				// Determine the size of the log
+				size_t log_size;
+				clGetProgramBuildInfo(program, device_list[i], CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+				
+				// Allocate memory for the log
+				char *log = (char *)malloc(log_size);
+				
+				// Get the log
+				clGetProgramBuildInfo(program, device_list[i], CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+				
+				// Print the log
+				printf("Log from device %d:\n", i);
+				printf("%s\n", log);
+				free(log);
+			}
+		}
+		exit(1);
 	}
 }
 
-cl_kernel oclCreateKernel(cl_program  program,
+cl_kernel oclCreateKernel(
+	cl_program  program,
 	const char *kernel_name)
 {
 	cl_int err;
@@ -124,7 +135,8 @@ cl_kernel oclCreateKernel(cl_program  program,
 	return kernel;
 }
 
-cl_command_queue oclCreateCommandQueue(cl_context context,
+cl_command_queue oclCreateCommandQueue(
+	cl_context context,
 	cl_device_id device,
 	cl_command_queue_properties properties)
 {
@@ -137,20 +149,22 @@ cl_command_queue oclCreateCommandQueue(cl_context context,
 	return command_queue;
 }
 
-void oclGetPlatformInfo(cl_platform_id platform,
-    cl_platform_info param_name,
-    size_t param_value_size,
-    void *param_value,
-    size_t *param_value_size_ret)
+void oclGetPlatformInfo(
+	cl_platform_id platform,
+	cl_platform_info param_name,
+	size_t param_value_size,
+	void *param_value,
+	size_t *param_value_size_ret)
 {
-    cl_int err = clGetPlatformInfo(platform, param_name, param_value_size, param_value, param_value_size_ret);
-    if (err != CL_SUCCESS) {
-        cerr << "clGetDeviceInfo Failed: " << err << endl;
-        exit(1);
-    }
+	cl_int err = clGetPlatformInfo(platform, param_name, param_value_size, param_value, param_value_size_ret);
+	if (err != CL_SUCCESS) {
+		cerr << "clGetDeviceInfo Failed: " << err << endl;
+		exit(1);
+	}
 }
 
-void oclGetDeviceInfo(cl_device_id device,
+void oclGetDeviceInfo(
+	cl_device_id device,
 	cl_device_info param_name,
 	size_t param_value_size,
 	void *param_value,
@@ -199,7 +213,8 @@ void oclReleaseContext(cl_context context)
 	}
 }
 
-void oclEnqueueWriteBuffer(cl_command_queue command_queue,
+void oclEnqueueWriteBuffer(
+	cl_command_queue command_queue,
 	cl_mem buffer,
 	cl_bool blocking_write,
 	size_t offset,
@@ -225,7 +240,8 @@ void oclFinish(cl_command_queue command_queue)
 	}
 }
 
-void oclSetKernelArg(cl_kernel kernel,
+void oclSetKernelArg(
+	cl_kernel kernel,
 	cl_uint arg_index,
 	size_t arg_size,
 	const void *arg_value)
@@ -237,7 +253,8 @@ void oclSetKernelArg(cl_kernel kernel,
 	}
 }
 
-void oclEnqueueNDRangeKernel(cl_command_queue command_queue,
+void oclEnqueueNDRangeKernel(
+	cl_command_queue command_queue,
 	cl_kernel kernel,
 	cl_uint work_dim,
 	const size_t *global_work_offset,
@@ -254,7 +271,8 @@ void oclEnqueueNDRangeKernel(cl_command_queue command_queue,
 	}
 }
 
-void oclEnqueueReadBuffer(cl_command_queue command_queue,
+void oclEnqueueReadBuffer(
+	cl_command_queue command_queue,
 	cl_mem buffer,
 	cl_bool blocking_read,
 	size_t offset,

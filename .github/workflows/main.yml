@@ -69,8 +69,7 @@ jobs:
              -DOpenCL_LIBRARY="../clGPU/common/intel_ocl_icd/windows/Release/lib/x64/OpenCL.lib" \
              && nmake
       - name: Compress Binary
-        run: zip cas-offinder_${{ matrix.name }}_${{ matrix.arch }}.zip build/cas-offinder${{ matrix.extension }}
-        working-directory: build
+        run: zip -j cas-offinder_${{ matrix.name }}_${{ matrix.arch }}.zip build/cas-offinder${{ matrix.extension }}
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v2.2.1
         with:

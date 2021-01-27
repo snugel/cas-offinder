@@ -202,7 +202,7 @@ bool Cas_OFFinder::loadNextChunk() {
 
 	unsigned int dev_index;
 	unsigned long long tailsize;
-    size_t overlap;
+	size_t overlap;
 
 	m_activedevnum = 0;
 	m_worksizes.clear();
@@ -226,7 +226,7 @@ bool Cas_OFFinder::loadNextChunk() {
 			break;
 		}
 		else {
-            overlap = MIN(m_patternlen - 1, tailsize - m_dicesizes[dev_index]);
+			overlap = MIN(m_patternlen - 1, tailsize - m_dicesizes[dev_index]);
 			oclEnqueueWriteBuffer(m_queues[dev_index], m_chrdatabufs[dev_index], CL_TRUE, 0, sizeof(cl_char) * (m_dicesizes[dev_index] + overlap), (cl_char *)m_chrdata.c_str() + m_totalanalyzedsize, 0, 0, 0);
 			m_totalanalyzedsize += m_dicesizes[dev_index];
 			m_worksizes.push_back(m_dicesizes[dev_index] - m_patternlen + overlap + 1);

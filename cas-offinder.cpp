@@ -335,6 +335,7 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 	string seq_dna;
 	string id;
 	string bulge_type;
+        char bulge_marker = '_';
 	int offset;
 	cl_uint zero = 0;
 
@@ -401,7 +402,7 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 									// dna bulge or none
 									bulge_size = (unsigned int)stoi(bi.first);
 									offset = m_dnabulgesize - bulge_size;
-									seq_rna = compare.substr(offset, bi.second) + string(bulge_size, '-') + compare.substr(offset + bi.second + bulge_size);
+									seq_rna = compare.substr(offset, bi.second) + string(bulge_size, bulge_marker) + compare.substr(offset + bi.second + bulge_size);
 									seq_dna = seq_dna.substr(offset);
 									if (bulge_size == 0)
 										bulge_type = "X";
@@ -412,7 +413,7 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 									bulge_size = (unsigned int)bi.first.size();
 									offset = m_dnabulgesize + bulge_size;
 									seq_rna = compare.substr(offset, bi.second) + bi.first + compare.substr(bi.second + bulge_size);
-									seq_dna = seq_dna.substr(offset, bi.second) + string(bulge_size, '-') + seq_dna.substr(bi.second + bulge_size);
+									seq_dna = seq_dna.substr(offset, bi.second) + string(bulge_size, bulge_marker) + seq_dna.substr(bi.second + bulge_size);
 									bulge_type = "RNA";
 								}
 								(*fo) << id << "\t" << bulge_type << "\t" << seq_rna << "\t" << seq_dna << "\t" << m_chrnames[idx] << "\t" << loci - m_chrpos[idx] + offset << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << "\t" << bulge_size << endl;

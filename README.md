@@ -53,8 +53,10 @@ Cas-OFFinder can run with:
 
 G stands for using GPU devices, C for using CPUs, and A for using accelerators.
 
-(Optionally, you can set device ID in addition to G/C/A to limit number of
-devices used by Cas-OFFinder)
+Optionally, you can set device IDs in addition to `G`, `C`, `A` to limit
+number of devices used by Cas-OFFinder.  A range of device IDs can be
+specified by using comma or colon to separate the IDs.  See examples
+below.
 
 The special filename `-` may be used in place of the input and output filename
 to read and write from `stdin` and `stdout`, respectively.
@@ -102,7 +104,7 @@ And just try running it for a short help:
     Usage: cas-offinder {input_filename|-} {C|G|A}[device_id(s)] {output_filename|-}
     (C: using CPUs, G: using GPUs, A: using accelerators)
 
-    Example input file (DNA bulge 2, RNA bulge 1):
+    Example input file (DNA bulge size 2, RNA bulge size 1):
     /var/chromosomes/human_hg38
     NNNNNNNNNNNNNNNNNNNNNRG 2 1
     GGCCGACCTGTCGCTGACGCNNN 5
@@ -121,10 +123,10 @@ Redistributable Packages for Visual Studio 2015, 2017 and 2019](https://support.
 
 Now you should create an input file:
 
-- The first line of the input file gives a directory path containing FASTA or 2BIT files,
-- The second line indicates the desired pattern including PAM site,
+- The first line is a directory containing FASTA or 2BIT files,
+- The second line indicates the desired pattern including PAM site and optional DNA or RNA bulge sizes, separated by spaces,
 - The remaining lines are the query sequences and maximum mismatch numbers, separated by spaces,
-- Optionally, you can specify labels per each query sequence, it will be annotated in the output file (`Id` field).
+- Optionally, you can specify an ID for each query sequence, which will be included in the output (`Id` column).
 
 The length of the desired pattern and the query sequences should be the same!
 
@@ -146,7 +148,7 @@ Following codes are supported:
 |:---------:|:---------:|:---------:|:---------:|:------:|
 |C or G or T|A or G or T|A or C or T|A or C or G|any base|
 
-An example of input file:
+An example of an input file:
 
     /var/chromosomes/human_hg38
     NNNNNNNNNNNNNNNNNNNNNRG 2 1
@@ -158,57 +160,58 @@ Save it as `input.txt`.
 
 Now you can run Cas-OFFinder as following (using GPUs):
 
-    $ ./cas-offinder input.txt G out.txt
-    ...
+    $ ./cas-offinder input.txt G output.txt
 
-Optionally, you can set the ID of devices to select a specific device used by Cas-OFFinder:
+Optionally, you can set the ID of devices to select a specific device
+used by Cas-OFFinder. For example, to use the second GPU device
+(0-based):
 
-    $ ./cas-offinder input.txt G1 out.txt # use second GPU device (0-based)
-    ...
+    $ ./cas-offinder input.txt G1 output.txt
 
-You can use commas, or colons to select range of devices:
+You can use commas or colons to select range of devices:
 
-    $ ./cas-offinder input.txt G0,1 out.txt
+    $ ./cas-offinder input.txt G0,1 output.txt
 
-    or
+or
 
-    $ ./cas-offinder input.txt G0:2 out.txt
-    ...
+    $ ./cas-offinder input.txt G0:2 output.txt
 
-Then output file will be generated:
-- The first column is the sequence id, by default line numbers (0 based), or given labels from the input file.
-- The second columns is the type of bulge, the value is one of `X`, `DNA`, or `RNA`.
-- The third column is the given query sequence (including gaps in case of DNA bulge).
+Then the `TAB` separated output file will be generated with the following columns:
+
+- The first column is the sequence id, by default line numbers (0-based), or given IDs from the input file,
+- The second column is the type of bulge, the value is one of `X`, `DNA`, or `RNA`,
+- The third column is the given query sequence (including gaps in case of DNA bulge),
 - The fourth column is the actual sequence at the location (including gaps in case of RNA bulge; mismatched bases are noted in lowercase letters),
 - The fifth column is the sequence name (if you downloaded it from UCSC or Ensembl, it is usually a chromosome name),
 - The sixth column is the 0-based location of the off-target site (same convention as [Bowtie](https://github.com/BenLangmead/bowtie), not 1-based as IGV Viewer and others),
 - The seventh column is the direction of sequence, either forward (+) or reverse (-) strand of the found sequence,
-- The eighth column is the number of the mismatched bases.
+- The eighth column is the number of the mismatched bases,
 - The last column is the size of bulge.
 
-out.txt:
+`output.txt` will be (shown here as a table for convenience):
 
-    #Id	Bulge type	crRNA	DNA	Chromosome	Location	Direction	Mismatches	Bulge Size
-    Seq2	DNA	CGCCAGCGTCAGCGACAGG--TNNN	CcCCAGtGTCAGCcACAGGGCTCAG	chr1	34978273	-	3	2
-    Seq2	DNA	CGC--CAGCGTCAGCGACAGGTNNN	CaCTCCAGCcTCAGCGACAGGcAAG	chr1	18173251	+	3	2
-    Seq2	DNA	CG--CCAGCGTCAGCGACAGGTNNN	CaCTCCAGCcTCAGCGACAGGcAAG	chr1	18173251	+	3	2
-    Seq2	DNA	C--GCCAGCGTCAGCGACAGGTNNN	CACtCCAGCcTCAGCGACAGGcAAG	chr1	18173251	+	3	2
-    Seq1	DNA	GGCCGACC--TGTCGCTGACGCNNN	GGCCcAgCTCTGTCGCTGACGgGAG	chr1	40979785	+	3	2
-    Seq1	DNA	GGCCGACCTGTCGCTGA--CGCNNN	GGCCGtCCTGTtGCTGAGACtCGGG	chr1	17408102	-	3	2
-    Seq1	DNA	GGCCGACCTGTCGCTG--ACGCNNN	GGCCGtCCTGTtGCTGAGACtCGGG	chr1	17408102	-	3	2
-    Seq1	DNA	GGCCGACCTGTCGCT--GACGCNNN	GGCCGtCCTGTtGCTGAGACtCGGG	chr1	17408102	-	3	2
-    ...
-    Seq2	X	CGCCAGCGTCAGCGACAGGTNNN	CtCCAGCcTCAGCGACAGGcAAG	chr1	18173253	+	3	0
-    Seq2	RNA	CGNCCCAGCGTCAGCGACAGGTNNN	C-CCCCAGtGTCActGACAGGTGGG	chr1	5502832	-	3	1
-    Seq2	RNA	CGNCCCAGCGTCAGCGACAGGTNNN	t-CtCCAGCcTCAGCGACAGGcAAG	chr1	18173254	+	3	1
-    Seq2	RNA	CGCCGCAGCGTCAGCGACAGGTNNN	CG-CGCAGCGaCAGgGAgAGGTGAG	chr1	1273663	-	3	1
-    Seq2	RNA	CGCCGCAGCGTCAGCGACAGGTNNN	CGC-GCAGCGaCAGgGAgAGGTGAG	chr1	1273663	-	3	1
-    Seq2	RNA	CGCCAGCGTCGCAGCGACAGGTNNN	CGCCtGCG-CGgAGCtACAGGTGAG	chr1	18888560	+	3	1
-    Seq2	RNA	CGCCAGCGTCGCAGCGACAGGTNNN	aGCCAGCt-CtCAGCGACAGcTGAG	chr1	91631879	+	3	1
-    Seq2	RNA	CGCCAGCGTCGTAGCGACAGGTNNN	CGCCtGCGg-GgAGCtACAGGTGAG	chr1	18888560	+	3	1
-    Seq2	RNA	CGCCAGCGTCAGCGGCACAGGTNNN	CcCCAGaGTCAGC-GCACAGaTGGG	chr1	4006295	-	3	1
-    Seq2	RNA	CGCCAGCGTCAGCGACGAAGGTNNN	tGCCAGCGgCAGCGA-GAAGtTTAG	chr1	8462729	+	3	1
-    ...
+|Id    |Bulge type|crRNA                      |DNA                        |Chromosome|Location|Direction|Mismatches|Bulge Size|
+|:----:|:---------|:-------------------------:|:--------------------------|:--------:|:-------|:-------:|:---------|:--------:|
+|Seq2  |DNA       |`CGCCAGCGTCAGCGACAGG--TNNN`|`CcCCAGtGTCAGCcACAGGGCTCAG`|chr1      |34978273|-        |3         |2         |
+|Seq2  |DNA       |`CGC--CAGCGTCAGCGACAGGTNNN`|`CaCTCCAGCcTCAGCGACAGGcAAG`|chr1      |18173251|+        |3         |2         |
+|Seq2  |DNA       |`CG--CCAGCGTCAGCGACAGGTNNN`|`CaCTCCAGCcTCAGCGACAGGcAAG`|chr1      |18173251|+        |3         |2         |
+|Seq2  |DNA       |`C--GCCAGCGTCAGCGACAGGTNNN`|`CACtCCAGCcTCAGCGACAGGcAAG`|chr1      |18173251|+        |3         |2         |
+|Seq1  |DNA       |`GGCCGACC--TGTCGCTGACGCNNN`|`GGCCcAgCTCTGTCGCTGACGgGAG`|chr1      |40979785|+        |3         |2         |
+|Seq1  |DNA       |`GGCCGACCTGTCGCTGA--CGCNNN`|`GGCCGtCCTGTtGCTGAGACtCGGG`|chr1      |17408102|-        |3         |2         |
+|Seq1  |DNA       |`GGCCGACCTGTCGCTG--ACGCNNN`|`GGCCGtCCTGTtGCTGAGACtCGGG`|chr1      |17408102|-        |3         |2         |
+|Seq1  |DNA       |`GGCCGACCTGTCGCT--GACGCNNN`|`GGCCGtCCTGTtGCTGAGACtCGGG`|chr1      |17408102|-        |3         |2         |
+|...   |
+|Seq2  |X         |`CGCCAGCGTCAGCGACAGGTNNN`  |`CtCCAGCcTCAGCGACAGGcAAG`  |chr1      |18173253|+        |3         |0         |
+|Seq2  |RNA       |`CGNCCCAGCGTCAGCGACAGGTNNN`|`C-CCCCAGtGTCActGACAGGTGGG`|chr1      |5502832 |-        |3         |1         |
+|Seq2  |RNA       |`CGNCCCAGCGTCAGCGACAGGTNNN`|`t-CtCCAGCcTCAGCGACAGGcAAG`|chr1      |18173254|+        |3         |1         |
+|Seq2  |RNA       |`CGCCGCAGCGTCAGCGACAGGTNNN`|`CG-CGCAGCGaCAGgGAgAGGTGAG`|chr1      |1273663 |-        |3         |1         |
+|Seq2  |RNA       |`CGCCGCAGCGTCAGCGACAGGTNNN`|`CGC-GCAGCGaCAGgGAgAGGTGAG`|chr1      |1273663 |-        |3         |1         |
+|Seq2  |RNA       |`CGCCAGCGTCGCAGCGACAGGTNNN`|`CGCCtGCG-CGgAGCtACAGGTGAG`|chr1      |18888560|+        |3         |1         |
+|Seq2  |RNA       |`CGCCAGCGTCGCAGCGACAGGTNNN`|`aGCCAGCt-CtCAGCGACAGcTGAG`|chr1      |91631879|+        |3         |1         |
+|Seq2  |RNA       |`CGCCAGCGTCGTAGCGACAGGTNNN`|`CGCCtGCGg-GgAGCtACAGGTGAG`|chr1      |18888560|+        |3         |1         |
+|Seq2  |RNA       |`CGCCAGCGTCAGCGGCACAGGTNNN`|`CcCCAGaGTCAGC-GCACAGaTGGG`|chr1      |4006295 |-        |3         |1         |
+|Seq2  |RNA       |`CGCCAGCGTCAGCGACGAAGGTNNN`|`tGCCAGCGgCAGCGA-GAAGtTTAG`|chr1      |8462729 |+        |3         |1         |
+|...   |
 
 Advanced Usage
 --------------
@@ -224,9 +227,6 @@ Example input file for TALENs:
     TTCTGGAGGTGCCTGAGGCCNNNNNNNNNNNNGAGGCCACCTTTCCAGTCCA 5
     TGGCCAATGTGACGCTGACGNNNNNNNNNNNNCTGGAGACTCCAGACTTCCA 5
     ....
-
-Cas-OFFinder can handle RNA/DNA bulges by using a small wrapper script, found
-[here](https://github.com/hyugel/cas-offinder-bulge).
 
 Installation
 ------------

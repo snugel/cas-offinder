@@ -420,7 +420,7 @@ void Cas_OFFinder::compareAll(const char* outfilename, bool issummary) {
 								(*fo) << id << "\t" << bulge_type << "\t" << seq_rna << "\t" << seq_dna << "\t" << m_chrnames[idx] << "\t" << loci - m_chrpos[idx] + offset << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << "\t" << bulge_size << endl;
 								if (issummary) {
 									snprintf(key, 10000, "%s,%s,%d,%d", id.c_str(), bulge_type.c_str(), bulge_size, m_mmcounts[dev_index][i]);
-									m_summarytable[string(key)]++;
+									++m_summarytable[string(key)];
 								}
 							}
 						}
@@ -441,24 +441,28 @@ void Cas_OFFinder::compareAll(const char* outfilename, bool issummary) {
 void Cas_OFFinder::writeSummaryTable(const char* summaryfilename) {
 	bool isfile = false;
 	ostream *fo;
-	int cnt = 0;
+	int cnt;
 	size_t pos;
+	string key, token;
 	vector<string> summaryheaders = {
 		"Id", "Bulge Type", "Bulge Size", "Mismatches"
 	};
 	if (strlen(summaryfilename) == 1 && summaryfilename[0] == '-') {
 		fo = &cout;
 	} else {
-		fo = new ofstream(summaryfilename, ios::out | ios::app);
+		fo = new ofstream(summaryfilename, ios::out);
 		isfile = true;
 	}
     for (const auto& kv : m_summarytable) {
-		string key = string(kv.first);
+		cnt = 0;
+		key = string(kv.first);
+		(*fo) << "##";
 		while ((pos = key.find(",")) != string::npos) {
-			string token = key.substr(0, pos);
+			token = key.substr(0, pos);
 			(*fo) << summaryheaders[cnt++] << "=" << token << ";";
 			key.erase(0, pos + 1);
 		}
+		(*fo) << summaryheaders[cnt++] << "=" << key << ";";
         (*fo) << "Number of Found Targets=" << kv.second << endl;
     }
 	if (isfile)

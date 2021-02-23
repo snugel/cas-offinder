@@ -419,7 +419,7 @@ void Cas_OFFinder::compareAll(const char* outfilename, bool issummary) {
 								}
 								(*fo) << id << "\t" << bulge_type << "\t" << seq_rna << "\t" << seq_dna << "\t" << m_chrnames[idx] << "\t" << loci - m_chrpos[idx] + offset << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << "\t" << bulge_size << endl;
 								if (issummary) {
-									snprintf(key, 10000, "%s,%s,%d,%d", id, bulge_type, bulge_size, m_mmcounts[dev_index][i]);
+									snprintf(key, 10000, "%s,%s,%d,%d", id.c_str(), bulge_type.c_str(), bulge_size, m_mmcounts[dev_index][i]);
 									m_summarytable[string(key)]++;
 								}
 							}

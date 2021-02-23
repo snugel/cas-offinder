@@ -88,12 +88,11 @@ int main(int argc, char *argv[]) {
 		if (tmpstr.size() > 2 && tmpstr[0] == '-' && tmpstr[1] == '-') {
 			tmpstr = tmpstr.substr(2);
 			if (tmpstr.compare("summary") == 0) {
-				summaryfilename = argv[i];
+				summaryfilename = argv[++i];
 			} else {
 				Cas_OFFinder::print_usage();
 				exit(0);
 			}
-			i++;
 		} else {
 			positionalargs.push_back(string(argv[i]));
 		}

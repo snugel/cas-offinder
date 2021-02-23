@@ -453,7 +453,7 @@ void Cas_OFFinder::writeSummaryTable(const char* summaryfilename) {
 		isfile = true;
 	}
     for (const auto& kv : m_summarytable) {
-		string key = kv.first;
+		string key = string(kv.first);
 		while ((pos = key.find(",")) != string::npos) {
 			string token = key.substr(0, pos);
 			(*fo) << summaryheaders[cnt++] << "=" << token << ";";

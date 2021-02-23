@@ -63,8 +63,10 @@ void run_cas_offinder(Cas_OFFinder &s, const char* chromfilename, const char* ou
 		s.compareAll(outfilename, issummary);
 		s.releaseLociinfo();
 	}
-	if (issummary)
+	if (issummary) {
+		cerr << "Writing summary file..." << endl;
 		s.writeSummaryTable(summaryfilename);
+	}
 }
 
 int main(int argc, char *argv[]) {

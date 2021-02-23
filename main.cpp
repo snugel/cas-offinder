@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
 		devtype = CL_DEVICE_TYPE_ACCELERATOR;
 		break;
 	default:
-		error_exit(2, "Unknown option: ", positionalargs[1]);
+		error_exit(2, "Unknown option: ", positionalargs[1].c_str());
 	}
 
 	string devarg = positionalargs[1].substr(1);

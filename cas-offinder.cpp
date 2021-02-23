@@ -323,10 +323,10 @@ void Cas_OFFinder::writeHeaders(const char* outfilename) {
 	} else {
 		fo = new ofstream(outfilename, ios::out | ios::trunc);
 	}
-	(*fo) << "#Id\tBulge type\tcrRNA\tDNA\tChromosome\tLocation\tDirection\tMismatches\tBulge Size" << endl;
+	(*fo) << "#Id\tBulge Type\tcrRNA\tDNA\tChromosome\tLocation\tDirection\tMismatches\tBulge Size" << endl;
 }
 
-void Cas_OFFinder::compareAll(const char* outfilename) {
+void Cas_OFFinder::compareAll(const char* outfilename, bool issummary) {
 	unsigned int i, j, dev_index;
 	unsigned int bulge_size;
 	cl_ushort threshold;
@@ -379,6 +379,7 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 		unsigned long long localanalyzedsize = 0;
 		unsigned int cnt = 0;
 		unsigned int idx;
+		char key[10000];
 		for (dev_index = 0; dev_index < m_activedevnum; dev_index++) {
 			if (m_locicnts[dev_index] > 0) {
 				oclFinish(m_queues[dev_index]);
@@ -416,6 +417,10 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 									bulge_type = "RNA";
 								}
 								(*fo) << id << "\t" << bulge_type << "\t" << seq_rna << "\t" << seq_dna << "\t" << m_chrnames[idx] << "\t" << loci - m_chrpos[idx] + offset << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << "\t" << bulge_size << endl;
+								if (issummary) {
+									snprintf(key, 10000, "%s,%s,%d,%d", id, bulge_type, bulge_size, m_mmcounts[dev_index][i]);
+									m_summarytable[string(key)]++;
+								}
 							}
 						}
 					}
@@ -430,6 +435,33 @@ void Cas_OFFinder::compareAll(const char* outfilename) {
 	delete [] strbuf;
 	delete [] cl_compare;
 	delete [] cl_compare_flags;
+}
+
+void Cas_OFFinder::writeSummaryTable(const char* summaryfilename) {
+	bool isfile = false;
+	ostream *fo;
+	int cnt = 0;
+	size_t pos;
+	vector<string> summaryheaders = {
+		"Id", "Bulge Type", "Bulge Size", "Mismatches"
+	};
+	if (strlen(summaryfilename) == 1 && summaryfilename[0] == '-') {
+		fo = &cout;
+	} else {
+		fo = new ofstream(summaryfilename, ios::out | ios::app);
+		isfile = true;
+	}
+    for (const auto& kv : m_summarytable) {
+		string key = kv.first;
+		while ((pos = key.find(",")) != string::npos) {
+			string token = key.substr(0, pos);
+			(*fo) << summaryheaders[cnt++] << "=" << token << ";";
+			key.erase(0, pos + 1);
+		}
+        (*fo) << "Number of Found Targets=" << kv.second << endl;
+    }
+	if (isfile)
+		((ofstream *)fo)->close();
 }
 
 void Cas_OFFinder::releaseLociinfo() {
@@ -458,9 +490,12 @@ void Cas_OFFinder::print_usage() {
 		"Copyright (c) 2021 Jeongbin Park and Sangsu Bae" << endl <<
 		"Website: " << CAS_OFFINDER_HOMEPAGE_URL << endl <<
 		endl <<
-		"Usage: cas-offinder {input_filename|-} {C|G|A}[device_id(s)] {output_filename|-}" << endl <<
-		"(C: using CPUs, G: using GPUs, A: using accelerators)" << endl <<
-		endl <<
+		"Usage: cas-offinder [options] {input_filename|-} {C|G|A}[device_id(s)] {output_filename|-}" << endl <<
+		"(C: using CPUs, G: using GPUs, A: using accelerators)" << endl
+		<< endl <<
+		"Options" << endl <<
+		"  --summary <file>        Print summary table to the specified file." << endl
+		<< endl <<
 		"Example input file (DNA bulge 2, RNA bulge 1):" << endl <<
 		"/var/chromosomes/human_grch38" << endl <<
 		"NNNNNNNNNNNNNNNNNNNNNRG 2 1" << endl <<

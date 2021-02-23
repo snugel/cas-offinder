@@ -40,8 +40,9 @@ int check_file(const char* filename) {
 	return (stat(filename, &file_stat) == 0);
 }
 
-void run_cas_offinder(Cas_OFFinder &s, const char* chromfilename, const char* outfilename, int *cnum) {
+void run_cas_offinder(Cas_OFFinder &s, const char* chromfilename, const char* outfilename, const char* summaryfilename, int *cnum) {
 	string filepath = chromfilename;
+	bool issummary = strlen(summaryfilename) > 0;
 
 	cerr << "Reading " << filepath << "..." << endl;
 	
@@ -59,9 +60,11 @@ void run_cas_offinder(Cas_OFFinder &s, const char* chromfilename, const char* ou
 		cerr << "Finding pattern in chunk #" << ++(*cnum) << "..." << endl;
 		s.findPattern();
 		cerr << "Comparing patterns in chunk #" << *cnum << "..." << endl;
-		s.compareAll(outfilename);
+		s.compareAll(outfilename, issummary);
 		s.releaseLociinfo();
 	}
+	if (issummary)
+		s.writeSummaryTable(summaryfilename);
 }
 
 int main(int argc, char *argv[]) {
@@ -73,19 +76,36 @@ int main(int argc, char *argv[]) {
 	gettimeofday(&start, NULL);
 #endif
 	float seconds;
-	string filepath, tmpstr, outfilename;
+	string filepath, tmpstr, outfilename, summaryfilename = "";
 	DIR* dir;
 	dirent *ent;
+	vector<string> positionalargs;
 
 	Cas_OFFinder::initOpenCLPlatforms();
 
-	if (argc < 4) { // Not all option specified
+	for (size_t i=1; i<argc; i++) {
+		tmpstr = string(argv[i]);
+		if (tmpstr.size() > 2 && tmpstr[0] == '-' && tmpstr[1] == '-') {
+			tmpstr = tmpstr.substr(2);
+			if (tmpstr.compare("summary") == 0) {
+				summaryfilename = argv[i];
+			} else {
+				Cas_OFFinder::print_usage();
+				exit(0);
+			}
+			i++;
+		} else {
+			positionalargs.push_back(string(argv[i]));
+		}
+	}
+
+	if (positionalargs.size() < 3) { // Not all option specified
 		Cas_OFFinder::print_usage();
 		exit(0);
 	}
 
 	cl_device_type devtype;
-	switch (argv[2][0]) {
+	switch (positionalargs[1][0]) {
 	case 'C':
 		devtype = CL_DEVICE_TYPE_CPU;
 		break;
@@ -96,22 +116,22 @@ int main(int argc, char *argv[]) {
 		devtype = CL_DEVICE_TYPE_ACCELERATOR;
 		break;
 	default:
-		error_exit(2, "Unknown option: ", argv[2]);
+		error_exit(2, "Unknown option: ", positionalargs[1]);
 	}
 
-	string devarg = argv[2]+1;
+	string devarg = positionalargs[1].substr(1);
 	Cas_OFFinder s(devtype, devarg);
 
 	cerr << "Loading input file..." << endl;
-	s.readInputFile(argv[1]);
+	s.readInputFile(positionalargs[0].c_str());
 
-	outfilename = argv[3];
+	outfilename = positionalargs[2];
 	s.writeHeaders(outfilename.c_str());
 
 	int cnum = 0;
 	if ((dir = opendir(s.m_chrdir.c_str())) == NULL) {
 		if (check_file(s.m_chrdir.c_str())) {
-			run_cas_offinder(s, s.m_chrdir.c_str(), outfilename.c_str(), &cnum);
+			run_cas_offinder(s, s.m_chrdir.c_str(), outfilename.c_str(), summaryfilename.c_str(), &cnum);
 		} else {
 			error_exit(2, "An error has occured while opening directory: ", s.m_chrdir.c_str());
 			exit(1);
@@ -120,7 +140,7 @@ int main(int argc, char *argv[]) {
 		while ((ent = readdir(dir)) != NULL) {
 			if (ent->d_type == DT_REG || ent->d_type == DT_LNK) {
 				filepath = s.m_chrdir + "/" + ent->d_name;
-				run_cas_offinder(s, filepath.c_str(), outfilename.c_str(), &cnum);
+				run_cas_offinder(s, filepath.c_str(), outfilename.c_str(), summaryfilename.c_str(), &cnum);
 			}
 		}
 	}

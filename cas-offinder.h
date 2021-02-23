@@ -84,6 +84,7 @@ private:
 public:
 	string m_chrdir;
 	string m_chrdata;
+	map<string, unsigned int> m_summarytable;
 	vector<string> m_chrnames;
 	vector<unsigned long long> m_chrpos;
 
@@ -97,7 +98,8 @@ public:
 	void findPattern();
 	void releaseLociinfo();
 
-	void compareAll(const char* outfilename);
+	void compareAll(const char* outfilename, bool issummary);
+    void writeSummaryTable(const char* summaryfilename);
 	void readInputFile(const char* inputfile);
 
 	static void print_usage();

@@ -329,7 +329,8 @@ void Cas_OFFinder::writeHeaders(const char* outfilename) {
 
 void Cas_OFFinder::compareAll(const char* outfilename, bool issummary) {
 	unsigned int i, j, dev_index;
-	unsigned int bulge_size;
+	unsigned int bulge_size, bulge_index;
+	bool is_reversed_pam;
 	cl_ushort threshold;
 	string compare;
 	string seq_rna;
@@ -399,22 +400,47 @@ void Cas_OFFinder::compareAll(const char* outfilename, bool issummary) {
 							for (j = 0; ((j < m_chrpos.size()) && (loci >= m_chrpos[j])); j++) idx = j;
 							for (auto &bi: ci.second.second) {
 								seq_dna = string(strbuf);
+								if (bi.second < 0) {
+									is_reversed_pam = true;
+									bulge_index = -bi.second;
+								} else {
+									is_reversed_pam = false;
+									bulge_index = bi.second;
+								}
 								if (isnumeric(bi.first)) {
 									// dna bulge or none
 									bulge_size = (unsigned int)stoi(bi.first);
-									offset = m_dnabulgesize - bulge_size;
-									seq_rna = compare.substr(offset, bi.second) + string(bulge_size, '-') + compare.substr(offset + bi.second + bulge_size);
-									seq_dna = seq_dna.substr(offset);
-									if (bulge_size == 0)
+									if (is_reversed_pam) {
+										offset = 0;
+										seq_rna = compare.substr(0, bulge_index) + string(bulge_size, '-') + compare.substr(bulge_index + bulge_size);
+									} else {
+										offset = m_dnabulgesize - bulge_size;
+										seq_rna = compare.substr(offset, bulge_index) + string(bulge_size, '-') + compare.substr(offset + bulge_index + bulge_size);
+										seq_dna = seq_dna.substr(offset);
+									}
+									if (bulge_size == 0) {
 										bulge_type = "X";
-									else
+										if (is_reversed_pam) {
+											seq_rna = seq_rna.substr(0, seq_rna.size() - m_dnabulgesize);
+											seq_dna = seq_dna.substr(0, seq_dna.size() - m_dnabulgesize);
+										}
+									} else {
 										bulge_type = "DNA";
+									}
 								} else {
 									// rna bulge
 									bulge_size = (unsigned int)bi.first.size();
-									offset = m_dnabulgesize + bulge_size;
-									seq_rna = compare.substr(offset, bi.second) + bi.first + compare.substr(bi.second + bulge_size);
-									seq_dna = seq_dna.substr(offset, bi.second) + string(bulge_size, '-') + seq_dna.substr(bi.second + bulge_size);
+									if (is_reversed_pam) {
+										offset = 0;
+										seq_rna = compare.substr(0, bulge_index) + bi.first + compare.substr(bulge_index);
+										seq_dna = seq_dna.substr(0, bulge_index) + string(bulge_size, '-') + seq_dna.substr(bulge_index);
+										seq_rna = seq_rna.substr(0, seq_rna.size() - m_dnabulgesize - bulge_size);
+										seq_dna = seq_dna.substr(0, seq_dna.size() - m_dnabulgesize - bulge_size);
+									} else {
+										offset = m_dnabulgesize + bulge_size;
+										seq_rna = compare.substr(offset, bulge_index) + bi.first + compare.substr(offset + bulge_index);
+										seq_dna = seq_dna.substr(offset, bulge_index) + string(bulge_size, '-') + seq_dna.substr(offset + bulge_index);
+									}
 									bulge_type = "RNA";
 								}
 								(*fo) << id << "\t" << bulge_type << "\t" << seq_rna << "\t" << seq_dna << "\t" << m_chrnames[idx] << "\t" << loci - m_chrpos[idx] + offset << "\t" << m_directions[dev_index][i] << "\t" << m_mmcounts[dev_index][i] << "\t" << bulge_size << endl;
@@ -566,6 +592,8 @@ void Cas_OFFinder::parseInput(istream& input) {
 	m_compare_t::iterator it; // used in `add_compare`
 	compareinfo ci;
 	bulgeinfo bi;
+	bool is_reversed_pam = false;
+	string compare, tmp;
 
 	try {
 		if (!input.good())
@@ -584,7 +612,12 @@ void Cas_OFFinder::parseInput(istream& input) {
 			m_dnabulgesize = atoi(sline[1].c_str());
 			m_rnabulgesize = atoi(sline[2].c_str());
 		}
-		m_pattern = string(m_dnabulgesize, 'N') + sline[0];
+		if (sline[0][0] != 'N') { // As of today (2021.07.29), there is no reversed PAM starts with 'N'
+			is_reversed_pam = true;
+			m_pattern = sline[0] + string(m_dnabulgesize, 'N');
+		} else {
+			m_pattern = string(m_dnabulgesize, 'N') + sline[0];
+		}
 		transform(m_pattern.begin(), m_pattern.end(), m_pattern.begin(), ::toupper);
 
 		size_t linecnt = 0;
@@ -607,20 +640,40 @@ void Cas_OFFinder::parseInput(istream& input) {
 			else
 				id = to_string(linecnt);
 			ci = make_pair(id, threshold);
-			bi = make_pair("0", 0);
-			add_compare(string(m_dnabulgesize, 'N') + sline[0], ci, bi);
-			for (i = 1; i <= m_dnabulgesize; i++) {
-				preNcnt = m_dnabulgesize - i;
-				for (j = 1; j < sline[0].find_last_not_of('N') + 1; j++) {
-					bi = make_pair(to_string(i), j);
-					add_compare(string(preNcnt, 'N') + sline[0].substr(0, j) + string(i, 'N') + sline[0].substr(j), ci, bi);
+			if (m_dnabulgesize == 0) {
+				bi = make_pair("0", 0);
+				add_compare(sline[0], ci, bi);
+			} else {
+				if (is_reversed_pam)
+					tmp = sline[0] + string(m_dnabulgesize, 'N');
+				else
+					tmp = string(m_dnabulgesize, 'N') + sline[0];
+				for (i = 1; i <= m_dnabulgesize; i++) {
+					preNcnt = m_dnabulgesize - i;
+					for (j = sline[0].find_first_not_of('N'); j < sline[0].find_last_not_of('N') + 2; j++) {
+						if (is_reversed_pam) {
+							compare = sline[0].substr(0, j) + string(i, 'N') + sline[0].substr(j) + string(preNcnt, 'N');
+						} else {
+							compare = string(preNcnt, 'N') + sline[0].substr(0, j) + string(i, 'N') + sline[0].substr(j);
+						}
+						if (compare == tmp)
+							bi = make_pair("0", (is_reversed_pam?-j:j));
+						else
+							bi = make_pair(to_string(i), (is_reversed_pam?-j:j));
+						add_compare(compare, ci, bi);
+					}
 				}
 			}
 			for (i = 1; i <= m_rnabulgesize; i++) {
 				preNcnt = m_dnabulgesize + i;
-				for (j = 1; j < sline[0].find_last_not_of('N') + 1 - i; j++) {
-					bi = make_pair(sline[0].substr(j, i), j);
-					add_compare(string(preNcnt, 'N') + sline[0].substr(0, j) + sline[0].substr(j + i), ci, bi);
+				for (j = sline[0].find_first_not_of('N'); j < sline[0].find_last_not_of('N') + 1 - i; j++) {
+					bi = make_pair(sline[0].substr(j, i), (is_reversed_pam?-j:j));
+					if (is_reversed_pam) {
+						compare = sline[0].substr(0, j) + sline[0].substr(j + i) + string(preNcnt, 'N');
+					} else {
+						compare = string(preNcnt, 'N') + sline[0].substr(0, j) + sline[0].substr(j + i);
+					}
+					add_compare(compare, ci, bi);
 				}
 			}
 			if (entrycnt == 0) {

@@ -9,9 +9,11 @@ struct bulge_info{
     int loc;
 };
 struct bulge_augment{
-    int orig_idx;
     int bulge_pos;
+    int bulge_size;
     BulgeType bulge_type;
 };
-void get_bulge_info(bulge_info & result, std::string & genome, bulge_augment & augment, int dna_bulges, int rna_bulges);
-std::vector<std::pair<std::string,bulge_augment>> augment_patterns_with_bulges(std::vector<std::string> & patterns, int dna_bulges, int rna_bulges);
+using bulge_pair = std::pair<std::string,bulge_augment>;
+std::string get_bulge_type_name(BulgeType type);
+void get_bulge_info(bulge_info & result, std::string & genome, bulge_augment & augment, int orig_loc, int dna_bulges, int rna_bulges);
+std::vector<bulge_pair> augment_patterns_with_bulges(std::vector<std::string> patterns, int dna_bulges, int rna_bulges);

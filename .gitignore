@@ -6,3 +6,4 @@ cas-offinder
 cmake_install.cmake
 config.h
 oclkernels.h
+.vscode

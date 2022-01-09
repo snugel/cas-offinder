@@ -13,9 +13,10 @@ std::string get_bulge_type_name(BulgeType type){
     }
 }
 
-void get_bulge_info(bulge_info & result, std::string & genome, bulge_augment & augment, int orig_loc, int dna_bulges, int rna_bulges){
-    
+bulge_info get_bulge_info(std::string & genome, bulge_augment & augment, int orig_loc, int dna_bulges, int rna_bulges){
+    return bulge_info{.dna="placeholder",.rna="placebolder",.loc=-1};
 }
+
 std::vector<bulge_pair> augment_patterns_with_bulges(std::vector<std::string> patterns, int dna_bulges, int rna_bulges){
     std::vector<bulge_pair> augmented;
     int pad_size = dna_bulges;

@@ -6,6 +6,13 @@ struct match{
     size_t loc;
     int mismatches;
     size_t pattern_idx;
-    char direction;
 };
 std::vector<match> find_matches(std::string genome, std::vector<std::string> patterns, int max_mismatches);
+void sort_matches(std::vector<match> & matches);
+void atomic_print_match(match & m);
+bool matches_equal(std::vector<match> & m1, std::vector<match> & m2);
+
+
+// internal facing, use externally at your own risk
+char to4bit(char c);
+std::vector<match> find_matches_gold(std::string genome, std::vector<std::string> patterns, int max_mismatches);

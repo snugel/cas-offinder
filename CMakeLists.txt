@@ -10,14 +10,13 @@ set (CMAKE_CXX_STANDARD 11)
 set (SOURCES
     test/test.cpp
 	find_mismatches.cpp
-	reverse_compliment.cpp
     test/test_framework.cpp
     bulge_logic.cpp
+    find_mismatches_packed.cpp
 )
 
 set (HEADERS
 	find_mismatches.h
-	reverse_compliment.h
     RangeIterator.h
     bulge_logic.h
     test/test_framework.h

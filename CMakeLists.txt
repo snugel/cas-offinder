@@ -17,6 +17,7 @@ set (SOURCES
 set (HEADERS
 	find_mismatches.h
 	reverse_compliment.h
+    RangeIterator.h
     test/test_framework.h
 )
 

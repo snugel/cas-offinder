@@ -1,5 +1,7 @@
 #include "find_mismatches.h"
 #include "test/test_framework.h"
+#include "reverse_compliment.h"
+#include "RangeIterator.h"
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
@@ -10,11 +12,11 @@
 
 
 
-uint64_t to4bit(char c){
-    constexpr uint64_t G = 0x1;
-    constexpr uint64_t C = 0x2;
-    constexpr uint64_t A = 0x4;
-    constexpr uint64_t T = 0x8;
+char to4bit(char c){
+    constexpr char G = 0x1;
+    constexpr char C = 0x2;
+    constexpr char A = 0x4;
+    constexpr char T = 0x8;
     switch (c)
     {
     case 'G':
@@ -52,173 +54,227 @@ uint64_t to4bit(char c){
     }
 }
 
-std::vector<uint64_t> to4bit(std::string genome){
-    std::vector<uint64_t> result((genome.size() + 15) / 16);
-    for(size_t i = 0; i < genome.size(); i++){
-        int ridx = i / 16;
-        int shift = 15 - i % 16;
-        result[ridx] |= to4bit(genome[i]) << (shift*4);
-    }
-    return result;
+char complimentb4(char c){
+    char left = (c & 0xb) >> 1;
+    char right = (c & 0x5) << 1;
+    return left | right;
 }
 
-void find_mismatches(std::vector<uint64_t> & genome, std::vector<uint64_t> & pattern_blocks, std::vector<uint16_t*> & b4_counts){
-    constexpr int blocks_avail = (128-64)/4;
-    for(size_t i = 0; i < genome.size(); i++){
-        uint64_t prev = genome[i];
-        uint64_t next = i+1 < genome.size() ? genome[i+1] : 0;
-        for(size_t k = 0; k < blocks_avail; k++){
-            uint64_t cur = (prev << (k*4)) | (next >> ((blocks_avail - k)*4));
-            for(size_t j = 0; j < pattern_blocks.size(); j++){
-                b4_counts[j][i*16+k] -= __builtin_popcountll(cur & pattern_blocks[j]);
-            }
-        }
-    }
-}
-
-
-std::vector<std::vector<uint16_t>> find_mismatches_packed(std::string genome, std::vector<std::string> patterns){
-    if(patterns.size() == 0){
-        return {{}};
-    }
-    size_t pattern_size = patterns[0].size();
-    for(std::string & p : patterns){
-        assert(p.size() == pattern_size);
-    }
-    size_t blocks_per_pattern = (pattern_size + 15) / 16; 
-    size_t num_pattern_blocks = patterns.size() * blocks_per_pattern;
-    
-    std::vector<std::vector<uint16_t>> padded_pattern_mismatches(patterns.size(), std::vector<uint16_t>(genome.size() + (blocks_per_pattern+1)*16, uint16_t(pattern_size)));
-
-    std::vector<uint64_t> pattern_blocks(num_pattern_blocks);
-    std::vector<uint16_t*> block_counts(num_pattern_blocks);
-    for(size_t i = 0; i < patterns.size(); i++){
-        std::vector<uint64_t> b4pattern = to4bit(patterns[i]);
-        assert(b4pattern.size() == blocks_per_pattern);
-        for(size_t j = 0; j < blocks_per_pattern; j++){
-            block_counts[i*blocks_per_pattern + j] = &padded_pattern_mismatches[i][(blocks_per_pattern-j-1)*16];
-            pattern_blocks[i*blocks_per_pattern + j] = b4pattern[j];
-        }
-    }
-    std::vector<uint64_t> b4genome = to4bit(genome);
-    int start = clock();
-    find_mismatches(b4genome, pattern_blocks, block_counts);
-    int end = clock();
-    std::cout << "innertime: " << (end - start)/double(CLOCKS_PER_SEC) << "\n";
-
-    //removes memory pad on patterns
-    for(auto & v : padded_pattern_mismatches){
-        v.erase(v.begin(), v.begin() + (blocks_per_pattern-1)*16);
-        v.resize(genome.size()-pattern_size+1);
-    }
-    // returns unpadded patterns
-    return padded_pattern_mismatches;
-}
-
-struct match_info{
-    int x;
-};
-std::vector<std::vector<uint16_t>> find_mismatches(std::string genome,  std::vector<std::string> patterns){
-    if(patterns.size() == 0){
-        return {{}};
-    }
-    size_t pattern_size = patterns[0].size();
-    for(std::string & p : patterns){
-        assert(p.size() == pattern_size);
-    }
-    
-    std::vector<std::vector<uint16_t>> mismatches(patterns.size(), std::vector<uint16_t>(genome.size() - pattern_size + 1));
-    for(char & c : genome){
+void modifyto4bit(std::string & s){
+    for(char & c : s){
         c = to4bit(c);
     }
-    for(std::string & pat : patterns){
-        for(char & c : pat){
-            c = to4bit(c);
+}
+
+
+std::vector<size_t> find_locations(std::string & genomeb4, std::string & searchpatternb4){
+    size_t size = genomeb4.size()-searchpatternb4.size()+1;
+    std::vector<size_t> nonNposes;
+    for(size_t j : range(searchpatternb4.size())){
+        char c = searchpatternb4[j];
+        if(c != to4bit('N')){
+            nonNposes.push_back(j);
         }
     }
-    for(int j = 0; j < patterns.size(); j++){
-        for(int i = 0; i < genome.size() - pattern_size + 1; i++){
-            for(int k = 0; k < pattern_size; k++){
-                if(!(genome[i+k] & patterns[j][k])){
-                    mismatches[j][i] += 1;
-                    if(mismatches[j][i] > 5){
+    std::vector<size_t> possible_locs;
+    for(size_t i : range(size)){
+        bool possible = true;
+        for(size_t sidx : nonNposes){
+            if(!(genomeb4[i+sidx] & searchpatternb4[sidx])){
+                possible = false;
+                break;
+            }
+        }
+        if(possible){
+            possible_locs.push_back(i);
+        }
+    }
+    return possible_locs;
+}
+
+struct local_match{
+    size_t loc;
+    int mismatches;
+    size_t pattern_idx;
+};
+std::vector<local_match> find_matches_gold_local(std::string & genomeb4, std::vector<size_t> & positions, std::vector<std::string> & patternsb4, int max_mismatches){
+    size_t pattern_size = patternsb4.at(0).size();
+    for(std::string & p : patternsb4){
+        assert(p.size() == pattern_size);
+    }
+    std::vector<local_match> matches;
+    for(size_t i : positions){
+        for(size_t j : range(patternsb4.size())){
+            std::string & pattern = patternsb4[j];
+            int mismatches = 0;
+            for(size_t j : range(pattern_size)){
+                if(!(genomeb4[j+i] & pattern[j])){
+                    mismatches++;
+                    if(mismatches > max_mismatches){
                         break;
                     }
                 }
             }
-        }
-    }
-    return mismatches;
-}
-
-std::vector<std::vector<uint16_t>> find_mismatches_gold(std::string genome, std::vector<std::string> patterns){
-    if(patterns.size() == 0){
-        return {{}};
-    }
-    size_t pattern_size = patterns[0].size();
-    for(std::string & p : patterns){
-        assert(p.size() == pattern_size);
-    }
-    std::vector<std::vector<uint16_t>> mismatches(patterns.size(), std::vector<uint16_t>(genome.size() - pattern_size + 1, uint16_t(pattern_size)));
-    for(int j = 0; j < patterns.size(); j++){
-        for(int i = 0; i < genome.size() - pattern_size + 1; i++){
-            for(int k = 0; k < pattern_size; k++){
-                if(to4bit(genome.at(i+k)) & to4bit(patterns.at(j).at(k))){
-                    mismatches.at(j).at(i) -= 1;
-                }
+            if(mismatches <= max_mismatches){
+                matches.push_back(local_match{.loc=i, .mismatches=mismatches, .pattern_idx=j});
             }
         }
     }
-    return mismatches;
+    return matches;
+}
+struct match{
+    size_t loc;
+    int mismatches;
+    size_t pattern_idx;
+    char direction;
+};
+void add_matches(std::vector<match> & matches, std::vector<local_match> & local_matches, char dir){
+    for(local_match lm : local_matches){
+        matches.push_back(match{
+            .loc=lm.loc,
+            .mismatches=lm.mismatches,
+            .pattern_idx=lm.pattern_idx,
+            .direction=dir,
+        });
+    }
+}
+std::vector<match> find_matches_gold(std::string genome, std::string search_pattern, std::vector<std::string> patterns, int max_mismatches){
+    modifyto4bit(genome);
+    std::string reverse_search_pattern = reverse_compliment(search_pattern);
+    modifyto4bit(search_pattern);
+    modifyto4bit(reverse_search_pattern);
+    std::vector<std::string> plus_patterns = patterns;
+    for(std::string & pat : plus_patterns){
+        modifyto4bit(pat);
+    }
+    std::vector<std::string> minus_patterns = patterns;
+    for(std::string & pat : minus_patterns){
+        pat = reverse_compliment(pat);
+        modifyto4bit(pat);
+    }
+    std::vector<size_t> plus_positions = find_locations(genome, search_pattern);
+    std::vector<size_t> minus_positions = find_locations(genome, reverse_search_pattern);
+    std::vector<local_match> plus_local_matchs = find_matches_gold_local(genome, plus_positions, plus_patterns, max_mismatches);
+    std::vector<local_match> minus_local_matchs = find_matches_gold_local(genome, minus_positions, minus_patterns, max_mismatches);
+    std::vector<match> matches;
+    add_matches(matches, plus_local_matchs, '+');
+    add_matches(matches, minus_local_matchs, '-');
+    return matches;
 }
 
-TEST(find_mismatches_gold){
+void sort_matches(std::vector<match> & matches){
+    std::sort(matches.begin(), matches.end(), [](match & a, match & b){
+        return 
+            a.loc < b.loc && 
+            a.pattern_idx < b.pattern_idx && 
+            a.direction < b.direction;
+    });
+}
+TEST(test_find_matches_gold){
     std::string genome = "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     std::vector<std::string> patterns = {
         "GCGTAGACG",
-        "CGTAGCTAG"
+        "CGTAGCTAG",
+        "GATCGACTG"
     };
-    std::vector<std::vector<uint16_t>> expected = {
-        //6, 9, 0, 9, 7, 6, 8, 6, 6, 8, 4, 9, 8, 5, 7, 7, 6, 6, 7, 8, 4, 8, 7, 8, 5, 6, 9, 7, 6,
-        { 6, 9, 0, 9, 7, 6, 8, 6, 6, 8, 4, 9, 8, 5, 7, 7, 7, 6, 7, 8, 4, 8, 7, 8, 5, 6, 9, 7, 6, },
-        //6, 6, 8, 4, 7, 8, 6, 7, 7, 7, 6, 7, 7, 8, 4, 9, 5, 4, 7, 9, 9, 0, 9, 9, 7, 5, 6, 8, 6,
-        { 8, 6, 8, 4, 7, 8, 6, 7, 7, 7, 6, 7, 7, 8, 4, 9, 7, 4, 7, 9, 9, 0, 9, 9, 7, 5, 6, 8, 6, },
+    std::string search_pattern = "NNNNNNNNG";
+    int mismatches = 3;
+    std::vector<match> expected = {
+        match{
+            .loc=2,
+            .mismatches=0,
+            .pattern_idx=0,
+            .direction='+',
+        },
+        match{
+            .loc=21,
+            .mismatches=0,
+            .pattern_idx=1,
+            .direction='+',
+        },
+        match{
+            .loc=25,
+            .mismatches=3,
+            .pattern_idx=2,
+            .direction='+',
+        },
+        match{
+            .loc=3,
+            .mismatches=3,
+            .pattern_idx=0,
+            .direction='-',
+        },
+        match{
+            .loc=13,
+            .mismatches=0,
+            .pattern_idx=2,
+            .direction='-',
+        },
     };
-    std::vector<std::vector<uint16_t>> actual = find_mismatches(genome, patterns);
-    for(auto & v : actual){
-        for(uint16_t i : v){
-            std::cout << i << ", ";
-        }
-        std::cout << "\n";
+    std::vector<match> actual = find_matches_gold(genome, search_pattern, patterns, mismatches);
+    sort_matches(actual);
+    sort_matches(expected);
+    for(match m : actual){
+        std::cout << m.loc << "\t" << m.mismatches << "\t" << m.pattern_idx << "\t" << m.direction << "\n";
     }
-    if(actual.size() != expected.size() || actual[0].size() != expected[0].size()){
+
+    if(actual.size() != expected.size()){
         return false;
     }
-    for(int i = 0; i < actual.size(); i++){
-        for(int j = 0; j < actual[0].size(); j++){
-            if(actual.at(i).at(j) != expected.at(i).at(j)){
-                return false;
-            }
-        }
-    }
-    return true;
+    return std::equal(actual.begin(), actual.end(), expected.begin(), [](match a, match b){
+        return 
+            a.direction == b.direction &&
+            a.loc == b.loc &&
+            a.mismatches == b.mismatches &&
+            a.pattern_idx == b.pattern_idx;
+    });
 }
 TEST(find_mismatches_perf){
     std::vector<std::string> patterns(25, "GCGTAGACGGCGTAGACGGCGTANNRGR");
     std::string genome;
+    for(int i = 0; i < 1000; i++){
+        genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
+    }
+    std::string search_pattern = "NNNNNG";
+    int mismatches = 5;
+    int start = clock();
+    std::vector<match> actual = find_matches_gold(genome, search_pattern, patterns, mismatches);
+    int end = clock();
+    std::cout << "time: " << (end - start)/double(CLOCKS_PER_SEC) << "\n";
+    return true;
+}
+
+TEST(test_find_locations){
+    std::string genome = "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
+    std::string pattern = "NNNNNRG";
+    modifyto4bit(genome);
+    modifyto4bit(pattern);
+    std::vector<size_t> expected = { 1, 9, 19, 23, };
+    std::vector<size_t> actual = find_locations(genome, pattern);
+    return expected.size() == actual.size() && std::equal(expected.begin(), expected.end(), actual.begin());
+}
+
+TEST(find_locations_perf){
+    std::string pattern = "TTNNNNNNNNNNNNNNNNNNNGRRT";
+    std::string genome;
     for(int i = 0; i < 100000; i++){
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }
+    modifyto4bit(genome);
+    modifyto4bit(pattern);
     int start = clock();
-    find_mismatches(genome, patterns);
+    find_locations(genome, pattern);
     int end = clock();
     std::cout << "time: " << (end - start)/double(CLOCKS_PER_SEC) << "\n";
+    return true;
 }
 
-
-TEST(test_to_4bit_vec){
-    std::string genome = "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
-    std::vector<uint64_t> expected = {0x4212184142148241, 0x8214821841284182, 0x8148100000000000};
-    std::vector<uint64_t> actual = to4bit(genome);
-    return expected.size() == actual.size() && std::equal(expected.begin(), expected.end(), actual.begin());
+TEST(test_complimentb4){
+    return (
+        (complimentb4(to4bit('T')) == to4bit('A')) &&
+        (complimentb4(to4bit('A')) == to4bit('T')) &&
+        (complimentb4(to4bit('G')) == to4bit('C')) &&
+        (complimentb4(to4bit('C')) == to4bit('G')) &&
+        (complimentb4(to4bit('N')) == to4bit('N')) 
+    );
 }

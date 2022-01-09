@@ -63,7 +63,7 @@ std::vector<match> find_matches_gold_local(std::string & genomeb4, std::vector<s
         assert(p.size() == pattern_size);
     }
     std::vector<match> matches;
-    for(size_t i : range(genomeb4.size())){
+    for(size_t i : range(genomeb4.size() - pattern_size + 1)){
         for(size_t j : range(patternsb4.size())){
             std::string & pattern = patternsb4[j];
             int mismatches = 0;
@@ -159,10 +159,10 @@ TEST(test_find_matches_gold){
     }
     return matches_equal(actual, expected);
 }
-TEST(find_mismatches_perf){
+TEST(find_mismatches_gold_perf){
     std::vector<std::string> patterns(25, "GCGTAGACGGCGTAGACGGCGTANNRGR");
     std::string genome;
-    for(int i : range(10000)){
+    for(int i : range(1000)){
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }
     int mismatches = 5;

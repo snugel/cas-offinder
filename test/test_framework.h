@@ -8,7 +8,7 @@ typedef bool (*test_fn)();
 #define TOKENPASTE(x, y) x ## y
 #define TOKENPASTE2(x, y) TOKENPASTE(x, y)
 
-#define TEST(test_name) bool test_name(); bool TOKENPASTE2(res, __LINE__ ) = all_tests.add_test(test_name, #test_name); bool test_name()
+#define TEST(test_name) bool test_name(); bool TOKENPASTE2(test_name, __LINE__ ) = all_tests.add_test(test_name, #test_name); bool test_name()
 // #define TESTTEST
 //#ifdef RUN_TESTS
 

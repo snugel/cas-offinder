@@ -122,12 +122,6 @@ std::vector<local_match> find_matches_gold_local(std::string & genomeb4, std::ve
     }
     return matches;
 }
-struct match{
-    size_t loc;
-    int mismatches;
-    size_t pattern_idx;
-    char direction;
-};
 void add_matches(std::vector<match> & matches, std::vector<local_match> & local_matches, char dir){
     for(local_match lm : local_matches){
         matches.push_back(match{
@@ -161,6 +155,10 @@ std::vector<match> find_matches_gold(std::string genome, std::string search_patt
     add_matches(matches, minus_local_matchs, '-');
     return matches;
 }
+std::vector<match> find_matches(std::string genome, std::string search_pattern, std::vector<std::string> patterns, int max_mismatches){
+    return find_matches_gold(genome, search_pattern, patterns, max_mismatches);
+}
+
 
 void sort_matches(std::vector<match> & matches){
     std::sort(matches.begin(), matches.end(), [](match & a, match & b){

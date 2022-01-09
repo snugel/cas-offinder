@@ -1,5 +1,12 @@
 #include<vector>
 #include<string>
 
-std::vector<std::vector<uint16_t>> find_mismatches(std::string genome, std::vector<std::string> patterns, int max_mismatches);
+
+struct match{
+    size_t loc;
+    int mismatches;
+    size_t pattern_idx;
+    char direction;
+};
+std::vector<match> find_matches(std::string genome, std::string search_pattern, std::vector<std::string> patterns, int max_mismatches);
 

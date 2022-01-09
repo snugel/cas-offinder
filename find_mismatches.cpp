@@ -66,44 +66,18 @@ void modifyto4bit(std::string & s){
     }
 }
 
-
-std::vector<size_t> find_locations(std::string & genomeb4, std::string & searchpatternb4){
-    size_t size = genomeb4.size()-searchpatternb4.size()+1;
-    std::vector<size_t> nonNposes;
-    for(size_t j : range(searchpatternb4.size())){
-        char c = searchpatternb4[j];
-        if(c != to4bit('N')){
-            nonNposes.push_back(j);
-        }
-    }
-    std::vector<size_t> possible_locs;
-    for(size_t i : range(size)){
-        bool possible = true;
-        for(size_t sidx : nonNposes){
-            if(!(genomeb4[i+sidx] & searchpatternb4[sidx])){
-                possible = false;
-                break;
-            }
-        }
-        if(possible){
-            possible_locs.push_back(i);
-        }
-    }
-    return possible_locs;
-}
-
 struct local_match{
     size_t loc;
     int mismatches;
     size_t pattern_idx;
 };
-std::vector<local_match> find_matches_gold_local(std::string & genomeb4, std::vector<size_t> & positions, std::vector<std::string> & patternsb4, int max_mismatches){
+std::vector<local_match> find_matches_gold_local(std::string & genomeb4, std::vector<std::string> & patternsb4, int max_mismatches){
     size_t pattern_size = patternsb4.at(0).size();
     for(std::string & p : patternsb4){
         assert(p.size() == pattern_size);
     }
     std::vector<local_match> matches;
-    for(size_t i : positions){
+    for(size_t i : range(genomeb4.size())){
         for(size_t j : range(patternsb4.size())){
             std::string & pattern = patternsb4[j];
             int mismatches = 0;
@@ -132,11 +106,8 @@ void add_matches(std::vector<match> & matches, std::vector<local_match> & local_
         });
     }
 }
-std::vector<match> find_matches_gold(std::string genome, std::string search_pattern, std::vector<std::string> patterns, int max_mismatches){
+std::vector<match> find_matches_gold(std::string genome, std::vector<std::string> patterns, int max_mismatches){
     modifyto4bit(genome);
-    std::string reverse_search_pattern = reverse_compliment(search_pattern);
-    modifyto4bit(search_pattern);
-    modifyto4bit(reverse_search_pattern);
     std::vector<std::string> plus_patterns = patterns;
     for(std::string & pat : plus_patterns){
         modifyto4bit(pat);
@@ -146,17 +117,15 @@ std::vector<match> find_matches_gold(std::string genome, std::string search_patt
         pat = reverse_compliment(pat);
         modifyto4bit(pat);
     }
-    std::vector<size_t> plus_positions = find_locations(genome, search_pattern);
-    std::vector<size_t> minus_positions = find_locations(genome, reverse_search_pattern);
-    std::vector<local_match> plus_local_matchs = find_matches_gold_local(genome, plus_positions, plus_patterns, max_mismatches);
-    std::vector<local_match> minus_local_matchs = find_matches_gold_local(genome, minus_positions, minus_patterns, max_mismatches);
+    std::vector<local_match> plus_local_matchs = find_matches_gold_local(genome, plus_patterns, max_mismatches);
+    std::vector<local_match> minus_local_matchs = find_matches_gold_local(genome, minus_patterns, max_mismatches);
     std::vector<match> matches;
     add_matches(matches, plus_local_matchs, '+');
     add_matches(matches, minus_local_matchs, '-');
     return matches;
 }
-std::vector<match> find_matches(std::string genome, std::string search_pattern, std::vector<std::string> patterns, int max_mismatches){
-    return find_matches_gold(genome, search_pattern, patterns, max_mismatches);
+std::vector<match> find_matches(std::string genome, std::vector<std::string> patterns, int max_mismatches){
+    return find_matches_gold(genome, patterns, max_mismatches);
 }
 
 
@@ -175,7 +144,6 @@ TEST(test_find_matches_gold){
         "CGTAGCTAG",
         "GATCGACTG"
     };
-    std::string search_pattern = "NNNNNNNNG";
     int mismatches = 3;
     std::vector<match> expected = {
         match{
@@ -203,13 +171,25 @@ TEST(test_find_matches_gold){
             .direction='-',
         },
         match{
+            .loc=5,
+            .mismatches=2,
+            .pattern_idx=2,
+            .direction='-',
+        },
+        match{
             .loc=13,
             .mismatches=0,
             .pattern_idx=2,
             .direction='-',
         },
+        match{
+            .loc=22,
+            .mismatches=3,
+            .pattern_idx=1,
+            .direction='-',
+        },
     };
-    std::vector<match> actual = find_matches_gold(genome, search_pattern, patterns, mismatches);
+    std::vector<match> actual = find_matches_gold(genome, patterns, mismatches);
     sort_matches(actual);
     sort_matches(expected);
     for(match m : actual){
@@ -230,42 +210,17 @@ TEST(test_find_matches_gold){
 TEST(find_mismatches_perf){
     std::vector<std::string> patterns(25, "GCGTAGACGGCGTAGACGGCGTANNRGR");
     std::string genome;
-    for(int i = 0; i < 1000; i++){
+    for(int i = 0; i < 10000; i++){
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }
-    std::string search_pattern = "NNNNNG";
     int mismatches = 5;
     int start = clock();
-    std::vector<match> actual = find_matches_gold(genome, search_pattern, patterns, mismatches);
+    std::vector<match> actual = find_matches_gold(genome, patterns, mismatches);
     int end = clock();
     std::cout << "time: " << (end - start)/double(CLOCKS_PER_SEC) << "\n";
     return true;
 }
 
-TEST(test_find_locations){
-    std::string genome = "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
-    std::string pattern = "NNNNNRG";
-    modifyto4bit(genome);
-    modifyto4bit(pattern);
-    std::vector<size_t> expected = { 1, 9, 19, 23, };
-    std::vector<size_t> actual = find_locations(genome, pattern);
-    return expected.size() == actual.size() && std::equal(expected.begin(), expected.end(), actual.begin());
-}
-
-TEST(find_locations_perf){
-    std::string pattern = "TTNNNNNNNNNNNNNNNNNNNGRRT";
-    std::string genome;
-    for(int i = 0; i < 100000; i++){
-        genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
-    }
-    modifyto4bit(genome);
-    modifyto4bit(pattern);
-    int start = clock();
-    find_locations(genome, pattern);
-    int end = clock();
-    std::cout << "time: " << (end - start)/double(CLOCKS_PER_SEC) << "\n";
-    return true;
-}
 
 TEST(test_complimentb4){
     return (

@@ -8,5 +8,4 @@ struct match{
     size_t pattern_idx;
     char direction;
 };
-std::vector<match> find_matches(std::string genome, std::string search_pattern, std::vector<std::string> patterns, int max_mismatches);
-
+std::vector<match> find_matches(std::string genome, std::vector<std::string> patterns, int max_mismatches);

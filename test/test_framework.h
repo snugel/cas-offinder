@@ -5,6 +5,9 @@
 
 typedef bool (*test_fn)();
 
+//make sure asserts are kept in code
+#undef NDEBUG
+
 #define TOKENPASTE(x, y) x ## y
 #define TOKENPASTE2(x, y) TOKENPASTE(x, y)
 

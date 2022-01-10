@@ -20,18 +20,18 @@ std::vector<uint64_t> make4bitpackedints(std::string genome){
 
 void find_matches_packed_helper(
         uint64_t * genome, 
-        int genome_size, 
+        size_t genome_size, 
         uint64_t * pattern_blocks, 
-        int num_patterns, 
-        int blocks_per_pattern,
+        size_t num_patterns, 
+        size_t blocks_per_pattern,
         std::vector<match> & matches, 
         int max_mismatches,
         int max_matches
 ){
-    // genome is expected to be at least blocks_per_pattern BIGGER than the genome_size
+    // genome is expected to be at least BIGGER than the genome_size
     constexpr size_t blocks_avail = 16;
     constexpr size_t pattern_count_arr_size = 8;
-    uint16_t pattern_counts[pattern_count_arr_size];
+    uint16_t pattern_counts[pattern_count_arr_size] = {0};
     for(size_t i = 0; i < genome_size; i++){
         for(size_t j = 0; j < num_patterns; j += pattern_count_arr_size){
             for(size_t k = 0; k < blocks_avail; k++){
@@ -123,6 +123,7 @@ TEST(test_find_matches_packed){
     }
     return matches_equal(actual, expected);
 }
+
 TEST(find_mismatches_packed_perf){
     std::vector<std::string> patterns(25, "GCGTAGACGGCGTAGACGGCGTANNRGR");
     std::string genome;

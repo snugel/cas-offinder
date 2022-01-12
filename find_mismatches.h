@@ -3,9 +3,9 @@
 
 
 struct match{
-    size_t loc;
-    int mismatches;
-    size_t pattern_idx;
+    uint64_t loc;
+    uint32_t mismatches;
+    uint32_t pattern_idx;
 };
 std::vector<match> find_matches(std::string genome, std::vector<std::string> patterns, int max_mismatches);
 void sort_matches(std::vector<match> & matches);

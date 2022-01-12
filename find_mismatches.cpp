@@ -162,7 +162,7 @@ TEST(test_find_matches_gold){
 TEST(find_mismatches_gold_perf){
     std::vector<std::string> patterns(25, "GCGTAGACGGCGTAGACGGCGTANNRGR");
     std::string genome;
-    for(int i : range(1000)){
+    for(int i : range(100)){
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }
     int mismatches = 5;

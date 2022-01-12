@@ -13,6 +13,7 @@ set (SOURCES
     test/test_framework.cpp
     bulge_logic.cpp
     find_mismatches_packed.cpp
+    find_mismatches_opencl.cpp
 )
 
 set (HEADERS
@@ -24,3 +25,6 @@ set (HEADERS
 
 add_executable (cas-offinder ${SOURCES} ${HEADERS})
 target_compile_options(cas-offinder PRIVATE -Wall -Wextra)
+
+link_directories(/usr/lib/x86_64-linux-gnu/)
+target_link_libraries(cas-offinder OpenCL)

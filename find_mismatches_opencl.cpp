@@ -40,7 +40,6 @@ std::vector<match> find_matches_opencl(std::string genome, std::vector<std::stri
     }
     std::vector<match> matches;
 
-    std::vector<uint64_t> b4genome = make4bitpackedints(genome);
 
     OpenCLPlatform plat;
     OpenCLExecutor executor(
@@ -48,7 +47,9 @@ std::vector<match> find_matches_opencl(std::string genome, std::vector<std::stri
         plat.get_platform(), 
         plat.get_first_device()
     );
-    const int OUT_BUF_SIZE = 1<<20;
+    std::vector<uint64_t> b4genome = make4bitpackedints(genome);
+
+    const int OUT_BUF_SIZE = 1<<24;
     CLBuffer<match> output_buf = executor.new_clbuffer<match>(OUT_BUF_SIZE);
     CLBuffer<int> output_count = executor.new_clbuffer<int>(1);
     CLBuffer<uint64_t> genome_buf = executor.new_clbuffer<uint64_t>(b4genome.size()+2);
@@ -71,7 +72,7 @@ std::vector<match> find_matches_opencl(std::string genome, std::vector<std::stri
             output_buf.k_arg(),
             output_count.k_arg(),
         });
-
+        int start = clock();
     genome_buf.clear_buffer();
     pattern_buf.clear_buffer();
     output_count.clear_buffer();
@@ -81,8 +82,13 @@ std::vector<match> find_matches_opencl(std::string genome, std::vector<std::stri
     compute_results.run();
     int out_count = 0;
     output_count.read_buffer(&out_count, 1);
-    matches.resize(out_count);
-    output_buf.read_buffer(&matches[0], out_count);
+
+    if(out_count > 0){
+        matches.resize(out_count);
+        output_buf.read_buffer(&matches[0], out_count);
+    }
+    int end = clock();
+    std::cout << "inner time: " << (end - start) / double(CLOCKS_PER_SEC) << "\n";
     std::cout << "out count" << out_count << "\n";
     return matches;
     
@@ -136,4 +142,20 @@ TEST(test_find_matches_opencl)
         atomic_print_match(m);
     }
     return matches_equal(actual, expected);
+}
+
+TEST(find_mismatches_opencl_perf)
+{
+    std::vector<std::string> patterns(50, "GCGTAGACGGCGTAGACGGCGTANNRGR");
+    std::string genome;
+    for (int i : range(100000000))
+    {
+        genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
+    }
+    int mismatches = 10;
+    int start = clock();
+    std::vector<match> actual = find_matches_opencl(genome, patterns, mismatches);
+    int end = clock();
+    std::cout << "time: " << (end - start) / double(CLOCKS_PER_SEC) << "\n";
+    return true;
 }

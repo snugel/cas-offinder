@@ -13,11 +13,18 @@
 std::vector<uint64_t> make4bitpackedints(std::string genome)
 {
     std::vector<uint64_t> result((genome.size() + 15) / 16);
-    for (size_t i = 0; i < genome.size(); i++)
+    size_t i = 0;
+    for (; i < genome.size() / 16; i++)
     {
-        int ridx = i / 16;
-        int shift = 15 - i % 16;
-        result[ridx] |= uint64_t(to4bit(genome[i])) << (shift * 4);
+        for(size_t j = 0; j < 16; j++){
+            int shift = 15 - j;
+            result[i] |= uint64_t(to4bit(genome[i*16+j])) << (shift * 4);
+        }
+    }
+    
+    for(size_t j = 0; j < genome.size() - i*16; j++){
+        int shift = 15 - j;
+        result[i] |= uint64_t(to4bit(genome[i*16+j])) << (shift * 4);
     }
     return result;
 }

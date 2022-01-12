@@ -7,6 +7,7 @@ project (Cas-OFFinder
 
 set (CMAKE_CXX_STANDARD 11)
 
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set (SOURCES
     test/test.cpp
 	find_mismatches.cpp

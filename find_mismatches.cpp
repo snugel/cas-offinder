@@ -9,47 +9,30 @@
 #include <ctime>
 
 
-char to4bit(char c){
+inline std::array<char, 256> make4bitmap(){
     constexpr char G = 0x1;
     constexpr char C = 0x2;
     constexpr char A = 0x4;
     constexpr char T = 0x8;
-    switch (c)
-    {
-    case 'G':
-        return G;
-    case 'C':
-        return C;
-    case 'A':
-        return A;
-    case 'T':
-        return T;
-    case 'R':
-        return A | G;
-    case 'Y':
-        return C | T;
-    case 'S':
-        return G | C;
-    case 'W':
-        return A | T;
-    case 'K':
-        return G | T;
-    case 'M':
-        return A | C;
-    case 'B':
-        return C | G | T;
-    case 'D':
-        return A | G | T;
-    case 'H':
-        return A | C | T;
-    case 'V':
-        return A | C | G;
-    case 'N':
-        return A | C | G | T;
-    default:
-        throw std::runtime_error("got unexpected letter, input must be mixed base");
-    }
+    std::array<char, 256> arr;
+    arr['G'] = G;
+    arr['C'] = C;
+    arr['A'] = A;
+    arr['T'] = T;
+    arr['R'] = A | G;
+    arr['Y'] = C | T;
+    arr['S'] = G | C;
+    arr['W'] = A | T;
+    arr['K'] = G | T;
+    arr['M'] = A | C;
+    arr['B'] = C | G | T;
+    arr['D'] = A | G | T;
+    arr['H'] = A | C | T;
+    arr['V'] = A | C | G;
+    arr['N'] = A | C | G | T;
+    return arr;
 }
+std::array<char, 256> to4bitmap = make4bitmap();
 
 void modifyto4bit(std::string & s){
     for(char & c : s){

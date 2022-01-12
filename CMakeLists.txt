@@ -15,6 +15,7 @@ set (SOURCES
     bulge_logic.cpp
     find_mismatches_packed.cpp
     find_mismatches_opencl.cpp
+    find_mismatches_opencl_multi.cpp
 )
 
 set (HEADERS
@@ -25,7 +26,12 @@ set (HEADERS
 )
 
 add_executable (cas-offinder ${SOURCES} ${HEADERS})
-target_compile_options(cas-offinder PRIVATE -Wall -Wextra)
+target_compile_options(cas-offinder PRIVATE -Wall -Wextra -Wno-deprecated-declarations)
 
 link_directories(/usr/lib/x86_64-linux-gnu/)
-target_link_libraries(cas-offinder OpenCL)
+target_link_libraries(cas-offinder PUBLIC OpenCL)
+
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(cas-offinder PUBLIC OpenMP::OpenMP_CXX)
+endif()

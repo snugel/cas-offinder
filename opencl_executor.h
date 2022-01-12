@@ -11,7 +11,7 @@
 #include <CL/cl.h>
 //#include <CL/cl_platform.h>
 
-std::string get_error_string(cl_int err){
+inline std::string get_error_string(cl_int err){
      switch(err){
          case 0: return "CL_SUCCESS";
          case -1: return "CL_DEVICE_NOT_FOUND";
@@ -64,7 +64,7 @@ std::string get_error_string(cl_int err){
      }
     return "Unknown OpenCL error";
  }
-void CheckErrorAt(cl_int err,const char * source_info){
+inline void CheckErrorAt(cl_int err,const char * source_info){
     if (err){
         std::cout << "Error: at " << source_info << ":\n" << get_error_string(err) << std::endl;
         exit(err);
@@ -213,7 +213,7 @@ public:
         return ndim;
     }
 };
-CL_NDRange div_nd(CL_NDRange range,CL_NDRange divisor){
+inline CL_NDRange div_nd(CL_NDRange range,CL_NDRange divisor){
     size_t * arr = range.array_view();
     size_t * div = divisor.array_view();
     for(int i = 0; i < 3; i++){

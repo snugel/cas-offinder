@@ -108,6 +108,7 @@ std::vector<match> find_matches_packed(std::string genome, std::vector<std::stri
     size_t genome_size = b4genome.size() - blocks_per_pattern;
 
     const size_t CHUNK_SIZE = 256;
+    #pragma omp parallel for
     for (size_t genome_block = 0; genome_block < genome_size; genome_block += CHUNK_SIZE) {
         match match_buffer[1024];
         int match_idx = 0;
@@ -127,7 +128,10 @@ std::vector<match> find_matches_packed(std::string genome, std::vector<std::stri
                 );
             }
         }
-        matches.insert(matches.end(), match_buffer, match_buffer + match_idx);
+        #pragma omp critical 
+        {
+            matches.insert(matches.end(), match_buffer, match_buffer + match_idx);
+        }
     }
 
     return matches;
@@ -170,7 +174,7 @@ TEST(find_mismatches_packed_perf)
 {
     std::vector<std::string> patterns(25, "GCGTAGACGGCGTAGACGGCGTANNRGR");
     std::string genome;
-    for (int i : range(10))
+    for (int i : range(1000000))
     {
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }

@@ -14,6 +14,7 @@
 std::vector<uint64_t> make4bitpackedints(std::string genome);
 
 
+
 std::vector<match> find_matches_opencl(std::string genome, std::vector<std::string> patterns, int max_mismatches)
 {
     if (patterns.size() == 0)
@@ -148,7 +149,7 @@ TEST(find_mismatches_opencl_perf)
 {
     std::vector<std::string> patterns(50, "GCGTAGACGGCGTAGACGGCGTANNRGR");
     std::string genome;
-    for (int i : range(100000000))
+    for (int i : range(10000000))
     {
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }

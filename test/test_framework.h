@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <utility>
+#include <chrono>
 
 typedef bool (*test_fn)();
 
@@ -25,3 +26,13 @@ public:
 };
 
 extern TestObj all_tests;
+
+
+template<typename fn_ty>
+double time_spent(fn_ty fn){
+    auto start = std::chrono::system_clock::now();
+    fn();
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff = end-start;
+    return diff.count();
+}

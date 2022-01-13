@@ -92,30 +92,6 @@ std::vector<match> find_matches_opencl(std::string genome, std::vector<std::stri
     std::cout << "inner time: " << (end - start) / double(CLOCKS_PER_SEC) << "\n";
     std::cout << "out count" << out_count << "\n";
     return matches;
-    
-    const size_t CHUNK_SIZE = 256;
-    for (size_t genome_block = 0; genome_block < genome_size; genome_block += CHUNK_SIZE) {
-        match match_buffer[1024];
-        int match_idx = 0;
-        for (size_t genome_idx = 0; genome_idx < std::min(genome_size-genome_block,CHUNK_SIZE); genome_idx += 1) {
-            for (size_t pattern_block_idx = 0; pattern_block_idx < patterns.size(); pattern_block_idx += LOCAL_BLOCK_SIZE) {
-                // find_matches_packed_helper(
-                //     b4genome.data() + genome_block,       // genome
-                //     genome_idx,                           // genome_idx
-                //     pattern_blocks.data(),                // pattern_blocks
-                //     patterns.size(),                      // num_patterns
-                //     blocks_per_pattern,                   // blocks_per_pattern
-                //     pattern_block_idx,                    // pattern_block_idx
-                //     max_mismatches,                       // max_mismatches
-                //     pattern_size,                         // max_matches
-                //     match_buffer,
-                //     match_idx
-                // );
-            }
-        }
-        matches.insert(matches.end(), match_buffer, match_buffer + match_idx);
-    }
-    return matches;
 }
 
 
@@ -149,7 +125,7 @@ TEST(find_mismatches_opencl_perf)
 {
     std::vector<std::string> patterns(50, "GCGTAGACGGCGTAGACGGCGTANNRGR");
     std::string genome;
-    for (int i : range(10000000))
+    for (int i : range(100000000))
     {
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }

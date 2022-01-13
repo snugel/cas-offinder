@@ -46,7 +46,7 @@ __kernel void find_matches_packed_helper(
             uint64_t cur = k == 0 ? prev : (prev << (k * 4)) | (next >> ((blocks_avail - k) * 4));
             for (size_t x = 0; x < local_pattern_size; x++)
             {
-                pattern_counts[x] += __builtin_popcountl(cur & pattern_blocks[(pattern_block_idx + x)*blocks_per_pattern + l]);
+                pattern_counts[x] += popcount(cur & pattern_blocks[(pattern_block_idx + x)*blocks_per_pattern + l]);
             }
         }
         for (size_t x = 0; x < local_pattern_size; x++)

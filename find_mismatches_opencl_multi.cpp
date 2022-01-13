@@ -41,29 +41,28 @@ std::vector<match> find_matches_opencl_multi(std::string genome, std::vector<std
     }
     std::vector<match> matches;
 
-    std::vector<uint64_t> b4genome = make4bitpackedints(genome);
     OpenCLPlatform plat;
     size_t next_genome_idx = 0;
-    const size_t CHUNK_SIZE = 1<<16;
+    constexpr size_t GENOME_CHUNK_SIZE = 1<<24-1;
+    constexpr size_t B4_CHUNK_SIZE = (GENOME_CHUNK_SIZE + 15) / 16 + 1;
     #pragma omp parallel for
     for(size_t device_idx = 0; device_idx < plat.num_cl_devices(); device_idx++){
         OpenCLExecutor executor(
             "find_mismatches_packed.cl", 
             plat.get_platform(), 
-            plat.get_first_device()
+            plat.get_device_ids()[device_idx]
         );
 
         const int OUT_BUF_SIZE = 1<<24;
         CLBuffer<match> output_buf = executor.new_clbuffer<match>(OUT_BUF_SIZE);
         CLBuffer<int> output_count = executor.new_clbuffer<int>(1);
-        CLBuffer<uint64_t> genome_buf = executor.new_clbuffer<uint64_t>(CHUNK_SIZE+3);
+        CLBuffer<uint64_t> genome_buf = executor.new_clbuffer<uint64_t>(B4_CHUNK_SIZE+2 + blocks_per_pattern);
         CLBuffer<uint64_t> pattern_buf = executor.new_clbuffer<uint64_t>(pattern_blocks.size());
 
-        size_t genome_size = CHUNK_SIZE - blocks_per_pattern + 1;
         size_t num_pattern_blocks = (patterns.size() + LOCAL_BLOCK_SIZE - 1) / LOCAL_BLOCK_SIZE;
         CLKernel compute_results = executor.new_clkernel(
             "find_matches_packed_helper",
-            CL_NDRange(genome_size, num_pattern_blocks),
+            CL_NDRange(B4_CHUNK_SIZE, num_pattern_blocks),
             CL_NDRange(),
             CL_NDRange(),
             {
@@ -85,25 +84,36 @@ std::vector<match> find_matches_opencl_multi(std::string genome, std::vector<std
             #pragma omp critical 
             {
                 genome_idx = next_genome_idx;
-                next_genome_idx += CHUNK_SIZE;
+                next_genome_idx += GENOME_CHUNK_SIZE;
             }
-            if(genome_idx >= b4genome.size()){
+            // std::cout << genome_idx << std::endl;
+            if(genome_idx >= genome.size()){
                 break;
             }
-        
+            std::string cur_genome = genome.substr(genome_idx, GENOME_CHUNK_SIZE+pattern_size);
+            // std::cout << cur_genome << std::endl;
+            std::vector<uint64_t> b4genome = make4bitpackedints(cur_genome);
+
             genome_buf.clear_buffer();
             output_count.clear_buffer();
-            genome_buf.write_buffer(&b4genome[genome_idx], std::min(CHUNK_SIZE, b4genome.size() - genome_idx));
+            genome_buf.write_buffer(&b4genome[0], b4genome.size());
             compute_results.run();
-            int out_count = 0;
+            int out_count;
             output_count.read_buffer(&out_count, 1);
-
+            
             if(out_count > 0){
+                std::vector<match> new_matches(out_count);
+                output_buf.read_buffer(&new_matches[0], out_count);
+                std::vector<match> pruned_matches;
+                for(match m : new_matches){
+                    if(m.loc < GENOME_CHUNK_SIZE){
+                        m.loc += genome_idx;
+                        pruned_matches.push_back(m);
+                    }
+                }
                 #pragma omp critical 
                 {
-                    size_t old_size = matches.size();
-                    matches.resize(old_size + out_count);
-                    output_buf.read_buffer(&matches[old_size], out_count);
+                    matches.insert(matches.end(), pruned_matches.begin(), pruned_matches.end());
                 }
             }
         }
@@ -147,9 +157,8 @@ TEST(find_mismatches_opencl_multi_perf)
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }
     int mismatches = 10;
-    int start = clock();
-    std::vector<match> actual = find_matches_opencl_multi(genome, patterns, mismatches);
-    int end = clock();
-    std::cout << "time: " << (end - start) / double(CLOCKS_PER_SEC) << "\n";
+    std::cout << "time: " << time_spent([&](){
+    find_matches_opencl_multi(genome, patterns, mismatches);
+    }) << std::endl;
     return true;
 }

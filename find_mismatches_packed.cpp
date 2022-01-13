@@ -179,9 +179,8 @@ TEST(find_mismatches_packed_perf)
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }
     int mismatches = 5;
-    int start = clock();
-    std::vector<match> actual = find_matches_packed(genome, patterns, mismatches);
-    int end = clock();
-    std::cout << "time: " << (end - start) / double(CLOCKS_PER_SEC) << "\n";
+    std::cout << "time: " << time_spent([&](){
+    find_matches_packed(genome, patterns, mismatches);
+    }) << std::endl;
     return true;
 }

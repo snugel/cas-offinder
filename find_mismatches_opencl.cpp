@@ -3,6 +3,7 @@
 #include "RangeIterator.h"
 #include "opencl_executor.h"
 #include "bit4ops.h"
+#include "timing.h"
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
@@ -123,7 +124,7 @@ TEST(find_mismatches_opencl_perf)
 {
     std::vector<std::string> patterns(50, "GCGTAGACGGCGTAGACGGCGTANNRGR");
     std::string genome;
-    for (int i : range(10000000))
+    for (int i : range(100000000))
     {
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }

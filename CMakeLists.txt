@@ -9,11 +9,10 @@ set (CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set (SOURCES
-    test/test.cpp
     bit4ops.cpp
-    test/test_framework.cpp
     bulge_logic.cpp
     find_mismatches_cpu.cpp
+    read_twobit.cpp
     find_mismatches_opencl.cpp
 )
 
@@ -23,15 +22,21 @@ set (HEADERS
     bulge_logic.h
     test/test_framework.h
     bit4ops.h
+    read_twobit.h
 )
 
-add_executable (cas-offinder ${SOURCES} ${HEADERS})
+add_executable (test test/test.cpp test/test_framework.cpp ${SOURCES} ${HEADERS})
+add_executable (cas-offinder main.cpp ${SOURCES} ${HEADERS})
 target_compile_options(cas-offinder PRIVATE -Wall -Wextra -Wno-deprecated-declarations)
 
+target_compile_definitions(test PRIVATE ENABLE_TESTS)
+
 link_directories(/usr/lib/x86_64-linux-gnu/)
+target_link_libraries(test PUBLIC OpenCL)
 target_link_libraries(cas-offinder PUBLIC OpenCL)
 
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
+    target_link_libraries(test PUBLIC OpenMP::OpenMP_CXX)
     target_link_libraries(cas-offinder PUBLIC OpenMP::OpenMP_CXX)
 endif()

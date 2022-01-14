@@ -2,6 +2,7 @@
 #include "find_mismatches.h"
 #include "RangeIterator.h"
 #include "bit4ops.h"
+#include "timing.h"
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>

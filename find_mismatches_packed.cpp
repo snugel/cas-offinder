@@ -1,6 +1,7 @@
 #include "test/test_framework.h"
 #include "find_mismatches.h"
 #include "RangeIterator.h"
+#include "bit4ops.h"
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
@@ -9,25 +10,6 @@
 #include <ctime>
 
 #define LOCAL_BLOCK_SIZE 4
-
-std::vector<uint64_t> make4bitpackedints(std::string genome)
-{
-    std::vector<uint64_t> result((genome.size() + 15) / 16);
-    size_t i = 0;
-    for (; i < genome.size() / 16; i++)
-    {
-        for(size_t j = 0; j < 16; j++){
-            int shift = 15 - j;
-            result[i] |= uint64_t(to4bit(genome[i*16+j])) << (shift * 4);
-        }
-    }
-    
-    for(size_t j = 0; j < genome.size() - i*16; j++){
-        int shift = 15 - j;
-        result[i] |= uint64_t(to4bit(genome[i*16+j])) << (shift * 4);
-    }
-    return result;
-}
 
 void find_matches_packed_helper(
     uint64_t *genome,
@@ -93,7 +75,7 @@ std::vector<match> find_matches_packed(std::string genome, std::vector<std::stri
     std::vector<uint64_t> pattern_blocks(patterns.size() * blocks_per_pattern);
     for (size_t i = 0; i < patterns.size(); i++)
     {
-        std::vector<uint64_t> b4pattern = make4bitpackedints(patterns[i]);
+        std::vector<uint64_t> b4pattern = make4bitpackedint64(patterns[i]);
         assert(b4pattern.size() == blocks_per_pattern);
         for (size_t j = 0; j < blocks_per_pattern; j++)
         {
@@ -102,7 +84,7 @@ std::vector<match> find_matches_packed(std::string genome, std::vector<std::stri
     }
     std::vector<match> matches;
 
-    std::vector<uint64_t> b4genome = make4bitpackedints(genome);
+    std::vector<uint64_t> b4genome = make4bitpackedint64(genome);
     b4genome.push_back(0);
 
     size_t genome_size = b4genome.size() - blocks_per_pattern;
@@ -137,13 +119,6 @@ std::vector<match> find_matches_packed(std::string genome, std::vector<std::stri
     return matches;
 }
 
-TEST(test_make4bitpackedints)
-{
-    std::string genome = "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
-    std::vector<uint64_t> expected = {0x4212184142148241, 0x8214821841284182, 0x8148100000000000};
-    std::vector<uint64_t> actual = make4bitpackedints(genome);
-    return expected.size() == actual.size() && std::equal(expected.begin(), expected.end(), actual.begin());
-}
 
 TEST(test_find_matches_packed)
 {

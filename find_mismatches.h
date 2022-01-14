@@ -1,6 +1,5 @@
 #include<vector>
 #include<string>
-#include <array>
 
 
 struct match{
@@ -16,10 +15,3 @@ bool matches_equal(std::vector<match> & m1, std::vector<match> & m2);
 
 // internal facing, use externally at your own risk
 std::vector<match> find_matches_gold(std::string genome, std::vector<std::string> patterns, int max_mismatches);
-
-extern std::array<char, 256> to4bitmap;
-
-
-inline char to4bit(char c){
-    return to4bitmap[c];
- }

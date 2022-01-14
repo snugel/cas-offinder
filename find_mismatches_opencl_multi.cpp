@@ -2,6 +2,7 @@
 #include "find_mismatches.h"
 #include "RangeIterator.h"
 #include "opencl_executor.h"
+#include "bit4ops.h"
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
@@ -11,8 +12,8 @@
 
 #define LOCAL_BLOCK_SIZE 4
 
-std::vector<uint64_t> make4bitpackedints(std::string genome);
-
+using block_ty = uint32_t;
+constexpr size_t bit4_c = sizeof(block_ty) * 8 / 4;
 
 
 std::vector<match> find_matches_opencl_multi(std::string genome, std::vector<std::string> patterns, int max_mismatches)
@@ -27,12 +28,12 @@ std::vector<match> find_matches_opencl_multi(std::string genome, std::vector<std
     {
         assert(p.size() == pattern_size);
     }
-    size_t blocks_per_pattern = (pattern_size + 15) / 16;
+    size_t blocks_per_pattern = (pattern_size + bit4_c - 1) / bit4_c;
 
-    std::vector<uint64_t> pattern_blocks(patterns.size() * blocks_per_pattern);
+    std::vector<block_ty> pattern_blocks(patterns.size() * blocks_per_pattern);
     for (size_t i = 0; i < patterns.size(); i++)
     {
-        std::vector<uint64_t> b4pattern = make4bitpackedints(patterns[i]);
+        std::vector<block_ty> b4pattern = make4bitpackedint32(patterns[i]);
         assert(b4pattern.size() == blocks_per_pattern);
         for (size_t j = 0; j < blocks_per_pattern; j++)
         {
@@ -44,7 +45,7 @@ std::vector<match> find_matches_opencl_multi(std::string genome, std::vector<std
     OpenCLPlatform plat;
     size_t next_genome_idx = 0;
     constexpr size_t GENOME_CHUNK_SIZE = 1<<24-1;
-    constexpr size_t B4_CHUNK_SIZE = (GENOME_CHUNK_SIZE + 15) / 16 + 1;
+    constexpr size_t B4_CHUNK_SIZE = (GENOME_CHUNK_SIZE + bit4_c - 1) / bit4_c + 1;
     #pragma omp parallel for
     for(size_t device_idx = 0; device_idx < plat.num_cl_devices(); device_idx++){
         OpenCLExecutor executor(
@@ -56,8 +57,8 @@ std::vector<match> find_matches_opencl_multi(std::string genome, std::vector<std
         const int OUT_BUF_SIZE = 1<<24;
         CLBuffer<match> output_buf = executor.new_clbuffer<match>(OUT_BUF_SIZE);
         CLBuffer<int> output_count = executor.new_clbuffer<int>(1);
-        CLBuffer<uint64_t> genome_buf = executor.new_clbuffer<uint64_t>(B4_CHUNK_SIZE+2 + blocks_per_pattern);
-        CLBuffer<uint64_t> pattern_buf = executor.new_clbuffer<uint64_t>(pattern_blocks.size());
+        CLBuffer<block_ty> genome_buf = executor.new_clbuffer<block_ty>(B4_CHUNK_SIZE+2 + blocks_per_pattern);
+        CLBuffer<block_ty> pattern_buf = executor.new_clbuffer<block_ty>(pattern_blocks.size());
 
         size_t num_pattern_blocks = (patterns.size() + LOCAL_BLOCK_SIZE - 1) / LOCAL_BLOCK_SIZE;
         CLKernel compute_results = executor.new_clkernel(
@@ -92,7 +93,7 @@ std::vector<match> find_matches_opencl_multi(std::string genome, std::vector<std
             }
             std::string cur_genome = genome.substr(genome_idx, GENOME_CHUNK_SIZE+pattern_size);
             // std::cout << cur_genome << std::endl;
-            std::vector<uint64_t> b4genome = make4bitpackedints(cur_genome);
+            std::vector<block_ty> b4genome = make4bitpackedint32(cur_genome);
 
             genome_buf.clear_buffer();
             output_count.clear_buffer();

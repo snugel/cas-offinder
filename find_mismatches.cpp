@@ -1,6 +1,7 @@
 #include "find_mismatches.h"
 #include "test/test_framework.h"
 #include "RangeIterator.h"
+#include "bit4ops.h"
 #include <algorithm>
 #include <sstream>
 #include <iostream>
@@ -8,31 +9,6 @@
 #include <cassert>
 #include <ctime>
 
-
-inline std::array<char, 256> make4bitmap(){
-    constexpr char G = 0x1;
-    constexpr char C = 0x2;
-    constexpr char A = 0x4;
-    constexpr char T = 0x8;
-    std::array<char, 256> arr;
-    arr['G'] = G;
-    arr['C'] = C;
-    arr['A'] = A;
-    arr['T'] = T;
-    arr['R'] = A | G;
-    arr['Y'] = C | T;
-    arr['S'] = G | C;
-    arr['W'] = A | T;
-    arr['K'] = G | T;
-    arr['M'] = A | C;
-    arr['B'] = C | G | T;
-    arr['D'] = A | G | T;
-    arr['H'] = A | C | T;
-    arr['V'] = A | C | G;
-    arr['N'] = A | C | G | T;
-    return arr;
-}
-std::array<char, 256> to4bitmap = make4bitmap();
 
 void modifyto4bit(std::string & s){
     for(char & c : s){

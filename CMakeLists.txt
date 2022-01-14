@@ -10,6 +10,7 @@ set (CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set (SOURCES
     test/test.cpp
+    bit4ops.cpp
 	find_mismatches.cpp
     test/test_framework.cpp
     bulge_logic.cpp
@@ -23,6 +24,7 @@ set (HEADERS
     RangeIterator.h
     bulge_logic.h
     test/test_framework.h
+    bit4ops.h
 )
 
 add_executable (cas-offinder ${SOURCES} ${HEADERS})

@@ -12,8 +12,7 @@ set (SOURCES
     bit4ops.cpp
     bulge_logic.cpp
     find_mismatches_cpu.cpp
-    read_twobit.cpp
-    find_mismatches_opencl.cpp
+    #find_mismatches_opencl.cpp
     postprocess.cpp
 )
 
@@ -23,13 +22,18 @@ set (HEADERS
     bulge_logic.h
     test/test_framework.h
     bit4ops.h
-    read_twobit.h
     postprocess.h
 )
 
 add_executable (test test/test.cpp test/test_framework.cpp ${SOURCES} ${HEADERS})
 add_executable (cas-offinder main.cpp ${SOURCES} ${HEADERS})
-target_compile_options(cas-offinder PRIVATE -Wall -Wextra -Wno-deprecated-declarations)
+add_executable (dump_file_data 
+    dump_file_data.cpp
+    read_twobit.cpp
+    bit4ops.cpp
+    read_twobit.h
+)
+target_compile_options(test PRIVATE -Wall -Wextra -Wno-deprecated-declarations)
 
 target_compile_definitions(test PRIVATE ENABLE_TESTS)
 

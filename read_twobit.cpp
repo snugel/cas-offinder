@@ -112,7 +112,7 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 		}
 
 		for (j=0; j<nblockcnt; j++) {
-			memset(chrbuf + nblockstarts[j], 0, nblocksizes[j]);
+			memset(chrbuf + nblockstarts[j], 'N', nblocksizes[j]);
 			//for (k=nblockstarts[j]; k<nblockstarts[j]+nblocksizes[j]; k++) {
 			//	chrbuf[k] = 'N';
 			//}
@@ -122,7 +122,7 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 		nblockstarts.clear();
 		nblocksizes.clear();
 		if (i < chrcnt-1) {
-			content += ';';
+		 //	content += ';';
 			chrpos.push_back(content.size());
 		}
 	}

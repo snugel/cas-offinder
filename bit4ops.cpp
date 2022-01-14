@@ -1,6 +1,7 @@
 #include "bit4ops.h"
 #include "test/test_framework.h"
 #include <algorithm>
+#include <iostream>
 
 inline std::array<char, 256> make4bitmap(){
     constexpr char T = 0x1;
@@ -27,7 +28,13 @@ inline std::array<char, 256> make4bitmap(){
     return arr;
 }
 std::array<char, 256> to4bitmap = make4bitmap();
-
+void clean_bogus(std::string & genome){
+    for(char & c : genome){
+        if(c == 'N' || c == ';'){
+            c = 0;
+        }
+    }
+}
 
 template<typename int_ty>
 std::vector<int_ty> make4bitpackedint_generic(const std::string & genome)
@@ -55,8 +62,36 @@ std::vector<uint64_t> make4bitpackedint64(const std::string & genome){
 std::vector<uint32_t> make4bitpackedint32(const std::string & genome){
     return make4bitpackedint_generic<uint32_t>(genome);
 }
+std::vector<uint64_t> bit64tobit32(const std::vector<uint32_t> & bit32){   
+    std::vector<uint64_t> bit64((bit32.size()+1)/2);
+    uint32_t * newb64 = reinterpret_cast<uint32_t*>(&bit64[0]);
+    for(size_t i = 0; i < bit64.size() - bit32.size()%2; i++){
+        newb64[i*2] = bit32[i*2+1];
+    
+        newb64[i*2+1] = bit32[i*2];
 
+    } 
+    if(bit32.size()%2){
+        bit64.back() = uint64_t(bit32.back()) << 32;
+    }
+    return bit64; 
+}
 
+TEST(test_byte_transform){
+    std::string genome = "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
+    std::vector<uint32_t> genomeb4 = make4bitpackedint32(genome);
+    std::vector<uint64_t> actual = bit64tobit32(genomeb4);
+    std::vector<uint64_t> expected = make4bitpackedint64(genome);
+    for(uint64_t i : expected){
+        std::cout << std::hex << i << "\t";
+    }
+    std::cout << "\n";
+    for(uint64_t i : actual){
+        std::cout << std::hex << i << "\t";
+    }
+    std::cout << "\n";
+    return expected.size() == actual.size() && std::equal(expected.begin(), expected.end(), actual.begin());
+}
 TEST(test_make4bitpackedint64)
 {
     std::string genome = "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";

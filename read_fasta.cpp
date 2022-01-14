@@ -38,7 +38,7 @@ int read_fasta(string &filepath, vector<string> &chrnames, string &content, vect
 				name = line.substr(1);
 				//if (((cnt++) % 10000) == 0) cerr << "Reading " << name << endl;
 				chrnames.push_back(name);
-				if (chrpos.size() != 0) content += ";"; // seperator
+				//if (chrpos.size() != 0) content += i"; // seperator
 				chrpos.push_back(content.size());
 			}
 			else {

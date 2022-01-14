@@ -10,7 +10,6 @@
 #include <immintrin.h>
 #include <ctime>
 
-#define LOCAL_BLOCK_SIZE 1
 using block_ty = uint32_t;
 constexpr size_t bit4_c = sizeof(block_ty) * 8 / 4;
 
@@ -56,7 +55,7 @@ std::vector<match> find_matches_opencl(std::string genome, std::vector<std::stri
     CLBuffer<block_ty> pattern_buf = executor.new_clbuffer<block_ty>(pattern_blocks.size());
 
     size_t genome_size = b4genome.size() - blocks_per_pattern + 1;
-    size_t num_pattern_blocks = (patterns.size() + LOCAL_BLOCK_SIZE - 1) / LOCAL_BLOCK_SIZE;
+    size_t num_pattern_blocks = patterns.size();
     CLKernel compute_results = executor.new_clkernel(
         "find_matches_packed_helper",
         CL_NDRange(genome_size, num_pattern_blocks),
@@ -124,14 +123,13 @@ TEST(find_mismatches_opencl_perf)
 {
     std::vector<std::string> patterns(50, "GCGTAGACGGCGTAGACGGCGTANNRGR");
     std::string genome;
-    for (int i : range(100000000))
+    for (int i : range(10000000))
     {
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }
     int mismatches = 10;
-    int start = clock();
-    std::vector<match> actual = find_matches_opencl(genome, patterns, mismatches);
-    int end = clock();
-    std::cout << "time: " << (end - start) / double(CLOCKS_PER_SEC) << "\n";
+    std::cout << "time: " << time_spent([&](){
+    find_matches_opencl(genome, patterns, mismatches);
+    }) << std::endl;
     return true;
 }

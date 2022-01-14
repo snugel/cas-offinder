@@ -8,6 +8,7 @@ struct match{
     uint32_t pattern_idx;
 };
 std::vector<match> find_matches(std::string genome, std::vector<std::string> patterns, int max_mismatches);
+std::vector<match> find_matches2bit(std::string genome_2bit_chars, std::vector<std::string> patterns, int max_mismatches);
 void sort_matches(std::vector<match> & matches);
 void atomic_print_match(match & m);
 bool matches_equal(std::vector<match> & m1, std::vector<match> & m2);
@@ -15,3 +16,4 @@ bool matches_equal(std::vector<match> & m1, std::vector<match> & m2);
 
 // internal facing, use externally at your own risk
 std::vector<match> find_matches_gold(std::string genome, std::vector<std::string> patterns, int max_mismatches);
+std::vector<match> find_matches4bit(std::string genome_2bit, std::vector<std::string> patterns, int max_mismatches);

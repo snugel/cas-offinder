@@ -56,10 +56,10 @@ std::vector<match> find_matches(std::string genome, std::vector<std::string> pat
 
 void sort_matches(std::vector<match> & matches){
     std::sort(matches.begin(), matches.end(), [](match & a, match & b){
-        if(a.loc < b.loc) return true;
-        if(a.loc > b.loc) return false;
         if(a.pattern_idx < b.pattern_idx) return true;
         if(a.pattern_idx > b.pattern_idx) return false;
+        if(a.loc < b.loc) return true;
+        if(a.loc > b.loc) return false;
         return false;
    });
 }

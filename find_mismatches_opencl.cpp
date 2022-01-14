@@ -13,7 +13,7 @@
 using block_ty = uint32_t;
 constexpr size_t bit4_c = sizeof(block_ty) * 8 / 4;
 
-std::vector<match> find_matches_opencl(std::string genome, std::vector<std::string> patterns, int max_mismatches)
+std::vector<match> find_matches(std::string genome, std::vector<std::string> patterns, int max_mismatches)
 {
     if (patterns.size() == 0)
     {
@@ -104,7 +104,7 @@ TEST(test_find_matches_opencl)
     };
     int mismatches = 12;
     std::vector<match> expected = find_matches_gold(genome, patterns, mismatches);
-    std::vector<match> actual = find_matches_opencl(genome, patterns, mismatches);
+    std::vector<match> actual = find_matches(genome, patterns, mismatches);
     sort_matches(actual);
     sort_matches(expected);
     for (match m : actual)
@@ -129,7 +129,7 @@ TEST(find_mismatches_opencl_perf)
     }
     int mismatches = 10;
     std::cout << "time: " << time_spent([&](){
-    find_matches_opencl(genome, patterns, mismatches);
+    find_matches(genome, patterns, mismatches);
     }) << std::endl;
     return true;
 }

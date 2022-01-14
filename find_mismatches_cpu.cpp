@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <cassert>
 #include <immintrin.h>
+#include <sstream>
 #include <ctime>
 
 #define LOCAL_BLOCK_SIZE 4
@@ -59,7 +60,7 @@ void find_matches_packed_helper(
     }
 }
 
-std::vector<match> find_matches_packed(std::string genome, std::vector<std::string> patterns, int max_mismatches)
+std::vector<match> find_matches_gold(std::string genome, std::vector<std::string> patterns, int max_mismatches)
 {
     if (patterns.size() == 0)
     {
@@ -120,26 +121,66 @@ std::vector<match> find_matches_packed(std::string genome, std::vector<std::stri
 }
 
 
-TEST(test_find_matches_packed)
-{
-    std::string genome = "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATGTCTGATG";
+void sort_matches(std::vector<match> & matches){
+    std::sort(matches.begin(), matches.end(), [](match & a, match & b){
+        if(a.pattern_idx < b.pattern_idx) return true;
+        if(a.pattern_idx > b.pattern_idx) return false;
+        if(a.loc < b.loc) return true;
+        if(a.loc > b.loc) return false;
+        return false;
+   });
+}
+bool matches_equal(std::vector<match> & m1, std::vector<match> & m2){
+    return m1.size() == m2.size() && 
+        std::equal(m1.begin(), m1.end(), m2.begin(), [](match a, match b){
+            return 
+                a.loc == b.loc &&
+                a.mismatches == b.mismatches &&
+                a.pattern_idx == b.pattern_idx;
+        });
+}
+
+void atomic_print_match(match & m){
+    // thread save printing: whole line guarenteed to print at once
+    std::ostringstream oss;
+    oss << m.loc << "\t" << m.mismatches << "\t" << m.pattern_idx << "\n";
+    std::cout << oss.str();
+}
+
+TEST(test_find_matches_gold){
+    std::string genome = "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     std::vector<std::string> patterns = {
-        "GCGTAGACGGCGTAGACG",
-        "CGTAGCTAGCGTAGCTAG",
-        "GATCGACTGGATCGACTG",
+        "GCGTAGACG",
+        "CGTAGCTAG",
+        "CAGTCGATC"
     };
-    int mismatches = 12;
-    std::vector<match> expected = find_matches_gold(genome, patterns, mismatches);
-    std::vector<match> actual = find_matches_packed(genome, patterns, mismatches);
+    int mismatches = 3;
+    std::vector<match> expected = {
+        match{
+            .loc=2,
+            .mismatches=0,
+            .pattern_idx=0,
+        },
+        match{
+            .loc=21,
+            .mismatches=0,
+            .pattern_idx=1,
+        },
+        match{
+            .loc=5,
+            .mismatches=2,
+            .pattern_idx=2,
+        },
+        match{
+            .loc=13,
+            .mismatches=0,
+            .pattern_idx=2,
+        },
+    };
+    std::vector<match> actual = find_matches_gold(genome, patterns, mismatches);
     sort_matches(actual);
     sort_matches(expected);
-    for (match m : actual)
-    {
-        atomic_print_match(m);
-    }
-    std::cout << "expected\n";
-    for (match m : expected)
-    {
+    for(match m : actual){
         atomic_print_match(m);
     }
     return matches_equal(actual, expected);
@@ -155,7 +196,7 @@ TEST(find_mismatches_packed_perf)
     }
     int mismatches = 5;
     std::cout << "time: " << time_spent([&](){
-    find_matches_packed(genome, patterns, mismatches);
+    find_matches_gold(genome, patterns, mismatches);
     }) << std::endl;
     return true;
 }

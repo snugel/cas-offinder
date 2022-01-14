@@ -11,12 +11,10 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set (SOURCES
     test/test.cpp
     bit4ops.cpp
-	find_mismatches.cpp
     test/test_framework.cpp
     bulge_logic.cpp
-    find_mismatches_packed.cpp
+    find_mismatches_cpu.cpp
     find_mismatches_opencl.cpp
-    # find_mismatches_opencl_multi.cpp
 )
 
 set (HEADERS

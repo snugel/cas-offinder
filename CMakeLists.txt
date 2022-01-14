@@ -16,7 +16,7 @@ set (SOURCES
     bulge_logic.cpp
     find_mismatches_packed.cpp
     find_mismatches_opencl.cpp
-    find_mismatches_opencl_multi.cpp
+    # find_mismatches_opencl_multi.cpp
 )
 
 set (HEADERS

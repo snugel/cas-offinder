@@ -10,7 +10,7 @@
 #include <immintrin.h>
 #include <ctime>
 
-#define LOCAL_BLOCK_SIZE 4
+#define LOCAL_BLOCK_SIZE 1
 using block_ty = uint32_t;
 constexpr size_t bit4_c = sizeof(block_ty) * 8 / 4;
 

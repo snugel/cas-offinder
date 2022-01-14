@@ -41,7 +41,7 @@ inline char bit_to_seq(unsigned char b) {
 	return 0;
 }
 
-int read_twobit(string &filepath, vector<string> &chrnames, string &content, vector<unsigned long long> &chrpos) {
+int read_twobit(string &filepath, vector<string> &chrnames, string &content, vector<uint64_t> &chrpos) {
 	unsigned int i, j, k, chrcnt, chrlen, nblockcnt, maskblockcnt, rawlen, rem, cnt;
 	int jj;
 
@@ -112,7 +112,7 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 		}
 
 		for (j=0; j<nblockcnt; j++) {
-			memset(chrbuf + nblockstarts[j], 'N', nblocksizes[j]);
+			memset(chrbuf + nblockstarts[j], 0, nblocksizes[j]);
 			//for (k=nblockstarts[j]; k<nblockstarts[j]+nblocksizes[j]; k++) {
 			//	chrbuf[k] = 'N';
 			//}

@@ -5,4 +5,4 @@
 
 using namespace std;
 
-int read_twobit(string &filepath, vector<string> &chrnames, string &content, vector<unsigned long long> &chrpos);
+int read_twobit(string &filepath, vector<string> &chrnames, string &content, vector<uint64_t> &chrpos);

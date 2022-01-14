@@ -1,5 +1,6 @@
 #include "bit4ops.h"
 #include "test/test_framework.h"
+#include <algorithm>
 
 inline std::array<char, 256> make4bitmap(){
     constexpr char T = 0x1;
@@ -7,6 +8,7 @@ inline std::array<char, 256> make4bitmap(){
     constexpr char A = 0x4;
     constexpr char G = 0x8;
     std::array<char, 256> arr;
+    std::fill(arr.begin(), arr.end(), 0);
     arr['G'] = G;
     arr['C'] = C;
     arr['A'] = A;

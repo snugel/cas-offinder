@@ -14,6 +14,7 @@ set (SOURCES
     find_mismatches_cpu.cpp
     read_twobit.cpp
     find_mismatches_opencl.cpp
+    postprocess.cpp
 )
 
 set (HEADERS
@@ -23,6 +24,7 @@ set (HEADERS
     test/test_framework.h
     bit4ops.h
     read_twobit.h
+    postprocess.h
 )
 
 add_executable (test test/test.cpp test/test_framework.cpp ${SOURCES} ${HEADERS})

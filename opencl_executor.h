@@ -66,7 +66,7 @@ inline std::string get_error_string(cl_int err){
  }
 inline void CheckErrorAt(cl_int err,const char * source_info){
     if (err){
-        std::cout << "Error: at " << source_info << ":\n" << get_error_string(err) << std::endl;
+        std::cerr << "Error: at " << source_info << ":\n" << get_error_string(err) << std::endl;
         exit(err);
     }
 }
@@ -307,14 +307,14 @@ class OpenCLPlatform{
             std::cerr << "No OpenCL platform found" << std::endl;
             exit(1);
         } else {
-            std::cout << "Found " << platformIdCount << " platform(s)" << std::endl;
+            std::cerr << "Found " << platformIdCount << " platform(s)" << std::endl;
         }
 
         std::vector<cl_platform_id> platformIds (platformIdCount);
         clGetPlatformIDs (platformIdCount, platformIds.data (), nullptr);
 
         for (cl_uint i = 0; i < platformIdCount; ++i) {
-            std::cout << "\t (" << (i+1) << ") : " << GetPlatformName (platformIds [i]) << std::endl;
+            std::cerr << "\t (" << (i+1) << ") : " << GetPlatformName (platformIds [i]) << std::endl;
         }
 
         // http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clGetDeviceIDs.html
@@ -326,14 +326,14 @@ class OpenCLPlatform{
             std::cerr << "No OpenCL devices found" << std::endl;
             exit(1);
         } else {
-            std::cout << "Found " << deviceIdCount << " device(s)" << std::endl;
+            std::cerr << "Found " << deviceIdCount << " device(s)" << std::endl;
         }
 
         deviceIds.resize(deviceIdCount);
         clGetDeviceIDs (platformIds [0], CL_DEVICE_TYPE_ALL, deviceIdCount,
             deviceIds.data (), nullptr);
 
-        std::cout << "Using platform: "<< GetPlatformName (platformIds [0])<<"\n";
+        std::cerr << "Using platform: "<< GetPlatformName (platformIds [0])<<"\n";
         this->platform = platformIds [0];
     }
     
@@ -368,7 +368,7 @@ public:
         platform = platid;
         source_path = in_source_path;
         build_program();
-        std::cout << "finished building program" << std::endl;
+        std::cerr << "finished building program" << std::endl;
     }
     ~OpenCLExecutor(){
         clReleaseProgram(program);
@@ -396,7 +396,7 @@ protected:
         this->context = clCreateContext (contextProperties, 1,
             &device, nullptr, nullptr, &error);
         CheckError(error);
-        std::cout << "Context created" << std::endl;
+        std::cerr << "Context created" << std::endl;
     }
     void create_queue(){
         // http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clCreateCommandQueue.html
@@ -415,7 +415,7 @@ protected:
     std::string get_source(){
         std::ifstream file(source_path);
         if(!file){
-            std::cout << "the file " << source_path << " is missing!\n";
+            std::cerr << "the file " << source_path << " is missing!\n";
             exit(1);
         }
         //slow way to read a file (but file size is small)
@@ -444,7 +444,7 @@ protected:
             CheckError(clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &len));
             std::vector<char> data(len);
             CheckError(clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, len, data.data(), NULL));
-            std::cout << "Build error:\n" << std::string(data.begin(),data.end()) << std::endl;
+            std::cerr << "Build error:\n" << std::string(data.begin(),data.end()) << std::endl;
             exit(1);
         }
         else{

@@ -54,6 +54,7 @@ int main(int argc, char *argv[]) {
 	assert(fsize % 4 == 0);
 	vector<uint32_t> data(fsize/4);
 	bit4_file.read((char*)&data[0], fsize);
+    std::cerr << "Aprox genome size: " << fsize*2 << std::endl;
 	
 	std::cerr << "Searching genome..." << std::endl;
 	std::vector<match> matches = find_matches(data, patterns, mismatches);

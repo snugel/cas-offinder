@@ -47,17 +47,17 @@ std::vector<match> find_matches(std::vector<uint32_t> & genomeb4, std::vector<st
     std::vector<match> matches;
 
     OpenCLPlatform plat;
-    size_t next_genome_idx = 0;
-    constexpr size_t GENOME_CHUNK_SIZE = 1<<22;
+    volatile size_t next_genome_idx = 0;
+    constexpr size_t GENOME_CHUNK_SIZE = 1<<24;
     #pragma omp parallel for
-    for(size_t device_idx = 0; device_idx < 1; device_idx++){
+    for(size_t device_idx = 0; device_idx < plat.num_cl_devices(); device_idx++){
         OpenCLExecutor executor(
             "find_mismatches_packed.cl", 
             plat.get_platform(), 
             plat.get_device_ids()[device_idx]
         );
 
-        const int OUT_BUF_SIZE = 1<<24;
+        const int OUT_BUF_SIZE = 1<<22;
         CLBuffer<match> output_buf = executor.new_clbuffer<match>(OUT_BUF_SIZE);
         CLBuffer<int> output_count = executor.new_clbuffer<int>(1);
         CLBuffer<block_ty> genome_buf = executor.new_clbuffer<block_ty>(GENOME_CHUNK_SIZE+2 + blocks_per_pattern);
@@ -98,7 +98,7 @@ std::vector<match> find_matches(std::vector<uint32_t> & genomeb4, std::vector<st
 
             genome_buf.clear_buffer();
             output_count.clear_buffer();
-            genome_buf.write_buffer(&genomeb4[genome_idx], std::min(genomeb4.size() - genome_idx, GENOME_CHUNK_SIZE));
+            genome_buf.write_buffer(&genomeb4[genome_idx], std::min(genomeb4.size() - blocks_per_pattern - genome_idx, GENOME_CHUNK_SIZE) + blocks_per_pattern);
             compute_results.run();
             int out_count;
             output_count.read_buffer(&out_count, 1);
@@ -106,7 +106,7 @@ std::vector<match> find_matches(std::vector<uint32_t> & genomeb4, std::vector<st
             if(out_count > 0){
                 std::vector<match> new_matches(out_count);
                 output_buf.read_buffer(&new_matches[0], out_count);
-                std::vector<match> pruned_matches;
+                std::vector<match> pruned_matches;// = new_matches;
                 for(match m : new_matches){
                     if(m.loc < GENOME_CHUNK_SIZE * bit4_c){
                         m.loc += genome_idx * bit4_c;

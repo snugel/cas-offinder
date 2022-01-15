@@ -11,7 +11,7 @@
 #include <sstream>
 #include <ctime>
 
-#define LOCAL_BLOCK_SIZE 1
+#define LOCAL_BLOCK_SIZE 4
 
 void find_matches_packed_helper(
     uint64_t *genome,

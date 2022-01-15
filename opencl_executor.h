@@ -318,8 +318,9 @@ class OpenCLPlatform{
         }
 
         // http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clGetDeviceIDs.html
+        size_t platform_idx = 0;
         cl_uint deviceIdCount = 0;
-        clGetDeviceIDs (platformIds [0], CL_DEVICE_TYPE_ALL, 0, nullptr,
+        clGetDeviceIDs (platformIds [platform_idx], CL_DEVICE_TYPE_ALL, 0, nullptr,
             &deviceIdCount);
 
         if (deviceIdCount == 0) {
@@ -330,11 +331,11 @@ class OpenCLPlatform{
         }
 
         deviceIds.resize(deviceIdCount);
-        clGetDeviceIDs (platformIds [0], CL_DEVICE_TYPE_ALL, deviceIdCount,
+        clGetDeviceIDs (platformIds [platform_idx], CL_DEVICE_TYPE_ALL, deviceIdCount,
             deviceIds.data (), nullptr);
 
-        std::cerr << "Using platform: "<< GetPlatformName (platformIds [0])<<"\n";
-        this->platform = platformIds [0];
+        std::cerr << "Using platform: "<< GetPlatformName (platformIds [platform_idx])<<"\n";
+        this->platform = platformIds [platform_idx];
     }
     
      std::string GetPlatformName (cl_platform_id id)

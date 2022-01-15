@@ -12,7 +12,7 @@ set (SOURCES
     bit4ops.cpp
     bulge_logic.cpp
     find_mismatches_cpu.cpp
-    #find_mismatches_opencl.cpp
+    find_mismatches_opencl.cpp
     postprocess.cpp
 )
 

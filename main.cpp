@@ -56,12 +56,12 @@ int main(int argc, char *argv[]) {
 	bit4_file.read((char*)&data[0], fsize);
 	
 	std::cerr << "Searching genome..." << std::endl;
-	// std::vector<match> matches = find_matches(m_chrdata, patterns, mismatches);
+	std::vector<match> matches = find_matches(data, patterns, mismatches);
 
-    // std::cout << "Idx\tLocation\tMismatches\n";
-    // for(match m : matches){
-    //     std::cout << m.pattern_idx << '\t' << m.loc << '\t' << m.mismatches << '\n';
-    // }
+    std::cout << "Idx\tLocation\tMismatches\n";
+    for(match m : matches){
+         std::cout << m.pattern_idx << '\t' << m.loc << '\t' << m.mismatches << '\n';
+    }
 	});
 	std::cerr << "Time spent: " << calc_time << std::endl;
 	return 0;

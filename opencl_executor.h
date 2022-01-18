@@ -119,7 +119,7 @@ public:
                              ptr,
                              0,nullptr,
                              nullptr));
-        CheckError(clEnqueueBarrier(myqueue));
+        CheckError(clFinish(myqueue));
     }
     void read_buffer(std::vector<item_ty> & read_into){
         assert(read_into.size() == bufsize);
@@ -127,7 +127,7 @@ public:
     }
     void read_buffer(item_ty * ptr, size_t size){
         assert(size <= bufsize);
-        CheckError(clEnqueueBarrier(myqueue));
+        CheckError(clFinish(myqueue));
         CheckError(clEnqueueReadBuffer(myqueue,
                              buf,
                              CL_TRUE,
@@ -135,7 +135,7 @@ public:
                              ptr,
                              0,nullptr,
                              nullptr));
-        CheckError(clEnqueueBarrier(myqueue));
+        CheckError(clFinish(myqueue));
     }
     CLKernelArg k_arg(){
         return make_arg(buf);
@@ -147,7 +147,7 @@ public:
         assert(src_buf.bufsize == this->bufsize);
         assert(src_buf.myqueue == this->myqueue);
         assert(src_buf.mycontext == this->mycontext);
-        CheckError(clEnqueueBarrier(myqueue));
+        CheckError(clFinish(myqueue));
         CheckError(clEnqueueCopyBuffer(myqueue,
                             src_buf.buf,this->buf,
                             0,0,
@@ -167,7 +167,7 @@ public:
             0,nullptr,
             nullptr
         ));
-        CheckError(clEnqueueBarrier(myqueue));
+        CheckError(clFinish(myqueue));
     }
 };
 class CL_NDRange{
@@ -252,7 +252,7 @@ public:
         }
     }
     void run(){
-        CheckError(clEnqueueBarrier(myqueue));
+        CheckError(clFinish(myqueue));
         int dim = exec_range.dim();
         CL_NDRange exec_range = dim == 0 ? CL_NDRange(1,1,1) : this->exec_range;
         CL_NDRange glob_range = div_nd(this->run_range,exec_range);

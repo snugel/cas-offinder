@@ -17,14 +17,21 @@ constexpr size_t bit4_c = sizeof(block_ty) * 8 / 4;
 
 std::vector<match> find_matches(std::string & genome, std::vector<std::string> & patterns, int max_mismatches){
     std::vector<uint32_t> genomeb4 = make4bitpackedint32(genome);
-    return find_matches(genomeb4, patterns, max_mismatches);
+    std::vector<match> matches;
+    find_matches_gold(genomeb4, patterns, max_mismatches, [&](match m){
+        #pragma omp critical 
+        {
+        matches.push_back(m);
+        }
+    });
+    return matches;
 }
 
-std::vector<match> find_matches(std::vector<uint32_t> & genomeb4, std::vector<std::string> & patterns, int max_mismatches)
+void find_matches(std::vector<uint32_t> & genomeb4, std::vector<std::string> & patterns, int max_mismatches, std::function<void(match)> func)
 {
     if (patterns.size() == 0)
     {
-        return {{}};
+        return;
     }
     size_t num_patterns = patterns.size();
     int pattern_size = patterns[0].size();
@@ -44,7 +51,6 @@ std::vector<match> find_matches(std::vector<uint32_t> & genomeb4, std::vector<st
             pattern_blocks[i * blocks_per_pattern + j] = b4pattern[j];
         }
     }
-    std::vector<match> matches;
 
     OpenCLPlatform plat;
     volatile size_t next_genome_idx = 0;
@@ -106,21 +112,19 @@ std::vector<match> find_matches(std::vector<uint32_t> & genomeb4, std::vector<st
             if(out_count > 0){
                 std::vector<match> new_matches(out_count);
                 output_buf.read_buffer(&new_matches[0], out_count);
-                std::vector<match> pruned_matches;// = new_matches;
+                #pragma omp critical 
+                {
+                // filter out and output matches
                 for(match m : new_matches){
                     if(m.loc < GENOME_CHUNK_SIZE * bit4_c){
                         m.loc += genome_idx * bit4_c;
-                        pruned_matches.push_back(m);
+                        func(m);
                     }
                 }
-                #pragma omp critical 
-                {
-                    matches.insert(matches.end(), pruned_matches.begin(), pruned_matches.end());
                 }
             }
         }
     }
-    return matches;
 }
 
 

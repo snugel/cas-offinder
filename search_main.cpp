@@ -57,12 +57,12 @@ int main(int argc, char *argv[]) {
     std::cerr << "Aprox genome size: " << fsize*2 << std::endl;
 	
 	std::cerr << "Searching genome..." << std::endl;
-	std::vector<match> matches = find_matches(data, patterns, mismatches);
-
+    
     std::cout << "Idx\tLocation\tMismatches\n";
-    for(match m : matches){
-         std::cout << m.pattern_idx << '\t' << m.loc << '\t' << m.mismatches << '\n';
-    }
+	find_matches(data, patterns, mismatches, [](match m){
+        atomic_print_match(m);
+    });
+
 	});
 	std::cerr << "Time spent: " << calc_time << std::endl;
 	return 0;

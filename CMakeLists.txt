@@ -33,6 +33,10 @@ add_executable (dump_file_data
     bit4ops.cpp
     read_twobit.h
 )
+add_executable (infinite_buffer large_pipe_buffer.cpp)
+find_package(Threads REQUIRED)
+target_link_libraries(infinite_buffer PRIVATE Threads::Threads)
+
 target_compile_options(test PRIVATE -Wall -Wextra -Wno-deprecated-declarations)
 
 target_compile_definitions(test PRIVATE ENABLE_TESTS)

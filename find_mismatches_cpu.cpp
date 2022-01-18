@@ -63,16 +63,21 @@ void find_matches_packed_helper(
 }
 
 std::vector<match> find_matches_gold(std::string & genome,std::vector<std::string> & patterns, int max_mismatches){
-    std::string genome_cpy = genome;
-    clean_bogus(genome_cpy);
     std::vector<uint32_t> genomeb4 = make4bitpackedint32(genome);
-    return find_matches_gold(genomeb4, patterns, max_mismatches);
+    std::vector<match> matches;
+    find_matches_gold(genomeb4, patterns, max_mismatches, [&](match m){
+        #pragma omp critical 
+        {
+        matches.push_back(m);
+        }
+    });
+    return matches;
 }
-std::vector<match> find_matches_gold(std::vector<uint32_t> & genomeb4, std::vector<std::string> & patterns, int max_mismatches)
+void find_matches_gold(std::vector<uint32_t> & genomeb4, std::vector<std::string> & patterns, int max_mismatches, std::function<void(match)> func)
 {
     if (patterns.size() == 0)
     {
-        return {{}};
+        return;
     }
     size_t pattern_size = patterns[0].size();
     for (std::string &p : patterns)
@@ -116,14 +121,11 @@ std::vector<match> find_matches_gold(std::vector<uint32_t> & genomeb4, std::vect
                     match_idx
                     );
         }
-
-        #pragma omp critical 
-        {
-            matches.insert(matches.end(), match_buffer, match_buffer + match_idx);
+        for(size_t i : range(match_idx)){
+            func(match_buffer[i]);
         }
     }
 
-    return matches;
 }
 
 

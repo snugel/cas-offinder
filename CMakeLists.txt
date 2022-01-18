@@ -26,7 +26,7 @@ set (HEADERS
 )
 
 add_executable (test test/test.cpp test/test_framework.cpp ${SOURCES} ${HEADERS})
-add_executable (cas-offinder main.cpp ${SOURCES} ${HEADERS})
+add_executable (cas-offinder search_main.cpp ${SOURCES} ${HEADERS})
 add_executable (dump_file_data 
     dump_file_data.cpp
     read_twobit.cpp

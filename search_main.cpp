@@ -3,6 +3,7 @@
 #include "timing.h"
 #include "chromloc.h"
 #include "postprocess.h"
+#include "bit4ops.h"
 #include "RangeIterator.h"
 
 #include <iostream>
@@ -74,7 +75,7 @@ int main(int argc, char *argv[]) {
 
 	std::cerr << "Searching genome..." << std::endl;
     
-    std::cout << "Idx\tChromosome\tLocation\tMismatches\n";
+    std::cout << "Idx\tChromosome\tLocation\tDNA\tMismatches\n";
 	find_matches(data, patterns, mismatches, [&](match m){
 		if(!crosses_chrom_wall(m.loc, chrom_poses, pattern_size)){
 			chrom_info chr_info = get_chrom_info(m.loc, chrom_poses);
@@ -83,6 +84,7 @@ int main(int argc, char *argv[]) {
 				std::to_string(m.pattern_idx) + "\t" + 
 				chrloc.name + "\t" + 
 				std::to_string(chr_info.rel_loc) + "\t" + 
+				bit4tostr(data, m.loc, m.loc + pattern_size) + "\t" +
 				std::to_string(m.mismatches) + "\n" 
 			);
 			std::cout << sstr;

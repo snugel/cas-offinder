@@ -101,7 +101,7 @@ void bit32tostr(uint32_t x, std::string & result){
 std::string bit4tostr(const std::vector<uint32_t> & bit32, size_t start, size_t end){
     std::string result;
     size_t start_idx = start/8;
-    size_t end_idx = (end+7)/8+1;
+    size_t end_idx = (end+7)/8;
     result.reserve((end_idx - start_idx)*8);
     for(size_t i : range(start_idx, end_idx)){
         bit32tostr(bit32[i], result);

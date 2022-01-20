@@ -11,15 +11,13 @@
 #include <sstream>
 #include <ctime>
 
-#define LOCAL_BLOCK_SIZE 4
-
 void find_matches_packed_helper(
     uint64_t *genome,
     size_t genome_idx,
     uint64_t *pattern_blocks,
     size_t num_patterns,
     size_t blocks_per_pattern,
-    size_t pattern_block_idx,
+    size_t pattern_idx,
     int max_mismatches,
     int max_matches,
     match * match_buffer,
@@ -27,37 +25,26 @@ void find_matches_packed_helper(
 ){
     // genome is expected to be at least BIGGER than the genome_size
     constexpr size_t blocks_avail = 16;
-    uint16_t pattern_counts[LOCAL_BLOCK_SIZE] = {0};
     for (size_t k = 0; k < blocks_avail; k++)
     {
-        size_t local_pattern_size = std::min(num_patterns - pattern_block_idx, size_t(LOCAL_BLOCK_SIZE));
-        for (size_t x = 0; x < local_pattern_size; x++)
-        {
-            pattern_counts[x] = 0;
-        }
+        uint64_t pattern_count = 0;
         for (size_t l = 0; l < blocks_per_pattern; l++)
         {
             uint64_t prev = genome[genome_idx + l];
             uint64_t next = genome[genome_idx + l + 1];
             uint64_t cur = k == 0 ? prev : (prev << (k * 4)) | (next >> ((blocks_avail - k) * 4));
-            for (size_t x = 0; x < local_pattern_size; x++)
-            {
-                pattern_counts[x] += __builtin_popcountl(cur & pattern_blocks[(pattern_block_idx + x)*blocks_per_pattern + l]);
-            }
+            pattern_count += __builtin_popcountl(cur & pattern_blocks[pattern_idx*blocks_per_pattern + l]);
         }
        // std::cout <<int(pattern_counts[0]) << std::endl;
-        for (size_t x = 0; x < local_pattern_size; x++)
+        uint32_t mismatches = max_matches - pattern_count;
+        if (mismatches <= max_mismatches)
         {
-            uint32_t mismatches = max_matches - pattern_counts[x];
-            if (mismatches <= max_mismatches)
-            {
-                int next_idx = match_idx++;
-                match_buffer[next_idx] = match{
-                    .loc = genome_idx * blocks_avail + k,
-                    .mismatches = mismatches,
-                    .pattern_idx = uint32_t(pattern_block_idx + x),
-                };
-            }
+            int next_idx = match_idx++;
+            match_buffer[next_idx] = match{
+                .loc = genome_idx * blocks_avail + k,
+                .mismatches = mismatches,
+                .pattern_idx = uint32_t(pattern_idx),
+            };
         }
     }
 }
@@ -66,10 +53,7 @@ std::vector<match> find_matches_gold(std::string & genome,std::vector<std::strin
     std::vector<uint32_t> genomeb4 = make4bitpackedint32(genome);
     std::vector<match> matches;
     find_matches_gold(genomeb4, patterns, max_mismatches, [&](match m){
-        #pragma omp critical 
-        {
         matches.push_back(m);
-        }
     });
     return matches;
 }
@@ -105,52 +89,29 @@ void find_matches_gold(std::vector<uint32_t> & genomeb4, std::vector<std::string
 
     #pragma omp parallel for
     for (size_t genome_idx = 0; genome_idx < genome_size; genome_idx += 1) {
-        match match_buffer[1<<16];
+        match match_buffer[1<<8];
         int match_idx = 0;
-        for (size_t pattern_block_idx = 0; pattern_block_idx < patterns.size(); pattern_block_idx += LOCAL_BLOCK_SIZE) {
+        for (size_t pattern_idx = 0; pattern_idx < patterns.size(); pattern_idx += 1) {
             find_matches_packed_helper(
                     b4genome.data(),       // genome
                     genome_idx,                           // genome_idx
                     pattern_blocks.data(),                // pattern_blocks
                     patterns.size(),                      // num_patterns
                     blocks_per_pattern,                   // blocks_per_pattern
-                    pattern_block_idx,                    // pattern_block_idx
+                    pattern_idx,                    // pattern_idx
                     max_mismatches,                       // max_mismatches
                     pattern_size,                         // max_matches
                     match_buffer,
                     match_idx
                     );
         }
-        for(size_t i : range(match_idx)){
-            func(match_buffer[i]);
+        
+        #pragma omp critical 
+        {
+            for(size_t i : range(match_idx)){
+                func(match_buffer[i]);
+            }
         }
     }
 
-}
-
-
-void sort_matches(std::vector<match> & matches){
-    std::sort(matches.begin(), matches.end(), [](match & a, match & b){
-            if(a.pattern_idx < b.pattern_idx) return true;
-            if(a.pattern_idx > b.pattern_idx) return false;
-            if(a.loc < b.loc) return true;
-            if(a.loc > b.loc) return false;
-            return false;
-            });
-}
-bool matches_equal(std::vector<match> & m1, std::vector<match> & m2){
-    return m1.size() == m2.size() && 
-        std::equal(m1.begin(), m1.end(), m2.begin(), [](match a, match b){
-                return 
-                a.loc == b.loc &&
-                a.mismatches == b.mismatches &&
-                a.pattern_idx == b.pattern_idx;
-                });
-}
-
-void atomic_print_match(match & m){
-    // thread save printing: whole line guarenteed to print at once
-    std::ostringstream oss;
-    oss << m.loc << "\t" << m.mismatches << "\t" << m.pattern_idx << "\n";
-    std::cout << oss.str();
 }

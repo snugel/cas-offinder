@@ -226,18 +226,11 @@ protected:
     cl_command_queue myqueue;
     cl_program program;
     cl_kernel kern;
-    CL_NDRange run_range;
-    CL_NDRange group_range;
-    CL_NDRange exec_range;
 public:
-    CLKernel(cl_program in_prog,cl_command_queue in_queue,const char * kern_name,CL_NDRange in_run_range,CL_NDRange in_group_range,CL_NDRange in_exec_range,std::vector<CLKernelArg> args){
+    CLKernel(cl_program in_prog,cl_command_queue in_queue,const char * kern_name,std::vector<CLKernelArg> args){
         myqueue = in_queue;
         program = in_prog;
-        run_range = in_run_range;
-        group_range = in_group_range;
-        exec_range = in_exec_range;
 
-        assert(run_range.dim() > 0 && "run_range needs to have at least 1 dimention specified");
 
         // http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clCreateKernel.html
         cl_int error = CL_SUCCESS;
@@ -251,11 +244,14 @@ public:
             idx++;
         }
     }
-    void run(){
+    void run(CL_NDRange run_range,CL_NDRange group_range,CL_NDRange exec_range){
+        assert(run_range.dim() > 0 && "run_range needs to have at least 1 dimention specified");
+
         CheckError(clFinish(myqueue));
-        int dim = exec_range.dim();
-        CL_NDRange exec_range = dim == 0 ? CL_NDRange(1,1,1) : this->exec_range;
-        CL_NDRange glob_range = div_nd(this->run_range,exec_range);
+        if (exec_range.dim() == 0){
+            exec_range = CL_NDRange(1,1,1);
+        }
+        CL_NDRange glob_range = div_nd(run_range,exec_range);
         for(size_t x = 0; x < exec_range.x; x++){
             for(size_t y = 0; y < exec_range.y; y++){
                 for(size_t z = 0; z < exec_range.z; z++){
@@ -273,6 +269,7 @@ public:
                }
            }
         }
+        CheckError(clFinish(myqueue));
     }
 };
 
@@ -380,8 +377,8 @@ public:
     CLBuffer<item_ty> new_clbuffer(size_t size){
         return CLBuffer<item_ty>(context,queue,size);
     }
-    CLKernel new_clkernel(const char * kern_name,CL_NDRange run_range,CL_NDRange in_group_range,CL_NDRange in_exec_range,std::vector<CLKernelArg> buflist){
-        return CLKernel(program,queue,kern_name,run_range,in_group_range,in_exec_range,buflist);
+    CLKernel new_clkernel(const char * kern_name,std::vector<CLKernelArg> buflist){
+        return CLKernel(program,queue,kern_name,buflist);
     }
 
 protected:

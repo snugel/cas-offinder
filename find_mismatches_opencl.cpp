@@ -19,11 +19,8 @@ constexpr size_t bit4_c = sizeof(block_ty) * 8 / 4;
 std::vector<match> find_matches(std::string & genome, std::vector<std::string> & patterns, int max_mismatches){
     std::vector<uint32_t> genomeb4 = make4bitpackedint32(genome);
     std::vector<match> matches;
-    find_matches_gold(genomeb4, patterns, max_mismatches, [&](match m){
-        #pragma omp critical 
-        {
+    find_matches(genomeb4, patterns, max_mismatches, [&](match m){
         matches.push_back(m);
-        }
     });
     return matches;
 }
@@ -73,9 +70,6 @@ void find_matches(std::vector<uint32_t> & genomeb4, std::vector<std::string> & p
         size_t num_pattern_blocks = patterns.size();
         CLKernel compute_results = executor.new_clkernel(
             "find_matches_packed_helper",
-            CL_NDRange(GENOME_CHUNK_SIZE, num_pattern_blocks),
-            CL_NDRange(),
-            CL_NDRange(),
             {
                 genome_buf.k_arg(),
                 pattern_buf.k_arg(),
@@ -106,7 +100,11 @@ void find_matches(std::vector<uint32_t> & genomeb4, std::vector<std::string> & p
             genome_buf.clear_buffer();
             output_count.clear_buffer();
             genome_buf.write_buffer(&genomeb4[genome_idx], std::min(genomeb4.size() - blocks_per_pattern - genome_idx, GENOME_CHUNK_SIZE) + blocks_per_pattern);
-            compute_results.run();
+            compute_results.run(
+                CL_NDRange(GENOME_CHUNK_SIZE, num_pattern_blocks),
+                CL_NDRange(),
+                CL_NDRange()
+            );
             int out_count;
             output_count.read_buffer(&out_count, 1);
             

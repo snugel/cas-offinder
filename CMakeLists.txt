@@ -32,19 +32,20 @@ add_executable (test
     bulge_logic.cpp
     find_mismatches_cpu.cpp
     find_mismatches_opencl.cpp
+    find_mismatches_utils.cpp
     postprocess.cpp
     test/bit4ops.cpp
     test/bulge_logic.cpp
-    test/find_mismatches.cpp
     test/postprocess.cpp
+    test/find_mismatches.cpp
     ${SOURCES} ${HEADERS}
 )
 
 add_executable (cas-offinder 
     search_main.cpp 
     bit4ops.cpp
-    find_mismatches_cpu.cpp
     find_mismatches_opencl.cpp
+    find_mismatches_utils.cpp
     ${HEADERS}
 )
 

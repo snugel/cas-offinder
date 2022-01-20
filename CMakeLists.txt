@@ -11,7 +11,7 @@ include_directories(.)
 
 set (CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 
 set (HEADERS
 	find_mismatches.h
@@ -19,6 +19,7 @@ set (HEADERS
     bulge_logic.h
     test/test_framework.h
     bit4ops.h
+    chromloc.h
     postprocess.h
     read_twobit.h
     read_fasta.h
@@ -26,32 +27,37 @@ set (HEADERS
 )
 
 add_executable (test 
-    test/test.cpp 
-    test/test_framework.cpp 
     bit4ops.cpp
+    chromloc.cpp
     bulge_logic.cpp
     find_mismatches_cpu.cpp
     find_mismatches_opencl.cpp
     find_mismatches_utils.cpp
     postprocess.cpp
-    test/bit4ops.cpp
+    test/test.cpp 
+    test/test_framework.cpp 
     test/bulge_logic.cpp
     test/postprocess.cpp
     test/find_mismatches.cpp
+    test/chromloc.cpp
+    test/bit4ops.cpp
     ${SOURCES} ${HEADERS}
 )
 
 add_executable (cas-offinder 
     search_main.cpp 
     bit4ops.cpp
+    chromloc.cpp
     find_mismatches_opencl.cpp
     find_mismatches_utils.cpp
+    postprocess.cpp
     ${HEADERS}
 )
 
 add_executable (dump_file_data 
     dump_file_data.cpp
     bit4ops.cpp
+    chromloc.cpp
     read_twobit.cpp
     read_fasta.cpp
     read_folder.cpp
@@ -63,7 +69,7 @@ add_executable (infinite_buffer
 
 target_link_libraries(infinite_buffer PRIVATE Threads::Threads)
 
-target_compile_options(test PRIVATE -Wall -Wextra -Wno-deprecated-declarations)
+target_compile_options(test PRIVATE -Wall -Wextra)
 
 target_link_libraries(test PRIVATE Threads::Threads)
 target_link_libraries(test PUBLIC OpenCL)

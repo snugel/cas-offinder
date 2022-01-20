@@ -1,6 +1,9 @@
 #include "find_mismatches.h"
 #include "read_fasta.h"
 #include "timing.h"
+#include "chromloc.h"
+#include "postprocess.h"
+#include "RangeIterator.h"
 
 #include <iostream>
 #include <fstream>
@@ -19,16 +22,21 @@
 
 using namespace std;
 
+
 int main(int argc, char *argv[]) {
 	if(argc != 5){
-		std::cerr << "Needs 4 command line arguments: 4bit_path, pattern_path, mismatches, device\n";
+		std::cerr << "Needs 4 command line arguments: data_folder, pattern_path, mismatches, device\n";
 		exit(1);
 	}
 	double calc_time = time_spent([&](){
-	std::string bit4_path(argv[1]);
+	std::string data_folder(argv[1]);
 	std::string pattern_path(argv[2]);
 	int mismatches = atoi(argv[3]);
 	char device = *argv[4];
+
+	if(data_folder.back() != '/'){
+		data_folder.push_back('/');
+	}
 
 	std::cerr << "Reading patterns..." << std::endl;
 
@@ -41,10 +49,11 @@ int main(int argc, char *argv[]) {
 			patterns.push_back(line);
 		}
 	}
+	size_t pattern_size = patterns[0].size();
 
 	std::cerr << "Reading genome..." << std::endl;
 
-	ifstream bit4_file(bit4_path, ios::binary);
+	ifstream bit4_file(data_folder + "genome.4bit", ios::binary);
 	const auto begin = bit4_file.tellg();
 	bit4_file.seekg (0, ios::end);
 	const auto end = bit4_file.tellg();
@@ -55,12 +64,29 @@ int main(int argc, char *argv[]) {
 	vector<uint32_t> data(fsize/4);
 	bit4_file.read((char*)&data[0], fsize);
     std::cerr << "Aprox genome size: " << fsize*2 << std::endl;
-	
+
+    std::ifstream chrom_locs_file(data_folder + "chrom_locs.csv");
+	std::vector<chromloc> chrom_locs = parse_chromloc_file(chrom_locs_file);
+	std::vector<uint64_t> chrom_poses(chrom_locs.size());
+	for(size_t i : range(chrom_locs.size())){
+		chrom_poses[i] = chrom_locs[i].loc;
+	}
+
 	std::cerr << "Searching genome..." << std::endl;
     
-    std::cout << "Idx\tLocation\tMismatches\n";
-	find_matches(data, patterns, mismatches, [](match m){
-        atomic_print_match(m);
+    std::cout << "Idx\tChromosome\tLocation\tMismatches\n";
+	find_matches(data, patterns, mismatches, [&](match m){
+		if(!crosses_chrom_wall(m.loc, chrom_poses, pattern_size)){
+			chrom_info chr_info = get_chrom_info(m.loc, chrom_poses);
+			chromloc chrloc = chrom_locs.at(chr_info.chrom_idx);
+	        std::string sstr = (
+				std::to_string(m.pattern_idx) + "\t" + 
+				chrloc.name + "\t" + 
+				std::to_string(chr_info.rel_loc) + "\t" + 
+				std::to_string(m.mismatches) + "\n" 
+			);
+			std::cout << sstr;
+		}
     });
 
 	});

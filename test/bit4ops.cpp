@@ -32,3 +32,16 @@ TEST(test_make4bitpackedint32)
     std::vector<uint32_t> actual = make4bitpackedint32(genome);
     return expected.size() == actual.size() && std::equal(expected.begin(), expected.end(), actual.begin());
 }
+
+
+TEST(test_bit4tostr)
+{
+    //data = "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
+    std::vector<uint32_t> data = {0x42828148, 0x42841248, 0x12841281, 0x48214812, 0x18418000};
+    size_t start = 5;
+    size_t end = 30;
+    std::string expected = "TAGACGATCAGTCGATCGTAGCTAG";
+    std::string actual = bit4tostr(data, start, end);
+    std::cout << expected << "\n" << actual << "\n";
+    return expected == actual;
+}

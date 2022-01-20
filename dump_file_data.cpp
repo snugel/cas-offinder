@@ -2,6 +2,7 @@
 #include "timing.h"
 #include "RangeIterator.h"
 #include "bit4ops.h"
+#include "chromloc.h"
 
 #include <iostream>
 #include <fstream>
@@ -62,11 +63,15 @@ int main(int argc, char *argv[]) {
         }
     }
     assert(m_chrpos.size() == m_chrnames.size());
+	std::vector<chromloc> locs(m_chrpos.size());
+	for(size_t i : range(m_chrpos.size())){
+		locs[i] = chromloc{
+			.name=m_chrnames[i],
+			.loc=m_chrpos[i],
+		};
+	}
     std::ofstream chrom_locs(out_folder + "chrom_locs.csv");
-    chrom_locs << "Name\tLoc\n";
-    for(size_t i : range(m_chrpos.size())){
-        chrom_locs << m_chrnames[i] << "\t" << m_chrpos[i] << "\n";
-    }
+	write_chromloc_file(locs, chrom_locs);
 
 	std::cerr << "Dumping genome data..." << std::endl;
     

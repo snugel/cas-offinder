@@ -1,5 +1,7 @@
 #include "bit4ops.h"
+#include "RangeIterator.h"
 #include <algorithm>
+#include <iostream>
 
 inline std::array<char, 256> make4bitmap(){
     constexpr char T = 0x1;
@@ -73,4 +75,36 @@ std::vector<uint64_t> bit64tobit32(const std::vector<uint32_t> & bit32){
         bit64.back() = uint64_t(bit32.back()) << 32;
     }
     return bit64; 
+}
+char to4bitN0(char c){
+    return c == 'N' ? 0 : to4bit(c);
+}
+inline std::array<std::array<char, 2>, 256> make_bit4_data(){
+    std::array<std::array<char, 2>, 256> data;
+    char arr[] = {'A','T','C','G','N'};
+    for(char c1 : arr){
+        for(char c2 : arr){
+            data[(to4bitN0(c1) << 4) | to4bitN0(c2)] = {c1,c2};
+        }
+    }
+    return data;
+}
+std::array<std::array<char, 2>, 256> bit4_data = make_bit4_data();
+void bit32tostr(uint32_t x, std::string & result){
+    uint8_t * arr = (uint8_t*)(&x);
+    for(size_t i : range(3,-1,-1)){
+        auto data = bit4_data[arr[i]];
+        result.push_back(data[0]);
+        result.push_back(data[1]);
+    }
+}
+std::string bit4tostr(const std::vector<uint32_t> & bit32, size_t start, size_t end){
+    std::string result;
+    size_t start_idx = start/8;
+    size_t end_idx = (end+7)/8+1;
+    result.reserve((end_idx - start_idx)*8);
+    for(size_t i : range(start_idx, end_idx)){
+        bit32tostr(bit32[i], result);
+    }
+    return result.substr(start-start_idx*8, (end-start));
 }

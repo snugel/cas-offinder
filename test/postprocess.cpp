@@ -1,7 +1,33 @@
 #include "postprocess.h"
 #include "test/test_framework.h"
+#include "RangeIterator.h"
+#include <algorithm>
 #include <iostream>
 
+
+void get_chrom_info(
+    const std::vector<match> & matches, 
+    const std::vector<uint64_t> & chrom_poses,
+    std::vector<uint64_t> & rel_locs,
+    std::vector<uint64_t> & chrom_idxs
+){
+    rel_locs.resize(matches.size());
+    chrom_idxs.resize(matches.size());
+    for(size_t i : range(matches.size())){
+        chrom_info info = get_chrom_info(matches[i].loc, chrom_poses);
+        chrom_idxs[i] = info.chrom_idx;
+        rel_locs[i] = info.rel_loc;
+    }
+}
+void filter_chrom_walls(
+    std::vector<match> & matches, 
+    const std::vector<uint64_t> & chrom_poses,
+    size_t query_size
+){
+    matches.erase(std::remove_if(matches.begin(), matches.end(), [&](match m){
+        return crosses_chrom_wall(m.loc, chrom_poses, query_size);
+    }), matches.end());
+}
 
 TEST(test_get_chrom_info){
     std::vector<match> expected = {

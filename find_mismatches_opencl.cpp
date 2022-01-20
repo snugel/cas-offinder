@@ -2,6 +2,7 @@
 #include "find_mismatches.h"
 #include "RangeIterator.h"
 #include "opencl_executor.h"
+#include "oclkernels.h"
 #include "bit4ops.h"
 #include "timing.h"
 #include <algorithm>
@@ -58,7 +59,7 @@ void find_matches(std::vector<uint32_t> & genomeb4, std::vector<std::string> & p
     #pragma omp parallel for
     for(size_t device_idx = 0; device_idx < plat.num_cl_devices(); device_idx++){
         OpenCLExecutor executor(
-            "find_mismatches_packed.cl", 
+            program_src, 
             plat.get_platform(), 
             plat.get_device_ids()[device_idx]
         );

@@ -7,3 +7,5 @@ cmake_install.cmake
 config.h
 oclkernels.h
 .vscode
+build
+data

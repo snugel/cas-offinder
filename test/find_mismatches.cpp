@@ -31,7 +31,7 @@ TEST(find_mismatches_packed_perf)
 {
     std::vector<std::string> patterns(25, "GCGTAGACGGCGTAGACGGCGTANNRGR");
     std::string genome;
-    for (int i : range(1000000))
+    for (int i : range(10000))
     {
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }
@@ -74,7 +74,7 @@ TEST(find_mismatches_opencl_perf)
 {
     std::vector<std::string> patterns(50, "GCGTAGACGGCGTAGACGGCGTANNRGR");
     std::string genome;
-    for (int i : range(1000000))
+    for (int i : range(10000))
     {
         genome += "ACGCGTAGACGATCAGTCGATCGTAGCTAGTCTGATG";
     }

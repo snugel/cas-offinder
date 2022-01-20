@@ -74,3 +74,7 @@ if(OpenMP_CXX_FOUND)
     target_link_libraries(test PUBLIC OpenMP::OpenMP_CXX)
     target_link_libraries(cas-offinder PUBLIC OpenMP::OpenMP_CXX)
 endif()
+
+set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
+execute_process(COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
+add_custom_command (TARGET cas-offinder PRE_BUILD COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")

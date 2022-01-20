@@ -355,7 +355,7 @@ class OpenCLPlatform{
 
 class OpenCLExecutor{
 protected:
-    std::string source_path;
+    std::string source;
     cl_platform_id platform;
     cl_device_id device;
     cl_context context;
@@ -363,11 +363,11 @@ protected:
     cl_command_queue queue;
 public:
 
-    OpenCLExecutor(std::string in_source_path, cl_platform_id platid, cl_device_id devid)
+    OpenCLExecutor(std::string in_source, cl_platform_id platid, cl_device_id devid)
     {
         device = devid;
         platform = platid;
-        source_path = in_source_path;
+        source = in_source;
         build_program();
         std::cerr << "finished building program" << std::endl;
     }
@@ -413,22 +413,8 @@ protected:
         CreateProgram();
     }
 
-    std::string get_source(){
-        std::ifstream file(source_path);
-        if(!file){
-            std::cerr << "the file " << source_path << " is missing!\n";
-            exit(1);
-        }
-        //slow way to read a file (but file size is small)
-        std::string fstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-        file.close();
-        return fstr;
-    }
-
     void CreateProgram ()
     {
-        std::string source = get_source();
         // http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clCreateProgramWithSource.html
         size_t lengths [1] = { source.size () };
         const char* sources [1] = { source.data () };

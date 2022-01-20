@@ -1,4 +1,4 @@
-#include "read_twobit.h"
+#include "read_folder.h"
 #include "timing.h"
 #include "RangeIterator.h"
 #include "bit4ops.h"
@@ -22,10 +22,10 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
 	if(argc != 3){
-		std::cerr << "Needs 2 command line arguments: 2bit_path, out_folder\n";
+		std::cerr << "Needs 2 command line arguments: path, out_folder\n";
 		exit(1);
 	}
-	std::string bit2_path(argv[1]);
+	std::string path(argv[1]);
 	std::string out_folder(argv[2]);
 
 	std::cerr << "Reading genome..." << std::endl;
@@ -33,13 +33,11 @@ int main(int argc, char *argv[]) {
 	vector<string> m_chrnames;
 	string m_chrdata;
 	vector<uint64_t> m_chrpos;
-	if (read_twobit(bit2_path, m_chrnames, m_chrdata, m_chrpos)) {
-		cerr << "Non-acceptable file: " << bit2_path << endl;
+	int cnum = 0;
+	if (read_folder(path, m_chrnames, m_chrdata, m_chrpos)) {
+        cerr << "Non-acceptable file/folder: " << path << endl;
 		exit(1);
 	}
-    // for(size_t i : range(m_chrnames.size())){
-    // 	std::cerr << m_chrnames[i] << "\t" << m_chrpos[i] << std::endl;
-    // }
 	
 	std::cerr << "Genome size: " << m_chrdata.size() << std::endl;
 

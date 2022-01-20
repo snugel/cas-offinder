@@ -8,7 +8,7 @@
 
 using namespace std;
 
-int read_fasta(string &filepath, vector<string> &chrnames, string &content, vector<unsigned long long> &chrpos) {
+int read_fasta(string &filepath, vector<string> &chrnames, string &content, vector<uint64_t> &chrpos) {
 	string line, name;
 	ifstream input;
 #ifdef _WIN32
@@ -21,9 +21,6 @@ int read_fasta(string &filepath, vector<string> &chrnames, string &content, vect
 	else
 		input.open(filepath.c_str());
 #endif
-	chrnames.clear();
-	content.clear();
-	chrpos.clear();
 	char c; input.get(c);
 	if (c != '>') {
 		input.close();

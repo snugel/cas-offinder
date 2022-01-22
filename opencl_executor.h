@@ -358,13 +358,15 @@ protected:
     cl_context context;
     cl_program program;
     cl_command_queue queue;
+    std::string arguments;
 public:
 
-    OpenCLExecutor(std::string in_source, cl_platform_id platid, cl_device_id devid)
+    OpenCLExecutor(std::string in_source, cl_platform_id platid, cl_device_id devid,std::string in_arguments="")
     {
         device = devid;
         platform = platid;
         source = in_source;
+        arguments = in_arguments;
         build_program();
         std::cerr << "finished building program" << std::endl;
     }
@@ -421,7 +423,7 @@ protected:
         CheckError (error);
 
         cl_int build_error = clBuildProgram (program, 1, &this->device,
-            "", nullptr, nullptr);
+            arguments.c_str(), nullptr, nullptr);
 
         if(build_error == CL_BUILD_PROGRAM_FAILURE){
             size_t len = 0;

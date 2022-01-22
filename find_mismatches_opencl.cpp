@@ -7,6 +7,7 @@
 #include "timing.h"
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <cassert>
 #include <immintrin.h>
@@ -53,12 +54,18 @@ void find_matches(std::vector<uint32_t> & genomeb4, std::vector<std::string> & p
     OpenCLPlatform plat;
     volatile size_t next_genome_idx = 0;
     constexpr size_t GENOME_CHUNK_SIZE = 1<<24;
+    
+    std::stringstream arguments;
+    arguments 
+        << "-Dblocks_per_pattern=" << blocks_per_pattern 
+        ;
     #pragma omp parallel for
     for(size_t device_idx = 0; device_idx < plat.num_cl_devices(); device_idx++){
         OpenCLExecutor executor(
             program_src, 
             plat.get_platform(), 
-            plat.get_device_ids()[device_idx]
+            plat.get_device_ids()[device_idx],
+            arguments.str()
         );
 
         const int OUT_BUF_SIZE = 1<<22;
@@ -73,8 +80,6 @@ void find_matches(std::vector<uint32_t> & genomeb4, std::vector<std::string> & p
             {
                 genome_buf.k_arg(),
                 pattern_buf.k_arg(),
-                make_arg(num_patterns),
-                make_arg(blocks_per_pattern),
                 make_arg(max_mismatches),
                 make_arg(pattern_size),
                 output_buf.k_arg(),

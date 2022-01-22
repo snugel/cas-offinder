@@ -36,11 +36,11 @@ add_executable (test
     postprocess.cpp
     test/test.cpp 
     test/test_framework.cpp 
-    test/bulge_logic.cpp
     test/postprocess.cpp
     test/find_mismatches.cpp
     test/chromloc.cpp
     test/bit4ops.cpp
+    test/bulge_logic.cpp
     ${SOURCES} ${HEADERS}
 )
 

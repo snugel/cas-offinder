@@ -11,8 +11,10 @@ typedef bool (*test_fn)();
 
 #define TOKENPASTE(x, y) x ## y
 #define TOKENPASTE2(x, y) TOKENPASTE(x, y)
+#define STRINGIFY(x) #x
 
-#define TEST(test_name) bool test_name(); bool TOKENPASTE2(test_name, __LINE__ ) = all_tests.add_test(test_name, #test_name); bool test_name()
+#define TEST_HELP(test_name) bool test_name(); bool TOKENPASTE2(test_name,__LINE__) = all_tests.add_test(test_name, STRINGIFY(test_name)); bool test_name()
+#define TEST(test_name) TEST_HELP(TOKENPASTE2(test_name, __LINE__ ))
 // #define TESTTEST
 //#ifdef RUN_TESTS
 

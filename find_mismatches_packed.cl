@@ -21,8 +21,6 @@ typedef struct s_match match;
 __kernel void find_matches_packed_helper(
     __global block_ty *genome,
     __global block_ty *pattern_blocks,
-    size_t num_patterns,
-    size_t blocks_per_pattern,
     int max_mismatches,
     int max_matches,
     __global match * match_buffer,

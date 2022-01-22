@@ -4,6 +4,10 @@ project (Cas-OFFinder
          VERSION 4.0.0
          HOMEPAGE_URL http://github.com/snugel/cas-offinder
 )
+include_directories(
+    ${PROJECT_SOURCE_DIR}/src
+)
+
 
 find_package(OpenMP)
 find_package(Threads REQUIRED)
@@ -14,57 +18,57 @@ set (CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 
 set (HEADERS
-	find_mismatches.h
-    RangeIterator.h
-    bulge_logic.h
-    test/test_framework.h
-    bit4ops.h
-    chromloc.h
-    postprocess.h
-    read_twobit.h
-    read_fasta.h
-    read_folder.h
+	src/find_mismatches.h
+    src/RangeIterator.h
+    src/bulge_logic.h
+    src/test/test_framework.h
+    src/bit4ops.h
+    src/chromloc.h
+    src/postprocess.h
+    src/read_twobit.h
+    src/read_fasta.h
+    src/read_folder.h
 )
 
 add_executable (test 
-    bit4ops.cpp
-    chromloc.cpp
-    bulge_logic.cpp
-    find_mismatches_cpu.cpp
-    find_mismatches_opencl.cpp
-    find_mismatches_utils.cpp
-    postprocess.cpp
-    test/test.cpp 
-    test/test_framework.cpp 
-    test/postprocess.cpp
-    test/find_mismatches.cpp
-    test/chromloc.cpp
-    test/bit4ops.cpp
-    test/bulge_logic.cpp
+    src/bit4ops.cpp
+    src/chromloc.cpp
+    src/bulge_logic.cpp
+    src/find_mismatches_cpu.cpp
+    src/find_mismatches_opencl.cpp
+    src/find_mismatches_utils.cpp
+    src/postprocess.cpp
+    src/test/test.cpp 
+    src/test/test_framework.cpp 
+    src/test/postprocess.cpp
+    src/test/find_mismatches.cpp
+    src/test/chromloc.cpp
+    src/test/bit4ops.cpp
+    src/test/bulge_logic.cpp
     ${SOURCES} ${HEADERS}
 )
 
 add_executable (cas-offinder 
-    search_main.cpp 
-    bit4ops.cpp
-    chromloc.cpp
-    find_mismatches_opencl.cpp
-    find_mismatches_utils.cpp
-    postprocess.cpp
+    src/search_main.cpp 
+    src/bit4ops.cpp
+    src/chromloc.cpp
+    src/find_mismatches_opencl.cpp
+    src/find_mismatches_utils.cpp
+    src/postprocess.cpp
     ${HEADERS}
 )
 
 add_executable (dump_file_data 
-    dump_file_data.cpp
-    bit4ops.cpp
-    chromloc.cpp
-    read_twobit.cpp
-    read_fasta.cpp
-    read_folder.cpp
+    src/dump_file_data.cpp
+    src/bit4ops.cpp
+    src/chromloc.cpp
+    src/read_twobit.cpp
+    src/read_fasta.cpp
+    src/read_folder.cpp
     ${HEADERS}
 )
 add_executable (infinite_buffer 
-    large_pipe_buffer.cpp
+    src/large_pipe_buffer.cpp
 )
 
 target_link_libraries(infinite_buffer PRIVATE Threads::Threads)

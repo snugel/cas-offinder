@@ -4,6 +4,7 @@
 #include "test/test_framework.h"
 #include <iostream>
 #include <cassert>
+#include <algorithm>
 
 
 std::string get_bulge_type_name(BulgeType type){
@@ -45,6 +46,24 @@ void indicate_mismatches_dna(std::string & dna_match, std::string & rna_match){
             dna_match[i] |= 0x20;
         }
     }
+}
+std::string reverse_compliment(std::string seq){
+    for(size_t i : range(seq.size())){
+		if (seq[i] == 'A') seq[i] = 'T';
+		else if (seq[i] == 'T') seq[i] = 'A';
+		else if (seq[i] == 'G') seq[i] = 'C';
+		else if (seq[i] == 'C') seq[i] = 'G';
+		else if (seq[i] == 'R') seq[i] = 'Y';
+		else if (seq[i] == 'Y') seq[i] = 'R';
+		else if (seq[i] == 'M') seq[i] = 'K';
+		else if (seq[i] == 'K') seq[i] = 'M';
+		else if (seq[i] == 'H') seq[i] = 'D';
+		else if (seq[i] == 'D') seq[i] = 'H';
+		else if (seq[i] == 'B') seq[i] = 'V';
+		else if (seq[i] == 'V') seq[i] = 'B';
+    }
+    std::reverse(seq.begin(), seq.end());
+    return seq;
 }
 
 bulge_info get_bulge_info(std::string base_dna_match, std::string base_rna_match, bulge_augment augment, int orig_loc, int dna_bulges, int rna_bulges){

@@ -48,3 +48,6 @@ TEST(test_augment_bulge_logic){
                 a.second.bulge_size == b.second.bulge_size;
            });
 }
+TEST(test_reverse_compliment){
+    return reverse_compliment("AGCTN") == "NAGCT";
+}

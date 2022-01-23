@@ -1,5 +1,7 @@
 #include <deque>
 #include <mutex>
+#include <vector>
+#include <condition_variable>
 
 template<class ItemTy>
 class Channel{
@@ -14,27 +16,33 @@ protected:
     std::condition_variable cv;
 public:
     void send(ItemTy item){
-        lock.lock();
+        std::unique_lock<std::mutex> lck(lock);
         queue.push_back(item);
-        lock.unlock();
         cv.notify_one();
     }
     void terminate(){
-        lock.lock();
+        std::unique_lock<std::mutex> lck(lock);
         is_done = true;
-        lock.unlock();
         cv.notify_all();
     }
     bool receive(ItemTy & item){
-        cv.wait();
+        std::unique_lock<std::mutex> lck(lock);
+        cv.wait(lck);
         
-        lock.lock();
         bool ret_val = is_done;
         if(!ret_val){
             item = queue.pop_front();
         }
-        lock.unlock();
         
         return ret_val;
     }
 };
+template<class ItemTy>
+inline std::vector<ItemTy> get_stream(Channel<ItemTy> & channel){
+    std::vector<ItemTy> result;
+    ItemTy item;
+    while(channel.receive(item)){
+        result.push_back(item);
+    }
+    return result;
+}

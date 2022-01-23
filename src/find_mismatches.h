@@ -18,4 +18,3 @@ std::vector<match> find_matches(std::string & genome, std::vector<std::string> &
 std::vector<match> find_matches_gold(std::string & genome, std::vector<std::string> & patterns, int max_mismatches);
 
 void find_matches(std::vector<uint32_t> & genome, std::vector<std::string> & patterns, int max_mismatches, std::function<void(match)> func);
-void find_matches_gold(std::vector<uint32_t> & genome, std::vector<std::string> & patterns, int max_mismatches, std::function<void(match)> func);

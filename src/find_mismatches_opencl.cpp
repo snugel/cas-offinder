@@ -28,12 +28,7 @@ std::vector<match> find_matches(std::string & genome, std::vector<std::string> &
 
 void find_matches(std::vector<uint32_t> & genomeb4, std::vector<std::string> & patterns, int max_mismatches, std::function<void(match)> func)
 {
-    if (patterns.size() == 0)
-    {
-        return;
-    }
-    size_t num_patterns = patterns.size();
-    int pattern_size = patterns[0].size();
+    uint32_t pattern_size = patterns.at(0).size();
     for (std::string &p : patterns)
     {
         assert(p.size() == pattern_size);

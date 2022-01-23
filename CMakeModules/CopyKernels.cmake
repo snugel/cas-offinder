@@ -1,4 +1,4 @@
-file(READ "${PROJECT_SOURCE_DIR}/find_mismatches_packed.cl" OPENCL_KERNELS)
+file(READ "${PROJECT_SOURCE_DIR}/src/find_mismatches_packed.cl" OPENCL_KERNELS)
 string(REGEX REPLACE "\"" "\\\\\"" OPENCL_KERNELS "${OPENCL_KERNELS}")
 string(REGEX REPLACE "\r" "" OPENCL_KERNELS "${OPENCL_KERNELS}")
 string(REGEX REPLACE "\n" "\\\\n\"\n\"" OPENCL_KERNELS "${OPENCL_KERNELS}")

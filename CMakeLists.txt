@@ -28,6 +28,7 @@ set (HEADERS
     src/read_twobit.h
     src/read_fasta.h
     src/read_folder.h
+    src/search_genome.h
 )
 
 add_executable (test 
@@ -53,6 +54,7 @@ add_executable (cas-offinder
     src/bit4ops.cpp
     src/chromloc.cpp
     src/find_mismatches_opencl.cpp
+    src/search_genome.cpp
     src/find_mismatches_utils.cpp
     src/postprocess.cpp
     ${HEADERS}

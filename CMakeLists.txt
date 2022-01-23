@@ -29,6 +29,7 @@ set (HEADERS
     src/read_fasta.h
     src/read_folder.h
     src/search_genome.h
+    src/read_genome.h
 )
 
 add_executable (test 
@@ -57,6 +58,7 @@ add_executable (cas-offinder
     src/search_genome.cpp
     src/find_mismatches_utils.cpp
     src/postprocess.cpp
+    src/read_genome.cpp
     ${HEADERS}
 )
 

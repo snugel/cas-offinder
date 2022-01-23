@@ -26,6 +26,7 @@ __kernel void find_matches_packed_helper(
     __global match * match_buffer,
     __global int * entrycount
 ){
+    int arg = 2;
     size_t genome_idx = get_global_id(0);
     size_t pattern_block_idx = get_global_id(1);
     // genome is expected to be at least BIGGER than the genome_size

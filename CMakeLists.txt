@@ -15,7 +15,12 @@ include_directories(.)
 
 set (CMAKE_CXX_STANDARD 14)
 
+
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+
+set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
+#execute_process(COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
+add_custom_command (OUTPUT ${PROJECT_SOURCE_DIR}/oclkernels.h DEPENDS ${PROJECT_SOURCE_DIR}/src/find_mismatches_packed.cl COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
 
 set (HEADERS
 	src/find_mismatches.h
@@ -30,16 +35,29 @@ set (HEADERS
     src/read_folder.h
     src/search_genome.h
     src/read_genome.h
+    ${PROJECT_SOURCE_DIR}/oclkernels.h
 )
 
-add_executable (test 
+add_library(genome_search_lib STATIC
     src/bit4ops.cpp
     src/chromloc.cpp
     src/bulge_logic.cpp
-    src/find_mismatches_cpu.cpp
     src/find_mismatches_opencl.cpp
     src/find_mismatches_utils.cpp
     src/postprocess.cpp
+    src/read_genome.cpp
+    src/search_genome.cpp
+    src/find_mismatches_cpu.cpp
+    ${HEADERS}
+)
+
+add_executable (genome_search
+    src/search_main.cpp
+    ${HEADERS}
+)
+
+
+add_executable (test 
     src/test/test.cpp 
     src/test/test_framework.cpp 
     src/test/postprocess.cpp
@@ -48,18 +66,6 @@ add_executable (test
     src/test/bit4ops.cpp
     src/test/bulge_logic.cpp
     ${SOURCES} ${HEADERS}
-)
-
-add_executable (cas-offinder 
-    src/search_main.cpp 
-    src/bit4ops.cpp
-    src/chromloc.cpp
-    src/find_mismatches_opencl.cpp
-    src/search_genome.cpp
-    src/find_mismatches_utils.cpp
-    src/postprocess.cpp
-    src/read_genome.cpp
-    ${HEADERS}
 )
 
 add_executable (dump_file_data 
@@ -71,21 +77,14 @@ add_executable (dump_file_data
     src/read_folder.cpp
     ${HEADERS}
 )
-add_executable (infinite_buffer 
-    src/large_pipe_buffer.cpp
-)
-
-target_link_libraries(infinite_buffer PRIVATE Threads::Threads)
 
 target_compile_options(test PRIVATE -Wall -Wextra)
 
-target_link_libraries(test PRIVATE Threads::Threads)
-target_link_libraries(cas-offinder PRIVATE Threads::Threads)
-target_link_libraries(test PUBLIC OpenCL)
-target_link_libraries(cas-offinder PUBLIC OpenCL)
+target_link_libraries(genome_search_lib PUBLIC Threads::Threads)
+target_link_libraries(genome_search_lib PUBLIC OpenCL)
+
+target_link_libraries(test PUBLIC genome_search_lib)
+target_link_libraries(genome_search PUBLIC genome_search_lib)
+
 
 link_directories(/usr/lib/x86_64-linux-gnu/)
-
-set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
-execute_process(COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
-add_custom_command (TARGET cas-offinder PRE_BUILD COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")

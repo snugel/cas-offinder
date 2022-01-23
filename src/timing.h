@@ -1,7 +1,8 @@
+#pragma once
 #include <chrono>
 
 template<typename fn_ty>
-double time_spent(fn_ty fn){
+inline double time_spent(fn_ty fn){
     auto start = std::chrono::system_clock::now();
     fn();
     auto end = std::chrono::system_clock::now();

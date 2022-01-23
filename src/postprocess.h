@@ -1,3 +1,4 @@
+#pragma once
 #include <vector>
 #include "find_mismatches.h"
 

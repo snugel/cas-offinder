@@ -78,15 +78,11 @@ target_link_libraries(infinite_buffer PRIVATE Threads::Threads)
 target_compile_options(test PRIVATE -Wall -Wextra)
 
 target_link_libraries(test PRIVATE Threads::Threads)
+target_link_libraries(cas-offinder PRIVATE Threads::Threads)
 target_link_libraries(test PUBLIC OpenCL)
 target_link_libraries(cas-offinder PUBLIC OpenCL)
 
 link_directories(/usr/lib/x86_64-linux-gnu/)
-
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(test PUBLIC OpenMP::OpenMP_CXX)
-    target_link_libraries(cas-offinder PUBLIC OpenMP::OpenMP_CXX)
-endif()
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 execute_process(COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")

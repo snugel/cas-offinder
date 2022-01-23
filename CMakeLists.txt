@@ -55,6 +55,10 @@ add_executable (genome_search
     src/search_main.cpp
     ${HEADERS}
 )
+add_executable (cas-offinder-2
+    src/cas-offinder-2.cpp
+    ${HEADERS}
+)
 
 
 add_executable (test 
@@ -85,6 +89,7 @@ target_link_libraries(genome_search_lib PUBLIC OpenCL)
 
 target_link_libraries(test PUBLIC genome_search_lib)
 target_link_libraries(genome_search PUBLIC genome_search_lib)
+target_link_libraries(cas-offinder-2 PUBLIC genome_search_lib)
 
 
 link_directories(/usr/lib/x86_64-linux-gnu/)

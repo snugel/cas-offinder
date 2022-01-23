@@ -41,7 +41,7 @@ TEST(test_bit4tostr)
     size_t start = 5;
     size_t end = 30;
     std::string expected = "TAGACGATCAGTCGATCGTAGCTAG";
-    std::string actual = bit4tostr(data, start, end);
+    std::string actual = bit4tostr(data.data(), start, end);
     std::cout << expected << "\n" << actual << "\n";
     return expected == actual;
 }

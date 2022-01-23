@@ -24,16 +24,23 @@ std::vector<match> find_matches(std::string & genome, std::vector<std::string> &
     std::copy(genomeb4.begin(), genomeb4.end(), ptr.get());
 
     Channel<GenomeInput> input_channel;
-    Channel<match> out_channel;
+    Channel<WorkerOutput> out_channel;
     input_channel.send(GenomeInput{.data=ptr,.size=genomeb4.size(),.idx=0});
     input_channel.terminate();
 
     std::thread find_matches_thread(find_matches_worker, &input_channel, patterns, max_mismatches, &out_channel);
 
     std::vector<match> matches;
-    match m;
-    while(out_channel.receive(m)){
-        matches.push_back(m);
+    WorkerOutput outs;
+    while(out_channel.receive(outs)){
+        // filter out and output matches
+        for(size_t i : range(outs.num_matches)){
+            match m = outs.matches.get()[i];
+            if(m.loc < outs.input.size * bit4_c){
+                m.loc += outs.input.idx * bit4_c;
+                matches.push_back(m);
+            }
+        }
     }
 
     find_matches_thread.join();
@@ -49,7 +56,7 @@ void find_matches_device_worker(
     uint32_t num_patterns, 
     uint32_t blocks_per_pattern ,
     int max_mismatches, 
-    Channel<match> * out_stream){
+    Channel<WorkerOutput> * out_stream){
 
     constexpr size_t MAX_GENOME_CHUNK_SIZE = 1<<24;
     
@@ -62,7 +69,6 @@ void find_matches_device_worker(
     );
 
     const int OUT_BUF_SIZE = 1<<22;
-    std::vector<match> cpu_match_buf(OUT_BUF_SIZE);
     CLBuffer<match> output_buf = executor.new_clbuffer<match>(OUT_BUF_SIZE);
     CLBuffer<int> output_count = executor.new_clbuffer<int>(1);
     CLBuffer<block_ty> genome_buf = executor.new_clbuffer<block_ty>(MAX_GENOME_CHUNK_SIZE+2 + blocks_per_pattern);
@@ -100,21 +106,19 @@ void find_matches_device_worker(
         output_count.read_buffer(&out_count, 1);
         
         if(out_count > 0){
-            output_buf.read_buffer(&cpu_match_buf[0], out_count);
-            // filter out and output matches
-            for(size_t i : range(out_count)){
-                match m = cpu_match_buf[i];
-                if(m.loc < input.size * bit4_c){
-                    m.loc += input.idx * bit4_c;
-                    out_stream->send(m);
-                }
-            }
+            std::shared_ptr<match> out_matches(new match[out_count]);
+            output_buf.read_buffer(out_matches.get(), out_count);
+            out_stream->send(WorkerOutput{
+                .input=input,
+                .matches=out_matches,
+                .num_matches=size_t(out_count),
+            });
         }
     }
 
 }
 
-void find_matches_worker(Channel<GenomeInput> * genome_data_stream, std::vector<std::string> patterns, int max_mismatches, Channel<match> * out_stream)
+void find_matches_worker(Channel<GenomeInput> * genome_data_stream, std::vector<std::string> patterns, int max_mismatches, Channel<WorkerOutput> * out_stream)
 {
     uint32_t pattern_size = patterns.at(0).size();
     for (std::string &p : patterns)
@@ -134,15 +138,6 @@ void find_matches_worker(Channel<GenomeInput> * genome_data_stream, std::vector<
         }
     }
 
-// void find_matches_device_worker(
-//     Channel<GenomeInput> * genome_data_stream, 
-//     std::vector<block_ty> pattern_blocks, 
-//     OpenCLPlatform * plat,
-//     uint32_t pattern_size, 
-//     uint32_t num_patterns, 
-//     uint32_t blocks_per_pattern ,
-//     int max_mismatches, 
-//     Channel<match> * out_stream){
     OpenCLPlatform plat;
     std::vector<std::thread> threads;
     for(size_t dev_idx : range(plat.num_cl_devices())){

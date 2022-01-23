@@ -36,8 +36,6 @@ void read_genome(std::string data_folder, size_t pattern_size, Channel<GenomeInp
 		bit4_file.read((char*)data.get() + buffer_padding, this_block_size*sizeof(uint32_t));
 		data_output_p->send(GenomeInput{.data=data,.size=this_block_size,.idx=i});
 		std::copy(data.get()+this_block_size, data.get() + padded_size, prev_padding.begin());	
-		// bit4_file.seekg (i*sizeof(uint32_t), ios::beg);
-		std::cerr << "read block\n";
 	}
 	data_output_p->terminate();
 }

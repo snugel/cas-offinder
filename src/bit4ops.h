@@ -14,4 +14,4 @@ std::vector<uint32_t> make4bitpackedint32(const std::string & genome);
 void clean_bogus(std::string & genome);
 
 std::vector<uint64_t> bit64tobit32(const std::vector<uint32_t> & bit32);
-std::string bit4tostr(const std::vector<uint32_t> & bit32, size_t start, size_t end);
+std::string bit4tostr(const uint32_t * bit32, size_t start, size_t end);

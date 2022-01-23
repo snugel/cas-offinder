@@ -35,6 +35,9 @@ std::vector<match> find_matches(std::string & genome, std::vector<std::string> &
     while(out_channel.receive(m)){
         matches.push_back(m);
     }
+
+    find_matches_thread.join();
+
     return matches;
 }
 void find_matches_device_worker(

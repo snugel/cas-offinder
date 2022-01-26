@@ -14,8 +14,7 @@ struct GenomeMatch{
 };
 void search_genome(
     std::vector<std::string> patterns, 
-    std::vector<chromloc> chrom_locs, 
+    std::string path,
     int mismatches, 
-    Channel<GenomeInput> * inp_channel, 
     Channel<GenomeMatch> * out_channel
 );

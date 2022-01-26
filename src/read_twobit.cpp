@@ -41,7 +41,7 @@ inline char bit_to_seq(unsigned char b) {
 	return 0;
 }
 
-int read_twobit(string &filepath, vector<string> &chrnames, string &content, vector<uint64_t> &chrpos) {
+int read_twobit(std::string &filepath, std::vector<std::string> &chrnames, Channel<std::string> &content, std::vector<uint64_t> &chrpos){
 	unsigned int i, j, k, chrcnt, chrlen, nblockcnt, maskblockcnt, rawlen, rem, cnt;
 	int jj;
 
@@ -117,13 +117,13 @@ int read_twobit(string &filepath, vector<string> &chrnames, string &content, vec
 			//	chrbuf[k] = 'N';
 			//}
 		}
-		content += chrbuf;
+		content.send(std::string(chrbuf));
 		delete [] chrbuf;
 		nblockstarts.clear();
 		nblocksizes.clear();
 		if (i < chrcnt-1) {
 		 //	content += ';';
-			chrpos.push_back(content.size());
+			chrpos.push_back(chrpos.back() + chrlen);
 		}
 	}
 	fclose(input);

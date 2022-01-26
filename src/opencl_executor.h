@@ -67,7 +67,7 @@ inline std::string get_error_string(cl_int err){
 inline void CheckErrorAt(cl_int err,const char * source_info){
     if (err){
         std::cerr << "Error: at " << source_info << ":\n" << get_error_string(err) << std::endl;
-        exit(err);
+        throw std::runtime_error("");
     }
 }
 #define STR_HELPER(x) #x

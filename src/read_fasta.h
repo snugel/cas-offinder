@@ -1,10 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <fstream>
-#include <algorithm>
-#include <iostream>
+#include "channel.h"
 
-using namespace std;
+int read_fasta(std::string &filepath, std::vector<std::string> &chrnames, Channel<std::string> &content, std::vector<uint64_t> &chrpos);
 
-int read_fasta(string &filepath, vector<string> &chrnames, string &content, vector<uint64_t> &chrpos);

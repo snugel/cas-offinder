@@ -47,17 +47,9 @@ int main(int argc, char *argv[]) {
 		patterns[i] = std::string(pattern_chrs[i]);
 	}
 	
-	if(data_folder.back() != '/'){
-		data_folder.push_back('/');
-	}
 
-	std::ifstream chrom_locs_file(data_folder + "chrom_locs.csv");
-	std::vector<chromloc> chrom_locs = parse_chromloc_file(chrom_locs_file);
-
-	Channel<GenomeInput> data_input_channel(6);
 	Channel<GenomeMatch> data_output_channel;
-	std::thread reader_thread(read_genome, data_folder, patterns.at(0).size(), &data_input_channel);
-	std::thread searcher_thread(search_genome, patterns, chrom_locs, mismatches, &data_input_channel, &data_output_channel);
+	std::thread searcher_thread(search_genome, patterns, data_folder, mismatches, &data_output_channel);
 	// search_genome(patterns, mismatches, data_folder);
 
     std::cout << "Idx\tChromosome\tLocation\tDNA\tMismatches\n";
@@ -71,7 +63,6 @@ int main(int argc, char *argv[]) {
 			<< m.dna_match << "\t"
 			<< m.mismatches << "\n";
 	}
-	reader_thread.join();
 	searcher_thread.join();
 	});
 	std::cerr << "Time spent: " << calc_time << std::endl;

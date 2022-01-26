@@ -1,4 +1,8 @@
 #include "read_fasta.h"
+#include <iostream>
+#include <algorithm>
+#include <fstream>
+#include <string>
 
 #ifndef _WIN32
   #include <unistd.h> // readlink
@@ -8,7 +12,7 @@
 
 using namespace std;
 
-int read_fasta(string &filepath, vector<string> &chrnames, string &content, vector<uint64_t> &chrpos) {
+int read_fasta(std::string &filepath, std::vector<std::string> &chrnames, Channel<std::string> &content, std::vector<uint64_t> &chrpos){
 	string line, name;
 	ifstream input;
 #ifdef _WIN32
@@ -27,6 +31,7 @@ int read_fasta(string &filepath, vector<string> &chrnames, string &content, vect
 		return 1;
 	}
 	input.seekg(0, input.beg);
+	string nextchunk;
 	while (getline(input, line)){
 		if (!line.empty()) {
 			if (line[line.length()-1] == '\r')
@@ -36,12 +41,18 @@ int read_fasta(string &filepath, vector<string> &chrnames, string &content, vect
 				//if (((cnt++) % 10000) == 0) cerr << "Reading " << name << endl;
 				chrnames.push_back(name);
 				//if (chrpos.size() != 0) content += i"; // seperator
-				chrpos.push_back(content.size());
+				if(chrpos.size() == 0){
+					chrpos.push_back(0);
+				}
+				else{
+					chrpos.push_back(chrpos.back() + nextchunk.size());
+				}
+				nextchunk.resize(0);
 			}
 			else {
 				transform(line.begin(), line.end(), line.begin(), ::toupper);
 				try {
-					content += line;
+					nextchunk += line;
 				}
 				catch (const std::bad_alloc&) {
 					cerr << "File is too big!" << endl << "Split FASTA file, or try 64bit version of Cas-OFFinder." << endl;

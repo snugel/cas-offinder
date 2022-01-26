@@ -96,9 +96,10 @@ void find_matches_device_worker(
 
         genome_buf.clear_buffer();// TODO: check if removing this improves performance 
         output_count.clear_buffer();
-        genome_buf.write_buffer(input.data.get(),input.size+blocks_per_pattern+1);
+        std::cerr << input.size - blocks_per_pattern << std::endl;
+        genome_buf.write_buffer(input.data.get(),input.size);
         compute_results.run(
-            CL_NDRange(input.size, num_pattern_blocks),
+            CL_NDRange(input.size - blocks_per_pattern, num_pattern_blocks),
             CL_NDRange(),
             CL_NDRange()
         );

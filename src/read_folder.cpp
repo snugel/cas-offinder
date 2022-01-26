@@ -1,16 +1,19 @@
 #include "read_twobit.h"
 #include "read_fasta.h"
 
+#include <iostream>
 #include <sys/stat.h>
 #include <cstdlib>
 #include <dirent.h>
+
+using namespace std;
 
 int check_file(const char* filename) {
 	struct stat file_stat;
 	return (stat(filename, &file_stat) == 0);
 }
 
-int read_file(string &filepath, vector<string> &chrnames, string &content, vector<uint64_t> &chrpos){
+int read_file(std::string &filepath, std::vector<std::string> &chrnames, Channel<std::string> &content, std::vector<uint64_t> &chrpos){
     if(read_twobit(filepath, chrnames, content, chrpos)){
         if(read_fasta(filepath, chrnames, content, chrpos)){
             std::cerr << "skipping invalid file: " << filepath << std::endl;
@@ -20,7 +23,7 @@ int read_file(string &filepath, vector<string> &chrnames, string &content, vecto
     return 0;
 }
 
-int read_folder(string &filepath, vector<string> &chrnames, string &content, vector<uint64_t> &chrpos){
+int read_folder(std::string &filepath, std::vector<std::string> &chrnames, Channel<std::string> &content, std::vector<uint64_t> &chrpos){
 	DIR* dir;
 	dirent *ent;
 	if ((dir = opendir(filepath.c_str())) == NULL) {

@@ -49,6 +49,9 @@ add_library(genome_search_lib STATIC
     src/read_genome.cpp
     src/search_genome.cpp
     src/find_mismatches_cpu.cpp
+    src/read_folder.cpp
+    src/read_twobit.cpp
+    src/read_fasta.cpp
     src/chunkify_data.cpp
     ${HEADERS}
 )
@@ -57,14 +60,14 @@ add_executable (genome_search
     src/search_main.cpp
     ${HEADERS}
 )
-add_executable (cas-offinder-2
-    src/cas-offinder-2.cpp
-    ${HEADERS}
-)
-add_executable (cas-offinder-3
-    src/cas-offinder-3.cpp
-    ${HEADERS}
-)
+#add_executable (cas-offinder-2
+#    src/cas-offinder-2.cpp
+#    ${HEADERS}
+#)
+#add_executable (cas-offinder-3
+#    src/cas-offinder-3.cpp
+#    ${HEADERS}
+#)
 
 
 add_executable (test 
@@ -79,15 +82,15 @@ add_executable (test
     ${SOURCES} ${HEADERS}
 )
 
-add_executable (dump_file_data 
-    src/dump_file_data.cpp
-    src/bit4ops.cpp
-    src/chromloc.cpp
-    src/read_twobit.cpp
-    src/read_fasta.cpp
-    src/read_folder.cpp
-    ${HEADERS}
-)
+#add_executable (dump_file_data 
+#    src/dump_file_data.cpp
+#    src/bit4ops.cpp
+#    src/chromloc.cpp
+#    src/read_twobit.cpp
+#    src/read_fasta.cpp
+#    src/read_folder.cpp
+#    ${HEADERS}
+#)
 
 target_compile_options(test PRIVATE -Wall -Wextra)
 
@@ -96,8 +99,8 @@ target_link_libraries(genome_search_lib PUBLIC OpenCL)
 
 target_link_libraries(test PUBLIC genome_search_lib)
 target_link_libraries(genome_search PUBLIC genome_search_lib)
-target_link_libraries(cas-offinder-2 PUBLIC genome_search_lib)
-target_link_libraries(cas-offinder-3 PUBLIC genome_search_lib)
+#target_link_libraries(cas-offinder-2 PUBLIC genome_search_lib)
+#target_link_libraries(cas-offinder-3 PUBLIC genome_search_lib)
 
 
 link_directories(/usr/lib/x86_64-linux-gnu/)

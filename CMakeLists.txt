@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.1)
+cmake_minimum_required (VERSION 3.9)
 
 project (Cas-OFFinder
          VERSION 4.0.0
@@ -15,7 +15,7 @@ include_directories(.)
 
 set (CMAKE_CXX_STANDARD 14)
 
-
+#set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
@@ -35,6 +35,7 @@ set (HEADERS
     src/read_folder.h
     src/search_genome.h
     src/read_genome.h
+    src/chunkify_data.h
     ${PROJECT_SOURCE_DIR}/oclkernels.h
 )
 
@@ -48,6 +49,7 @@ add_library(genome_search_lib STATIC
     src/read_genome.cpp
     src/search_genome.cpp
     src/find_mismatches_cpu.cpp
+    src/chunkify_data.cpp
     ${HEADERS}
 )
 
@@ -57,6 +59,10 @@ add_executable (genome_search
 )
 add_executable (cas-offinder-2
     src/cas-offinder-2.cpp
+    ${HEADERS}
+)
+add_executable (cas-offinder-3
+    src/cas-offinder-3.cpp
     ${HEADERS}
 )
 
@@ -69,6 +75,7 @@ add_executable (test
     src/test/chromloc.cpp
     src/test/bit4ops.cpp
     src/test/bulge_logic.cpp
+    src/test/chunkify_data.cpp
     ${SOURCES} ${HEADERS}
 )
 
@@ -90,6 +97,7 @@ target_link_libraries(genome_search_lib PUBLIC OpenCL)
 target_link_libraries(test PUBLIC genome_search_lib)
 target_link_libraries(genome_search PUBLIC genome_search_lib)
 target_link_libraries(cas-offinder-2 PUBLIC genome_search_lib)
+target_link_libraries(cas-offinder-3 PUBLIC genome_search_lib)
 
 
 link_directories(/usr/lib/x86_64-linux-gnu/)

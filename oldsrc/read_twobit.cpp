@@ -1,10 +1,12 @@
 #include "read_twobit.h"
+#include "RangeIterator.h"
 
 #include <iostream>
 #include <utility>
 
 #include <cstdlib>
 #include <cstring> // memset
+#include <array>
 
 #ifdef _WIN32
 #include <assert.h>
@@ -41,7 +43,20 @@ inline char bit_to_seq(unsigned char b) {
 	return 0;
 }
 
-int read_twobit(std::string &filepath, std::vector<std::string> &chrnames, Channel<std::string> &content, std::vector<uint64_t> &chrpos){
+static array<uint32_t, 256> create_array(){
+	array<uint32_t, 256> res;
+	for(uint32_t i : range(256)){
+		char arr[4];
+		for (int k=0; k<4; k++) {
+			arr[k] = bit_to_seq((i>>((3-k)*2))&0x3);
+		}
+		res[i] = *(uint32_t*)arr;
+	}
+	return res;
+}
+array<uint32_t, 256> lookup = create_array();
+
+int read_twobit(std::string &filepath, std::vector<std::string> &chrnames, Channel<FileChunk> &content, std::vector<uint64_t> &chrpos){
 	unsigned int i, j, k, chrcnt, chrlen, nblockcnt, maskblockcnt, rawlen, rem, cnt;
 	int jj;
 
@@ -101,9 +116,10 @@ int read_twobit(std::string &filepath, std::vector<std::string> &chrnames, Chann
 
 		#pragma omp parallel for private(jj, k)
 		for (jj=0; jj<(int)chrlen/4; jj++) {
-			for (k=0; k<4; k++) {
-				chrbuf[jj*4+k] = bit_to_seq((raw_chrbuf[jj]>>((3-k)*2))&0x3);
-			}
+			*(uint32_t*)(&chrbuf[jj*4]) = lookup[uint8_t(raw_chrbuf[jj])];
+			// for (k=0; k<4; k++) {
+			// 	chrbuf[jj*4+k] = bit_to_seq((raw_chrbuf[jj]>>((3-k)*2))&0x3);
+			// }
 		}
 
 		if (rem) {
@@ -117,8 +133,8 @@ int read_twobit(std::string &filepath, std::vector<std::string> &chrnames, Chann
 			//	chrbuf[k] = 'N';
 			//}
 		}
-		content.send(std::string(chrbuf));
-		delete [] chrbuf;
+		content.send(FileChunk{.data=std::shared_ptr<char[]>(chrbuf),.size=chrlen});
+		delete [] raw_chrbuf;
 		nblockstarts.clear();
 		nblocksizes.clear();
 		if (i < chrcnt-1) {

@@ -13,7 +13,7 @@ int check_file(const char* filename) {
 	return (stat(filename, &file_stat) == 0);
 }
 
-int read_file(std::string &filepath, std::vector<std::string> &chrnames, Channel<std::string> &content, std::vector<uint64_t> &chrpos){
+int read_file(std::string &filepath, std::vector<std::string> &chrnames, Channel<FileChunk> &content, std::vector<uint64_t> &chrpos){
     if(read_twobit(filepath, chrnames, content, chrpos)){
         if(read_fasta(filepath, chrnames, content, chrpos)){
             std::cerr << "skipping invalid file: " << filepath << std::endl;
@@ -23,7 +23,7 @@ int read_file(std::string &filepath, std::vector<std::string> &chrnames, Channel
     return 0;
 }
 
-int read_folder(std::string &filepath, std::vector<std::string> &chrnames, Channel<std::string> &content, std::vector<uint64_t> &chrpos){
+int read_folder(std::string &filepath, std::vector<std::string> &chrnames, Channel<FileChunk> &content, std::vector<uint64_t> &chrpos){
 	DIR* dir;
 	dirent *ent;
 	if ((dir = opendir(filepath.c_str())) == NULL) {

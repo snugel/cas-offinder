@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deque>
+#include <memory>
 #include <mutex>
 #include <vector>
 #include <condition_variable>
@@ -18,7 +19,7 @@ protected:
     std::mutex lock;
     std::condition_variable can_rec;
     std::condition_variable can_send;
-    static constexpr size_t NO_MAX = ~size_t(0);
+    static constexpr size_t NO_MAX = 1000000000LL;// ~size_t(0);
 public:
     Channel(size_t in_max_size=NO_MAX){
         max_size = in_max_size;

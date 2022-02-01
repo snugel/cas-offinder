@@ -12,7 +12,7 @@
 
 using namespace std;
 
-int read_fasta(std::string &filepath, std::vector<std::string> &chrnames, Channel<std::string> &content, std::vector<uint64_t> &chrpos){
+int read_fasta(std::string &filepath, std::vector<std::string> &chrnames, Channel<FileChunk> &content, std::vector<uint64_t> &chrpos){
 	string line, name;
 	ifstream input;
 #ifdef _WIN32
@@ -45,6 +45,9 @@ int read_fasta(std::string &filepath, std::vector<std::string> &chrnames, Channe
 					chrpos.push_back(0);
 				}
 				else{
+                    std::shared_ptr<char[]> arr(new char[nextchunk.size()]);
+                    std::copy(nextchunk.begin(), nextchunk.end(), arr.get()); 
+                    content.send(FileChunk{.data=arr, .size=nextchunk.size()});
 					chrpos.push_back(chrpos.back() + nextchunk.size());
 				}
 				nextchunk.resize(0);

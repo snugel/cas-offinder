@@ -12,21 +12,25 @@ include_directories(
 find_package(Threads REQUIRED)
 include_directories(.)
 
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
 
 
 
 set (HEADERS
     src/bit4ops.h
+    src/search.h
+    src/RangeIterator.h
 )
 set(SOURCES
     src/bit4ops.cpp
+    src/search.cpp
 )
 
 add_executable (test 
     src/test/test.cpp 
     src/test/test_framework.cpp 
     src/test/bit4ops.cpp
+    src/test/search.cpp
     ${SOURCES} ${HEADERS}
 )
 

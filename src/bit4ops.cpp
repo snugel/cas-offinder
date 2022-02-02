@@ -8,7 +8,6 @@ constexpr uint8_t A = 0x4;
 constexpr uint8_t G = 0x8;
 static std::array<uint8_t, 256> makebit4patternmap(){
     std::array<uint8_t, 256> arr;
-    std::fill(arr.begin(), arr.end(), 0);
     arr['G'] = G;
     arr['C'] = C;
     arr['A'] = A;

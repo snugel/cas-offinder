@@ -10,7 +10,7 @@ include_directories(
 
 
 find_package(Threads REQUIRED)
-include_directories(.)
+include_directories(headers/)
 
 set (CMAKE_CXX_STANDARD 17)
 
@@ -28,10 +28,10 @@ set(SOURCES
 )
 
 add_executable (test 
-    src/test/test.cpp 
-    src/test/test_framework.cpp 
-    src/test/bit4ops.cpp
-    src/test/search.cpp
+    test/test.cpp
+    test/test_framework.cpp
+    test/bit4ops.cpp
+    test/search.cpp
     ${SOURCES} ${HEADERS}
 )
 

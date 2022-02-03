@@ -1,5 +1,5 @@
 #include "bit4ops.h"
-#include "test/test_framework.h"
+#include "test_framework.h"
 #include <string.h>
 
 TEST(test_str2bit4){

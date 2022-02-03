@@ -17,9 +17,10 @@ set (CMAKE_CXX_STANDARD 17)
 
 
 set (HEADERS
-    src/bit4ops.h
-    src/search.h
-    src/RangeIterator.h
+    headers/bit4ops.h
+    headers/search.h
+    headers/RangeIterator.h
+    headers/ceildiv.h
 )
 set(SOURCES
     src/bit4ops.cpp

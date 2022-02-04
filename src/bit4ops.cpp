@@ -1,12 +1,13 @@
 #include "bit4ops.h"
-#include <stddef.h>
 #include <array>
+#include <stddef.h>
 
 constexpr uint8_t T = 0x1;
 constexpr uint8_t C = 0x2;
 constexpr uint8_t A = 0x4;
 constexpr uint8_t G = 0x8;
-static std::array<uint8_t, 256> makebit4patternmap() {
+static std::array<uint8_t, 256> makebit4patternmap()
+{
     std::array<uint8_t, 256> arr;
     arr['G'] = G;
     arr['C'] = C;
@@ -25,7 +26,8 @@ static std::array<uint8_t, 256> makebit4patternmap() {
     arr['N'] = A | C | G | T;
     return arr;
 }
-static std::array<uint8_t, 256> makebit4map() {
+static std::array<uint8_t, 256> makebit4map()
+{
     std::array<uint8_t, 256> arr;
     // all other values, including 'N' mapped to 0
     std::fill(arr.begin(), arr.end(), 0);
@@ -38,8 +40,12 @@ static std::array<uint8_t, 256> makebit4map() {
 std::array<uint8_t, 256> tobit4patternmap = makebit4patternmap();
 std::array<uint8_t, 256> tobit4map = makebit4map();
 
-void str2bit4_impl(uint8_t* dest, const char* src, int64_t write_offset, uint64_t n_chrs,
-                   uint8_t* arrdata) {
+void str2bit4_impl(uint8_t* dest,
+                   const char* src,
+                   int64_t write_offset,
+                   uint64_t n_chrs,
+                   uint8_t* arrdata)
+{
     dest += write_offset / 2;
     write_offset %= 2;
     if (write_offset && n_chrs > 0) {
@@ -56,13 +62,16 @@ void str2bit4_impl(uint8_t* dest, const char* src, int64_t write_offset, uint64_
     }
 }
 
-void str2bit4pattern(uint8_t* dest, const char* src, int64_t write_offset, uint64_t n_chrs) {
+void str2bit4pattern(uint8_t* dest, const char* src, int64_t write_offset, uint64_t n_chrs)
+{
     str2bit4_impl(dest, src, write_offset, n_chrs, &tobit4patternmap[0]);
 }
-void str2bit4(uint8_t* dest, const char* src, int64_t write_offset, uint64_t n_chrs) {
+void str2bit4(uint8_t* dest, const char* src, int64_t write_offset, uint64_t n_chrs)
+{
     str2bit4_impl(dest, src, write_offset, n_chrs, &tobit4map[0]);
 }
-char bit42chr(uint8_t v) {
+char bit42chr(uint8_t v)
+{
     // currently no support for patterns, as it is not needed
     switch (v) {
         case C:
@@ -74,10 +83,11 @@ char bit42chr(uint8_t v) {
         case A:
             return 'A';
         default:
-            return 'N';  // to capture weird values
+            return 'N'; // to capture weird values
     }
 }
-void bit42str(char* dest, const uint8_t* src, int64_t read_offset, uint64_t n_chrs) {
+void bit42str(char* dest, const uint8_t* src, int64_t read_offset, uint64_t n_chrs)
+{
     src += read_offset / 2;
     read_offset %= 2;
     if (read_offset && n_chrs > 0) {

@@ -5,7 +5,8 @@
 #include <string>
 
 using namespace std;
-static std::string get_error_string(cl_int err) {
+static std::string get_error_string(cl_int err)
+{
     switch (err) {
         case 0:
             return "CL_SUCCESS";
@@ -106,7 +107,8 @@ static std::string get_error_string(cl_int err) {
     return "Unknown OpenCL error";
 }
 
-cl_mem oclCreateBuffer(cl_context context, cl_mem_flags flags, size_t size, void *host_ptr) {
+cl_mem oclCreateBuffer(cl_context context, cl_mem_flags flags, size_t size, void* host_ptr)
+{
     cl_int err;
     cl_mem mem = clCreateBuffer(context, flags, size, host_ptr, &err);
     if (err != CL_SUCCESS) {
@@ -116,7 +118,8 @@ cl_mem oclCreateBuffer(cl_context context, cl_mem_flags flags, size_t size, void
     return mem;
 }
 
-void oclGetPlatformIDs(cl_uint num_entries, cl_platform_id *platforms, cl_uint *num_platforms) {
+void oclGetPlatformIDs(cl_uint num_entries, cl_platform_id* platforms, cl_uint* num_platforms)
+{
     cl_int err = clGetPlatformIDs(num_entries, platforms, num_platforms);
     if (err != CL_SUCCESS) {
         cerr << "clGetPlatformIDs Failed: " << get_error_string(err) << endl;
@@ -124,25 +127,33 @@ void oclGetPlatformIDs(cl_uint num_entries, cl_platform_id *platforms, cl_uint *
     }
 }
 
-void oclGetDeviceIDs(cl_platform_id platform, cl_device_type device_type, cl_uint num_entries,
-                     cl_device_id *devices, cl_uint *num_devices) {
+void oclGetDeviceIDs(cl_platform_id platform,
+                     cl_device_type device_type,
+                     cl_uint num_entries,
+                     cl_device_id* devices,
+                     cl_uint* num_devices)
+{
     cl_int err = clGetDeviceIDs(platform, device_type, num_entries, devices, num_devices);
-    if (err == CL_DEVICE_NOT_FOUND) (*num_devices) = 0;
+    if (err == CL_DEVICE_NOT_FOUND)
+        (*num_devices) = 0;
     if (err != CL_SUCCESS && err != CL_DEVICE_NOT_FOUND) {
         cerr << "clGetDeviceIDs Failed: " << get_error_string(err) << endl;
         throw runtime_error("");
     }
 }
 
-cl_context oclCreateContext(const cl_context_properties *properties, cl_uint num_devices,
-                            const cl_device_id *devices,
-                            void(CL_CALLBACK *pfn_notify)(const char *errinfo,
-                                                          const void *private_info, size_t cb,
-                                                          void *user_data),
-                            void *user_data) {
+cl_context oclCreateContext(const cl_context_properties* properties,
+                            cl_uint num_devices,
+                            const cl_device_id* devices,
+                            void(CL_CALLBACK* pfn_notify)(const char* errinfo,
+                                                          const void* private_info,
+                                                          size_t cb,
+                                                          void* user_data),
+                            void* user_data)
+{
     cl_int err;
     cl_context context =
-        clCreateContext(properties, num_devices, devices, pfn_notify, user_data, &err);
+      clCreateContext(properties, num_devices, devices, pfn_notify, user_data, &err);
     if (err != CL_SUCCESS) {
         cerr << "clCreateContext Failed: " << get_error_string(err) << endl;
         throw runtime_error("");
@@ -150,8 +161,11 @@ cl_context oclCreateContext(const cl_context_properties *properties, cl_uint num
     return context;
 }
 
-cl_program oclCreateProgramWithSource(cl_context context, cl_uint count, const char **strings,
-                                      const size_t *lengths) {
+cl_program oclCreateProgramWithSource(cl_context context,
+                                      cl_uint count,
+                                      const char** strings,
+                                      const size_t* lengths)
+{
     cl_int err;
     cl_program program = clCreateProgramWithSource(context, count, strings, lengths, &err);
     if (err != CL_SUCCESS) {
@@ -161,9 +175,13 @@ cl_program oclCreateProgramWithSource(cl_context context, cl_uint count, const c
     return program;
 }
 
-void oclBuildProgram(cl_program program, cl_uint num_devices, const cl_device_id *device_list,
-                     const char *options,
-                     void(CL_CALLBACK *pfn_notify)(cl_program, void *user_data), void *user_data) {
+void oclBuildProgram(cl_program program,
+                     cl_uint num_devices,
+                     const cl_device_id* device_list,
+                     const char* options,
+                     void(CL_CALLBACK* pfn_notify)(cl_program, void* user_data),
+                     void* user_data)
+{
     cl_int err = clBuildProgram(program, num_devices, device_list, options, pfn_notify, user_data);
     if (err != CL_SUCCESS) {
         cerr << "clBuildProgram Failed: " << get_error_string(err) << endl;
@@ -171,15 +189,15 @@ void oclBuildProgram(cl_program program, cl_uint num_devices, const cl_device_id
             for (unsigned int i = 0; i < num_devices; i++) {
                 // Determine the size of the log
                 size_t log_size;
-                clGetProgramBuildInfo(program, device_list[i], CL_PROGRAM_BUILD_LOG, 0, NULL,
-                                      &log_size);
+                clGetProgramBuildInfo(
+                  program, device_list[i], CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
 
                 // Allocate memory for the log
-                char *log = (char *)malloc(log_size);
+                char* log = (char*)malloc(log_size);
 
                 // Get the log
-                clGetProgramBuildInfo(program, device_list[i], CL_PROGRAM_BUILD_LOG, log_size, log,
-                                      NULL);
+                clGetProgramBuildInfo(
+                  program, device_list[i], CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
 
                 // Print the log
                 printf("Log from device %d:\n", i);
@@ -191,7 +209,8 @@ void oclBuildProgram(cl_program program, cl_uint num_devices, const cl_device_id
     }
 }
 
-cl_kernel oclCreateKernel(cl_program program, const char *kernel_name) {
+cl_kernel oclCreateKernel(cl_program program, const char* kernel_name)
+{
     cl_int err;
     cl_kernel kernel = clCreateKernel(program, kernel_name, &err);
     if (err != CL_SUCCESS) {
@@ -201,8 +220,10 @@ cl_kernel oclCreateKernel(cl_program program, const char *kernel_name) {
     return kernel;
 }
 
-cl_command_queue oclCreateCommandQueue(cl_context context, cl_device_id device,
-                                       cl_command_queue_properties properties) {
+cl_command_queue oclCreateCommandQueue(cl_context context,
+                                       cl_device_id device,
+                                       cl_command_queue_properties properties)
+{
     cl_int err;
     cl_command_queue command_queue = clCreateCommandQueue(context, device, properties, &err);
     if (err != CL_SUCCESS) {
@@ -212,27 +233,36 @@ cl_command_queue oclCreateCommandQueue(cl_context context, cl_device_id device,
     return command_queue;
 }
 
-void oclGetPlatformInfo(cl_platform_id platform, cl_platform_info param_name,
-                        size_t param_value_size, void *param_value, size_t *param_value_size_ret) {
-    cl_int err = clGetPlatformInfo(platform, param_name, param_value_size, param_value,
-                                   param_value_size_ret);
-    if (err != CL_SUCCESS) {
-        cerr << "clGetDeviceInfo Failed: " << get_error_string(err) << endl;
-        throw runtime_error("");
-    }
-}
-
-void oclGetDeviceInfo(cl_device_id device, cl_device_info param_name, size_t param_value_size,
-                      void *param_value, size_t *param_value_size_ret) {
+void oclGetPlatformInfo(cl_platform_id platform,
+                        cl_platform_info param_name,
+                        size_t param_value_size,
+                        void* param_value,
+                        size_t* param_value_size_ret)
+{
     cl_int err =
-        clGetDeviceInfo(device, param_name, param_value_size, param_value, param_value_size_ret);
+      clGetPlatformInfo(platform, param_name, param_value_size, param_value, param_value_size_ret);
     if (err != CL_SUCCESS) {
         cerr << "clGetDeviceInfo Failed: " << get_error_string(err) << endl;
         throw runtime_error("");
     }
 }
 
-void oclReleaseKernel(cl_kernel kernel) {
+void oclGetDeviceInfo(cl_device_id device,
+                      cl_device_info param_name,
+                      size_t param_value_size,
+                      void* param_value,
+                      size_t* param_value_size_ret)
+{
+    cl_int err =
+      clGetDeviceInfo(device, param_name, param_value_size, param_value, param_value_size_ret);
+    if (err != CL_SUCCESS) {
+        cerr << "clGetDeviceInfo Failed: " << get_error_string(err) << endl;
+        throw runtime_error("");
+    }
+}
+
+void oclReleaseKernel(cl_kernel kernel)
+{
     cl_int err;
     if (kernel != 0) {
         err = clReleaseKernel(kernel);
@@ -243,7 +273,8 @@ void oclReleaseKernel(cl_kernel kernel) {
     }
 }
 
-void oclReleaseCommandQueue(cl_command_queue command_queue) {
+void oclReleaseCommandQueue(cl_command_queue command_queue)
+{
     cl_int err;
     if (command_queue != 0) {
         err = clReleaseCommandQueue(command_queue);
@@ -254,7 +285,8 @@ void oclReleaseCommandQueue(cl_command_queue command_queue) {
     }
 }
 
-void oclReleaseContext(cl_context context) {
+void oclReleaseContext(cl_context context)
+{
     cl_int err;
     if (context != 0) {
         err = clReleaseContext(context);
@@ -265,19 +297,33 @@ void oclReleaseContext(cl_context context) {
     }
 }
 
-void oclEnqueueWriteBuffer(cl_command_queue command_queue, cl_mem buffer, cl_bool blocking_write,
-                           size_t offset, size_t cb, const void *ptr,
-                           cl_uint num_events_in_wait_list, const cl_event *event_wait_list,
-                           cl_event *event) {
-    cl_int err = clEnqueueWriteBuffer(command_queue, buffer, blocking_write, offset, cb, ptr,
-                                      num_events_in_wait_list, event_wait_list, event);
+void oclEnqueueWriteBuffer(cl_command_queue command_queue,
+                           cl_mem buffer,
+                           cl_bool blocking_write,
+                           size_t offset,
+                           size_t cb,
+                           const void* ptr,
+                           cl_uint num_events_in_wait_list,
+                           const cl_event* event_wait_list,
+                           cl_event* event)
+{
+    cl_int err = clEnqueueWriteBuffer(command_queue,
+                                      buffer,
+                                      blocking_write,
+                                      offset,
+                                      cb,
+                                      ptr,
+                                      num_events_in_wait_list,
+                                      event_wait_list,
+                                      event);
     if (err != CL_SUCCESS) {
         cerr << "clEnqueueWriteBuffer Failed: " << get_error_string(err) << endl;
         throw runtime_error("");
     }
 }
 
-void oclFinish(cl_command_queue command_queue) {
+void oclFinish(cl_command_queue command_queue)
+{
     cl_int err = clFinish(command_queue);
     if (err != CL_SUCCESS) {
         cerr << "clFinish Failed: " << get_error_string(err) << endl;
@@ -285,7 +331,8 @@ void oclFinish(cl_command_queue command_queue) {
     }
 }
 
-void oclSetKernelArg(cl_kernel kernel, cl_uint arg_index, size_t arg_size, const void *arg_value) {
+void oclSetKernelArg(cl_kernel kernel, cl_uint arg_index, size_t arg_size, const void* arg_value)
+{
     cl_int err = clSetKernelArg(kernel, arg_index, arg_size, arg_value);
     if (err != CL_SUCCESS) {
         cerr << "clSetKernelArg Failed: " << get_error_string(err) << endl;
@@ -293,31 +340,58 @@ void oclSetKernelArg(cl_kernel kernel, cl_uint arg_index, size_t arg_size, const
     }
 }
 
-void oclEnqueueNDRangeKernel(cl_command_queue command_queue, cl_kernel kernel, cl_uint work_dim,
-                             const size_t *global_work_offset, const size_t *global_work_size,
-                             const size_t *local_work_size, cl_uint num_events_in_wait_list,
-                             const cl_event *event_wait_list, cl_event *event) {
-    cl_int err = clEnqueueNDRangeKernel(command_queue, kernel, work_dim, global_work_offset,
-                                        global_work_size, local_work_size, num_events_in_wait_list,
-                                        event_wait_list, event);
+void oclEnqueueNDRangeKernel(cl_command_queue command_queue,
+                             cl_kernel kernel,
+                             cl_uint work_dim,
+                             const size_t* global_work_offset,
+                             const size_t* global_work_size,
+                             const size_t* local_work_size,
+                             cl_uint num_events_in_wait_list,
+                             const cl_event* event_wait_list,
+                             cl_event* event)
+{
+    cl_int err = clEnqueueNDRangeKernel(command_queue,
+                                        kernel,
+                                        work_dim,
+                                        global_work_offset,
+                                        global_work_size,
+                                        local_work_size,
+                                        num_events_in_wait_list,
+                                        event_wait_list,
+                                        event);
     if (err != CL_SUCCESS) {
         cerr << "clEnqueueNDRangeKernel Failed: " << get_error_string(err) << endl;
         throw runtime_error("");
     }
 }
 
-void oclEnqueueReadBuffer(cl_command_queue command_queue, cl_mem buffer, cl_bool blocking_read,
-                          size_t offset, size_t cb, void *ptr, cl_uint num_events_in_wait_list,
-                          const cl_event *event_wait_list, cl_event *event) {
-    cl_int err = clEnqueueReadBuffer(command_queue, buffer, blocking_read, offset, cb, ptr,
-                                     num_events_in_wait_list, event_wait_list, event);
+void oclEnqueueReadBuffer(cl_command_queue command_queue,
+                          cl_mem buffer,
+                          cl_bool blocking_read,
+                          size_t offset,
+                          size_t cb,
+                          void* ptr,
+                          cl_uint num_events_in_wait_list,
+                          const cl_event* event_wait_list,
+                          cl_event* event)
+{
+    cl_int err = clEnqueueReadBuffer(command_queue,
+                                     buffer,
+                                     blocking_read,
+                                     offset,
+                                     cb,
+                                     ptr,
+                                     num_events_in_wait_list,
+                                     event_wait_list,
+                                     event);
     if (err != CL_SUCCESS) {
         cerr << "clEnqueueReadBuffer Failed: " << get_error_string(err) << endl;
         throw runtime_error("");
     }
 }
 
-void clearbuf(cl_mem buf) {
+void clearbuf(cl_mem buf)
+{
     cl_int err;
     if (buf != 0) {
         err = clReleaseMemObject(buf);

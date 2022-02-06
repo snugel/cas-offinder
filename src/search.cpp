@@ -71,7 +71,8 @@ SearchFactory* create_search_factory(DeviceType device_ty)
     cl_uint device_cnt;
     for (cl_platform_id plat : fact->platforms) {
         oclGetDeviceIDs(plat, devtype, MAX_DEVICE_NUM, devices, &device_cnt);
-        fact->devices.insert(fact->devices.end(), devices, devices + device_cnt);
+        fact->devices.insert(
+          fact->devices.end(), devices, devices + device_cnt);
         for (int _ : range(device_cnt)) {
             fact->dev_plat.push_back(plat);
         }
@@ -111,32 +112,45 @@ Searcher* create_searcher(SearchFactory* fact,
     searcher->device = fact->devices.at(searcher_idx);
     searcher->platform = fact->dev_plat.at(searcher_idx);
     const cl_context_properties contextProperties[] = {
-        CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(searcher->platform), 0, 0
+        CL_CONTEXT_PLATFORM,
+        reinterpret_cast<cl_context_properties>(searcher->platform),
+        0,
+        0
     };
-    searcher->context = oclCreateContext(contextProperties, 1, &searcher->device, nullptr, nullptr);
-    searcher->program = oclCreateProgramWithSource(searcher->context, 1, &program_src, &src_len);
+    searcher->context = oclCreateContext(
+      contextProperties, 1, &searcher->device, nullptr, nullptr);
+    searcher->program =
+      oclCreateProgramWithSource(searcher->context, 1, &program_src, &src_len);
     searcher->block_size = 4;
-    string defs = "-Dpattern_size=" + to_string(pattern_size) + " -Dblock_ty=unsigned";
-    oclBuildProgram(searcher->program, 1, &searcher->device, defs.c_str(), nullptr, nullptr);
+    string defs =
+      "-Dpattern_size=" + to_string(pattern_size) + " -Dblock_ty=unsigned";
+    oclBuildProgram(
+      searcher->program, 1, &searcher->device, defs.c_str(), nullptr, nullptr);
 
     int old_pattern_size = cdiv(pattern_size, 2);
     int new_pattern_size = num_bytes(searcher, pattern_size);
     vector<uint8_t> padded_patterns(num_patterns * new_pattern_size);
     for (size_t j : range(num_patterns)) {
         for (size_t i : range(old_pattern_size)) {
-            padded_patterns.at(new_pattern_size * j + i) = bit4patterns[old_pattern_size * j + i];
+            padded_patterns.at(new_pattern_size * j + i) =
+              bit4patterns[old_pattern_size * j + i];
         }
     }
-    searcher->genome_buf = oclCreateBuffer(
-      searcher->context, CL_MEM_READ_WRITE, num_bytes(searcher, max_genome_size), nullptr);
-    searcher->pattern_buf =
-      oclCreateBuffer(searcher->context, CL_MEM_READ_WRITE, padded_patterns.size(), nullptr);
-    searcher->match_buf =
-      oclCreateBuffer(searcher->context, CL_MEM_READ_WRITE, max_matches * sizeof(Match), nullptr);
-    searcher->count_buf =
-      oclCreateBuffer(searcher->context, CL_MEM_READ_WRITE, sizeof(uint32_t), nullptr);
+    searcher->genome_buf = oclCreateBuffer(searcher->context,
+                                           CL_MEM_READ_WRITE,
+                                           num_bytes(searcher, max_genome_size),
+                                           nullptr);
+    searcher->pattern_buf = oclCreateBuffer(
+      searcher->context, CL_MEM_READ_WRITE, padded_patterns.size(), nullptr);
+    searcher->match_buf = oclCreateBuffer(searcher->context,
+                                          CL_MEM_READ_WRITE,
+                                          max_matches * sizeof(Match),
+                                          nullptr);
+    searcher->count_buf = oclCreateBuffer(
+      searcher->context, CL_MEM_READ_WRITE, sizeof(uint32_t), nullptr);
     searcher->search = oclCreateKernel(searcher->program, "find_matches");
-    searcher->queue = oclCreateCommandQueue(searcher->context, searcher->device, 0);
+    searcher->queue =
+      oclCreateCommandQueue(searcher->context, searcher->device, 0);
 
     oclEnqueueWriteBuffer(searcher->queue,
                           searcher->pattern_buf,
@@ -149,7 +163,8 @@ Searcher* create_searcher(SearchFactory* fact,
                           0);
 
     oclSetKernelArg(searcher->search, 0, sizeof(cl_mem), &searcher->genome_buf);
-    oclSetKernelArg(searcher->search, 1, sizeof(cl_mem), &searcher->pattern_buf);
+    oclSetKernelArg(
+      searcher->search, 1, sizeof(cl_mem), &searcher->pattern_buf);
     oclSetKernelArg(searcher->search, 3, sizeof(cl_uint), &pattern_size);
     oclSetKernelArg(searcher->search, 4, sizeof(cl_mem), &searcher->match_buf);
     oclSetKernelArg(searcher->search, 5, sizeof(cl_mem), &searcher->count_buf);
@@ -163,20 +178,43 @@ void search(Searcher* searcher,
             uint64_t* num_matches)
 {
     oclSetKernelArg(searcher->search, 2, sizeof(cl_uint), &max_mismatches);
-    oclEnqueueWriteBuffer(
-      searcher->queue, searcher->genome_buf, CL_TRUE, 0, cdiv(genome_size, 2), bit4genome, 0, 0, 0);
+    oclEnqueueWriteBuffer(searcher->queue,
+                          searcher->genome_buf,
+                          CL_TRUE,
+                          0,
+                          cdiv(genome_size, 2),
+                          bit4genome,
+                          0,
+                          0,
+                          0);
     int zero = 0;
-    oclEnqueueWriteBuffer(
-      searcher->queue, searcher->count_buf, CL_TRUE, 0, sizeof(zero), &zero, 0, 0, 0);
+    oclEnqueueWriteBuffer(searcher->queue,
+                          searcher->count_buf,
+                          CL_TRUE,
+                          0,
+                          sizeof(zero),
+                          &zero,
+                          0,
+                          0,
+                          0);
     size_t num_pattern_blocks = num_blocks(searcher, searcher->pattern_size);
-    size_t num_genome_blocks = num_blocks(searcher, genome_size) + 1 - num_pattern_blocks;
+    size_t num_genome_blocks =
+      num_blocks(searcher, genome_size) + 1 - num_pattern_blocks;
     size_t num_patterns = searcher->num_patterns;
     size_t work_sizes[] = { num_genome_blocks, num_patterns };
-    oclEnqueueNDRangeKernel(searcher->queue, searcher->search, 2, 0, work_sizes, 0, 0, 0, 0);
+    oclEnqueueNDRangeKernel(
+      searcher->queue, searcher->search, 2, 0, work_sizes, 0, 0, 0, 0);
     oclFinish(searcher->queue);
     cl_uint count;
-    oclEnqueueReadBuffer(
-      searcher->queue, searcher->count_buf, CL_TRUE, 0, sizeof(count), &count, 0, 0, 0);
+    oclEnqueueReadBuffer(searcher->queue,
+                         searcher->count_buf,
+                         CL_TRUE,
+                         0,
+                         sizeof(count),
+                         &count,
+                         0,
+                         0,
+                         0);
     if (count > 0) {
         *num_matches = count;
         *match_result = (Match*)malloc(count * sizeof(Match));

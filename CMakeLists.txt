@@ -31,24 +31,49 @@ set (HEADERS
     headers/RangeIterator.h
     headers/ceildiv.h
     headers/oclfunctions.h
+    headers/read_genome.h
+    headers/parse_input.h
+    headers/blockify.h
     oclkernels.h
 )
 set(SOURCES
     src/bit4ops.cpp
     src/search.cpp
     src/oclfunctions.cpp
+    src/read_genome.cpp
+    src/read_fasta.cpp
+    src/read_2bit.cpp
+    src/parse_input.cpp
+    src/blockify.cpp
+)
+
+set(NODEP_SOURCES
+    src/bit4ops.cpp
+    src/search_nodep.cpp
+    src/read_genome.cpp
+    src/read_fasta.cpp
+    src/read_2bit.cpp
+    src/parse_input.cpp
+    src/blockify.cpp
 )
 
 add_executable (test
     test/test.cpp
     test/test_framework.cpp
+    test/test_framework.h
     test/bit4ops.cpp
     test/search.cpp
-    ${SOURCES} ${HEADERS}
+    test/read_file.cpp
+    test/parse_input.cpp
+    test/blockify.cpp
+    ${NODEP_SOURCES} ${HEADERS}
+)
+add_executable (test_script
+    test/test_script.cpp
+    ${NODEP_SOURCES} ${HEADERS}
 )
 
-
-target_link_libraries(test PUBLIC OpenCL)
+#target_link_libraries(test PUBLIC OpenCL)
 
 target_compile_options(test PRIVATE -Wall -Wextra)
 

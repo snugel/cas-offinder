@@ -33,8 +33,11 @@ __kernel void find_matches(__global block_ty* genome,
         for (size_t l = 0; l < blocks_per_pattern; l++) {
             block_ty prev = genome[genome_idx + l];
             block_ty next = genome[genome_idx + l + 1];
-            block_ty cur = k == 0 ? prev : (prev >> (k * 4)) | (next << ((blocks_avail - k) * 4));
-            count += popcount(cur & pattern_blocks[pattern_block_idx * blocks_per_pattern + l]);
+            block_ty cur =
+              k == 0 ? prev
+                     : (prev >> (k * 4)) | (next << ((blocks_avail - k) * 4));
+            count += popcount(
+              cur & pattern_blocks[pattern_block_idx * blocks_per_pattern + l]);
         }
         int mismatches = max_matches - count;
         if (mismatches <= max_mismatches) {

@@ -61,3 +61,60 @@ TEST(test_bit42str_offset3)
     bit42str(actual_out, input, 3, out_size);
     return !memcmp(expected_out, actual_out, out_size);
 }
+
+TEST(test_memsetbit4_middle)
+{
+    uint8_t input[] = { 0x24, 0x81, 0x42, 0x02 };
+    uint8_t expected[] = { 0x04, 0x00, 0x40, 0x02 };
+    memsetbit4(input, 0, 1, 5);
+    return !memcmp(input, expected, sizeof(expected));
+}
+
+TEST(test_memsetbit4_edge)
+{
+    uint8_t input[] = { 0x24, 0x81, 0x42, 0x02 };
+    uint8_t expected[] = { 0x04, 0x80, 0x42, 0x02 };
+    memsetbit4(input, 0, 1, 3);
+    return !memcmp(input, expected, sizeof(expected));
+}
+
+TEST(test_memsetbit4_chnk)
+{
+    uint8_t input[] = { 0x24, 0x81, 0x42, 0x02 };
+    uint8_t expected[] = { 0x24, 0xff, 0x42, 0x02 };
+    memsetbit4(input, 0xf, 2, 4);
+    return !memcmp(input, expected, sizeof(expected));
+}
+
+TEST(test_twobit2bit4)
+{
+    // ACTGTGAC
+    uint8_t expected[] = { 0x24, 0x81, 0x81, 0x24 };
+    uint8_t input[] = { (2 << 6) | (1 << 4) | (0 << 2) | (3 << 0),
+                        (0 << 6) | (3 << 4) | (2 << 2) | (1 << 0) };
+    uint8_t result[sizeof(expected)] = { 0 };
+    twobit2bit4(result, input, sizeof(input) * 4);
+    return !memcmp(result, expected, sizeof(expected));
+}
+
+TEST(test_is_mixedbase_true)
+{
+    char data[] = "ACTNRVG";
+    return is_mixedbase(data, sizeof(data) - 1);
+}
+
+TEST(test_is_mixedbase_false)
+{
+    char data[] = "ACTNRVQG";
+    return !is_mixedbase(data, sizeof(data) - 1);
+}
+
+TEST(test_to_upper)
+{
+    char data[] = "acao\0TRd";
+    char expected[] = "ACAO\0TRD";
+    for (size_t i = 0; i < sizeof(data); i++) {
+        data[i] = to_upper(data[i]);
+    }
+    return !memcmp(data, expected, sizeof(data));
+}

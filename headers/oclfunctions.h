@@ -4,9 +4,14 @@
 
 #include <CL/cl.h>
 
-cl_mem oclCreateBuffer(cl_context context, cl_mem_flags flags, size_t size, void* host_ptr);
+cl_mem oclCreateBuffer(cl_context context,
+                       cl_mem_flags flags,
+                       size_t size,
+                       void* host_ptr);
 
-void oclGetPlatformIDs(cl_uint num_entries, cl_platform_id* platforms, cl_uint* num_platforms);
+void oclGetPlatformIDs(cl_uint num_entries,
+                       cl_platform_id* platforms,
+                       cl_uint* num_platforms);
 
 void oclGetDeviceIDs(cl_platform_id platform,
                      cl_device_type device_type,
@@ -14,14 +19,15 @@ void oclGetDeviceIDs(cl_platform_id platform,
                      cl_device_id* devices,
                      cl_uint* num_devices);
 
-cl_context oclCreateContext(const cl_context_properties* properties,
-                            cl_uint num_devices,
-                            const cl_device_id* devices,
-                            void(CL_CALLBACK* pfn_notify)(const char* errinfo,
-                                                          const void* private_info,
-                                                          size_t cb,
-                                                          void* user_data),
-                            void* user_data);
+cl_context oclCreateContext(
+  const cl_context_properties* properties,
+  cl_uint num_devices,
+  const cl_device_id* devices,
+  void(CL_CALLBACK* pfn_notify)(const char* errinfo,
+                                const void* private_info,
+                                size_t cb,
+                                void* user_data),
+  void* user_data);
 
 cl_program oclCreateProgramWithSource(cl_context context,
                                       cl_uint count,
@@ -71,7 +77,10 @@ void oclEnqueueWriteBuffer(cl_command_queue command_queue,
 
 void oclFinish(cl_command_queue command_queue);
 
-void oclSetKernelArg(cl_kernel kernel, cl_uint arg_index, size_t arg_size, const void* arg_value);
+void oclSetKernelArg(cl_kernel kernel,
+                     cl_uint arg_index,
+                     size_t arg_size,
+                     const void* arg_value);
 
 void oclEnqueueNDRangeKernel(cl_command_queue command_queue,
                              cl_kernel kernel,

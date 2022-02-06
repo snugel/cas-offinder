@@ -29,5 +29,6 @@ void search(Searcher* search,
             uint32_t max_mismatches,
             Match** match_result,
             uint64_t* num_matches);
+
 void free_searcher(Searcher**);
 void free_search_factory(SearchFactory**);

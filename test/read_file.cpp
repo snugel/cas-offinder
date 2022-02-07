@@ -36,6 +36,8 @@ TEST(test_read_twobit)
     free_2bit_reader(&reader);
     // the last position is just the total size of the genome
     uint64_t genome_size = chrompos.back();
+    t_assert(genome_size <= all_data.size() * 2);
+    t_assert(genome_size < 20000);
     chrompos.pop_back();
     char buf[20000] = { 0 };
     bit42str(buf, all_data.data(), 0, genome_size);
@@ -44,8 +46,11 @@ TEST(test_read_twobit)
     buffer << file.rdbuf();
     string expected = buffer.str();
     bool equal = !memcmp(expected.data(), buf, expected.size());
-    return equal && chromnames.size() == chrompos.size() &&
-           chromnames.size() == 13 && chromnames.at(5).size() > 5;
+    t_check(equal);
+    t_check(chromnames.size() == chrompos.size());
+    t_check(chromnames.size() == 13);
+    t_check(chromnames.at(5).size() > 5);
+    return true;
 }
 
 TEST(test_read_fasta)

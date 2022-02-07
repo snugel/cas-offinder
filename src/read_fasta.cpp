@@ -59,7 +59,7 @@ ChromData read_next_fasta(FastaReader* reader)
             reader->data[widx] = to_upper(reader->data[reader->idx]);
         }
     }
-    uint8_t* outdata = new uint8_t[cdiv(widx, 2)];
+    uint8_t* outdata = new uint8_t[cdiv(widx, 2)]();
     str2bit4(outdata, reader->data, 0, widx);
     char* name = (char*)malloc(namepos + 1);
     memcpy(name, chrname, namepos + 1);

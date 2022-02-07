@@ -119,7 +119,7 @@ ChromData read_next_2bit(TwoBitReader* reader)
     for (j = 0; j < nblockcnt; j++) {
         memset(chrbuf + nblockstarts[j], 'N', nblocksizes[j]);
     }
-    uint8_t* data = (uint8_t*)malloc(cdiv(chrlen, 2));
+    uint8_t* data = (uint8_t*)calloc(cdiv(chrlen, 2), 1);
     str2bit4(data, chrbuf, 0, chrlen);
     delete[] chrbuf;
     nblockstarts.clear();

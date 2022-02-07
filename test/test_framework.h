@@ -2,7 +2,7 @@
 
 typedef bool (*test_fn)();
 bool add_test(test_fn test, const char* func_name);
-void run_all_tests(const char* name_filter = nullptr);
+void run_all_tests();
 void notify_check_failure(const char* message);
 
 // make sure asserts are kept in code

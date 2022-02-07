@@ -44,7 +44,7 @@ string read_file(const char* fname)
     return ss.str();
 }
 
-void run_all_tests(const char* name_filter)
+void run_all_tests()
 {
     int num_passed = 0;
     for (size_t i = 0; i < cur_n_tests; i++) {

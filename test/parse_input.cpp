@@ -10,12 +10,14 @@ TEST(test_parse_input1)
     //    CGCCGACCTGTCGCTGACGCNNN 5
     const char* in_fname = "../cas-offinder/test/t_data/example.in";
     auto out = read_file(in_fname);
-    return !strcmp(out.genome_path, "test/t_data") && out.mismatches == 5 &&
-           out.num_patterns == 2 && out.pattern_size == 23 &&
-           !strcmp(out.pattern, "NNNNNNNNNNNNNNNNNNNNNRG") &&
-           !strcmp(out.compares,
-                   "GGCCGACCTGTCGCTGACGCNNNCGCCGACCTGTCGCTGACGCNNN") &&
-           out.ids == nullptr;
+    t_check(!strcmp(out.genome_path, "../cas-offinder/test/t_data"));
+    t_check(out.mismatches == 7);
+    t_check(out.num_patterns == 2 && out.pattern_size == 23);
+    t_check(!strcmp(out.pattern, "NNNNNNNNNNNNNNNNNNNNNRG"));
+    t_check(
+      !strcmp(out.compares, "GGCCGACCTGTCGCTGACGCNNNCGCCGACCTGTCGCTGACGCNNN"));
+    t_check(out.ids == nullptr);
+    return true;
 }
 
 TEST(test_parse_input2)

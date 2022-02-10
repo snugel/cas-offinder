@@ -34,6 +34,8 @@ set (HEADERS
     headers/read_genome.h
     headers/parse_input.h
     headers/blockify.h
+    headers/async_search.h
+    headers/bulge_logic.h
     oclkernels.h
 )
 set(SOURCES
@@ -45,6 +47,8 @@ set(SOURCES
     src/read_2bit.cpp
     src/parse_input.cpp
     src/blockify.cpp
+    src/async_search.cpp
+    src/bulge_logic.cpp
 )
 
 set(NODEP_SOURCES
@@ -55,6 +59,8 @@ set(NODEP_SOURCES
     src/read_2bit.cpp
     src/parse_input.cpp
     src/blockify.cpp
+    src/async_search.cpp
+    src/bulge_logic.cpp
 )
 
 add_executable (test
@@ -66,6 +72,7 @@ add_executable (test
     test/read_file.cpp
     test/parse_input.cpp
     test/blockify.cpp
+    test/bulge_logic.cpp
     ${NODEP_SOURCES} ${HEADERS}
 )
 add_executable (test_script

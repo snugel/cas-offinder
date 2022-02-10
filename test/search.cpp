@@ -179,6 +179,9 @@ TEST(test_search_against_gold)
     free_searcher(&searcher);
     free_search_factory(&fact);
     sort_matches(actual_result, num_actual_results);
+    size_t num_bounded_results = 0;
+    for(;num_bounded_results < num_actual_results && actual_result[num_bounded_results].loc <= genome_size - pattern_size; num_bounded_results++);
+    num_actual_results = num_bounded_results;
     std::cerr << num_gold_results << "\t" << num_actual_results << "\n";
     for (int i : range(10)) {
         std::cerr << gold_result[i].loc << "\t" << gold_result[i].pattern_idx

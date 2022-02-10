@@ -16,5 +16,5 @@ void bit42str(char* dest,
 void twobit2bit4(uint8_t* dest, const uint8_t* src, uint64_t n_chrs);
 void memsetbit4(uint8_t* dest, uint8_t bit4val, uint64_t start, uint64_t end);
 bool is_mixedbase(const char* src, uint64_t n_chrs);
-
+bool is_match(char nucl, char pattern);
 #define to_upper(c) ((c)&0xdf)

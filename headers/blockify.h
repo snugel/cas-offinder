@@ -10,6 +10,7 @@ struct Block
     size_t num_chunks;
     size_t* chunk_poses;
     void* metadatas;
+//    size_t metadata_bytes;
 };
 struct Chunk
 {
@@ -21,9 +22,9 @@ struct Blockifier;
 Blockifier* create_blockifier(size_t block_size,
                               size_t block_padding,
                               size_t metadata_size);
-void add_chunk(Blockifier* gen, Chunk* chunk);
+void add_chunk(Blockifier* gen, const Chunk* chunk);
 bool is_block_ready(Blockifier* gen);
-Block get_block(Blockifier* gen);
+Block pop_block(Blockifier* gen);
 void free_blockifier(Blockifier**);
 
 // block reading utilities
@@ -32,5 +33,4 @@ struct ChunkInfo
     size_t dataidx;
     void* metadata;
 };
-bool in_chunk(Block* b, size_t bidx);
-ChunkInfo get_chunk_info(Block* b, size_t bidx);
+ChunkInfo get_chunk_info(const Blockifier * gen, const Block* b, size_t bidx);

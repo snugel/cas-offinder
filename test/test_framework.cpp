@@ -10,9 +10,9 @@
 using namespace std;
 
 #ifdef WIN32
-const char * STDOUT_REFRESH = "CON";
+const char* STDOUT_REFRESH = "CON";
 #else
-const char * STDOUT_REFRESH = "/dev/tty"
+const char* STDOUT_REFRESH = "/dev/tty";
 #endif
 
 struct TestPair
@@ -89,7 +89,7 @@ void run_all_tests()
                 }
             }
             if (asserted) {
-                cerr << exception_msg<< "\n";
+                cerr << exception_msg << "\n";
             } else if (exception_msg.size()) {
                 cerr << "Exception raised: '" << exception_msg << "'\n";
             } else if (!ret_val) {

@@ -173,3 +173,6 @@ bool is_mixedbase(const char* src, uint64_t n_chrs)
     }
     return true;
 }
+bool is_match(char nucl, char pattern){
+    return 0 != (tobit4map[uint8_t(nucl)] & tobit4patternmap[uint8_t(pattern)]);
+}

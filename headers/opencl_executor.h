@@ -338,6 +338,7 @@ inline std::vector<ExecutorTemplate> get_executor_templates(cl_device_type devic
                                 });
         }
     }
+    return templates;
 }
 inline std::string get_template_info(ExecutorTemplate temp){
     std::string full_result;

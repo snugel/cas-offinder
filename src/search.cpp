@@ -38,7 +38,7 @@ cl_device_type to_dev_ty(DeviceType ty)
         case CPU: return CL_DEVICE_TYPE_CPU;
         case ACCEL: return CL_DEVICE_TYPE_ACCELERATOR;
     }
-    assert(false);
+    throw "err";
     return CL_DEVICE_TYPE_CPU;
 }
 

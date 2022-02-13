@@ -68,11 +68,6 @@ TwoBitReader* create_2bit_reader(const char* path)
         .chridx = 0,
     };
 }
-static char base_mapping[] = { 'T', 'C', 'A', 'G' };
-static char bit_to_seq(unsigned char b)
-{
-    return base_mapping[b];
-}
 
 ChromData read_next_2bit(TwoBitReader* reader)
 {

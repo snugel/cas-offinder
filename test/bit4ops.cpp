@@ -31,6 +31,15 @@ TEST(test_str2bit4_offset_3)
     return !memcmp(expected_out, actual_out, sizeof(expected_out));
 }
 
+TEST(test_str2bit4_large)
+{
+    char inpt_arr[] = "ACTGCAACTGCA";
+    uint8_t expected_out[] = { 0x24, 0x81, 0x42, 0x24, 0x81, 0x42 };
+    uint8_t actual_out[sizeof(expected_out)] = { 0 };
+    str2bit4(actual_out, inpt_arr, 0, sizeof(inpt_arr));
+    return !memcmp(expected_out, actual_out, sizeof(expected_out));
+}
+
 TEST(test_bit42str)
 {
     uint8_t input[] = { 0x24, 0x81, 0x02 };
@@ -77,6 +86,7 @@ TEST(test_memsetbit4_edge)
     memsetbit4(input, 0, 1, 3);
     return !memcmp(input, expected, sizeof(expected));
 }
+
 
 TEST(test_memsetbit4_chnk)
 {

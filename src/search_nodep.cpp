@@ -9,6 +9,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <thread>
 
 using namespace std;
 
@@ -32,9 +33,11 @@ SearchFactory* create_search_factory(DeviceType device_ty)
         cerr << "Nodep search only supports CPU!\n";
         exit(1);
     }
+    int num_threads = std::thread::hardware_concurrency();
+
 
     return new SearchFactory{
-        .num_threads=4,
+        .num_threads=num_threads,
     };
 }
 int num_searchers_avaliable(SearchFactory* fact)
@@ -88,17 +91,14 @@ void search(Searcher* searcher,
     uint64_t genome_blocks = cdiv(genome_size, block_size);
     uint32_t pattern_blocks = cdiv(pattern_size, block_size);
     uint64_t out_count = 0;
+    unique_ptr<uint64_t[]> shifted_data(new uint64_t[pattern_blocks+1]);
     for (size_t i : range(genome_blocks - pattern_blocks + 1)) {
+        std::copy(&genome_block_data[i],&genome_block_data[i+pattern_blocks+1],shifted_data.get());
         for (size_t l : range(block_size)) {
             for (size_t j : range(num_patterns)) {
                 uint32_t num_mismatches = pattern_size;
                 for (size_t k : range(pattern_blocks)) {
-                    uint64_t prev = genome_block_data[i + k];
-                    uint64_t next = genome_block_data[i + k + 1];
-                    uint64_t cur = l == 0
-                                     ? prev
-                                     : ((prev >> (4 * l))) |
-                                         ((next << (4 * (block_size - l))));
+                    uint64_t cur = shifted_data[k];
                     num_mismatches -= __builtin_popcountll(
                       cur & bit4blocks[j * pattern_blocks + k]);
                 }
@@ -110,6 +110,11 @@ void search(Searcher* searcher,
                     out_count += 1;
                 }
             }
+            for (size_t k : range(pattern_blocks)) {
+                shifted_data[k] >>= 4;
+                shifted_data[k] |= (shifted_data[k+1] & 0xf) << (4*(block_size-1));
+            }
+            shifted_data[pattern_blocks] >>= 4;
         }
     }
     *match_result = (Match*)malloc(out_count * sizeof(Match));

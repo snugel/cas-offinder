@@ -41,6 +41,7 @@ void reader_thread(const char* genome_path, Channel<Block> * block_stream, size_
     Blockifier* gen =
       create_blockifier(CHUNK_BYTES, CHUNK_PAD_BYTES, sizeof(Metadata));
 
+    Chunk prevc;
     while (data.name) {
         Metadata m{
             .name = data.name,
@@ -55,6 +56,10 @@ void reader_thread(const char* genome_path, Channel<Block> * block_stream, size_
         while (is_block_ready(gen)) {
             block_stream->send(pop_block(gen));
         }
+        if(prevc.data){
+            free(prevc.data);
+        }
+        prevc = c;
         data = read_next_folder(reader);
     }
     Block last_block = pop_block(gen);
@@ -130,6 +135,9 @@ void async_search(const char* genome_path,
     }
     SearchFactory* fact = create_search_factory(device_ty);
     int num_searchers = num_searchers_avaliable(fact);
+    if(num_searchers == 0){
+        throw std::runtime_error("no opencl devices found, please use -nodep version insead\n");
+    }
     vector<thread> searcher_threads;
     Channel<BlockOutput> output_stream(num_searchers*2+4, num_searchers);
     for(size_t i : range(num_searchers)){
@@ -174,6 +182,7 @@ void async_search(const char* genome_path,
                 }
             }
         }
+        free(output.b.buf);
     }
     reader_thread_obj.join();
     for(thread & t : searcher_threads){

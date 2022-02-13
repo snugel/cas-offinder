@@ -79,14 +79,14 @@ add_executable (test
 )
 add_executable (cas-offinder-2
     src/main_v2.cpp
-    ${NODEP_SOURCES} ${HEADERS}
+    ${SOURCES} ${HEADERS}
 )
 add_executable (cas-offinder-2-nocl
     src/main_v2.cpp
     ${NODEP_SOURCES} ${HEADERS}
 )
 
-#target_link_libraries(cas-offinder-2 PUBLIC OpenCL)
+target_link_libraries(cas-offinder-2 PUBLIC OpenCL)
 target_link_libraries(cas-offinder-2 PUBLIC Threads::Threads)
 target_link_libraries(test PUBLIC Threads::Threads)
 target_link_libraries(cas-offinder-2-nocl PUBLIC Threads::Threads)

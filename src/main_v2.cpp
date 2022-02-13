@@ -5,13 +5,10 @@
 #include "bulge_logic.h"
 #include "ceildiv.h"
 #include "parse_input.h"
-#include "read_genome.h"
 #include "search.h"
-#include <cassert>
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -72,10 +69,15 @@ static void async_callback(const GenomeMatch* gm)
 
 int main(int argc, char** argv)
 {
-    assert(argc == 4 && "requires 3 CLI arguments, in_file, device, out_file");
-    //    assert(argc =)
+    if(argc != 4){
+        cerr <<  "requires 3 CLI arguments, in_file, device, out_file\n";
+        return 1;
+    }
     const char* in_fname = argv[1];
-    assert(strlen(argv[2]) == 1 && "device should be 'C','G', or 'A'");
+    if(strlen(argv[2]) != 1){
+        cerr <<  "device should be 'C','G', or 'A'\n";
+        return 1;
+    }
     char device_chr = argv[2][0];
     const char* out_fname = argv[3];
 

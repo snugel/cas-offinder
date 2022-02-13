@@ -4,24 +4,26 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <stdexcept>
 #include <memory>
-#include <cstdlib>
+#include <stdexcept>
 
 using namespace std;
 
 struct SearchFactory
-{};
+{
+    int num_threads;
+};
 struct Searcher
 {
     uint64_t max_matches;
     uint64_t max_genome_size;
     uint64_t num_patterns;
     uint64_t pattern_size;
-    Match * out_buf;
-    uint64_t * bit4blocks;
+    Match* out_buf;
+    uint64_t* bit4blocks;
 };
 
 SearchFactory* create_search_factory(DeviceType device_ty)
@@ -30,11 +32,14 @@ SearchFactory* create_search_factory(DeviceType device_ty)
         cerr << "Nodep search only supports CPU!\n";
         exit(1);
     }
-    return new SearchFactory();
+
+    return new SearchFactory{
+        .num_threads=4,
+    };
 }
-int num_searchers_avaliable(SearchFactory*)
+int num_searchers_avaliable(SearchFactory* fact)
 {
-    return 1;
+    return fact->num_threads;
 }
 Searcher* create_searcher(SearchFactory*,
                           int,
@@ -46,10 +51,11 @@ Searcher* create_searcher(SearchFactory*,
 {
 
     int old_pattern_size = cdiv(pattern_size, 2);
-    int new_pattern_blocks = cdiv(pattern_size, 2*sizeof(uint64_t));
-    int new_pattern_size = new_pattern_blocks* sizeof(uint64_t);
-    uint64_t * data = (uint64_t*)calloc(new_pattern_blocks*num_patterns,sizeof(uint64_t));
-    uint8_t * padded_patterns = (uint8_t*)(data);
+    int new_pattern_blocks = cdiv(pattern_size, 2 * sizeof(uint64_t));
+    int new_pattern_size = new_pattern_blocks * sizeof(uint64_t);
+    uint64_t* data =
+      (uint64_t*)calloc(new_pattern_blocks * num_patterns, sizeof(uint64_t));
+    uint8_t* padded_patterns = (uint8_t*)(data);
     for (size_t j : range(num_patterns)) {
         for (size_t i : range(old_pattern_size)) {
             padded_patterns[new_pattern_size * j + i] =
@@ -61,8 +67,8 @@ Searcher* create_searcher(SearchFactory*,
         .max_genome_size = max_genome_size,
         .num_patterns = num_patterns,
         .pattern_size = pattern_size,
-        .out_buf = (Match*)malloc(sizeof(Match)*max_matches),
-        .bit4blocks= data,
+        .out_buf = (Match*)malloc(sizeof(Match) * max_matches),
+        .bit4blocks = data,
     };
 }
 void search(Searcher* searcher,
@@ -76,7 +82,7 @@ void search(Searcher* searcher,
     uint64_t* bit4blocks = searcher->bit4blocks;
     uint64_t num_patterns = searcher->num_patterns;
     uint64_t pattern_size = searcher->pattern_size;
-    constexpr size_t block_size = 2*sizeof(uint64_t);
+    constexpr size_t block_size = 2 * sizeof(uint64_t);
     uint64_t* genome_block_data = (uint64_t*)(bit4genome);
 
     uint64_t genome_blocks = cdiv(genome_size, block_size);
@@ -89,8 +95,10 @@ void search(Searcher* searcher,
                 for (size_t k : range(pattern_blocks)) {
                     uint64_t prev = genome_block_data[i + k];
                     uint64_t next = genome_block_data[i + k + 1];
-                    uint64_t cur = l == 0 ? prev : ((prev >> (4 * l))) |
-                                  ((next << (4 * (block_size - l))));
+                    uint64_t cur = l == 0
+                                     ? prev
+                                     : ((prev >> (4 * l))) |
+                                         ((next << (4 * (block_size - l))));
                     num_mismatches -= __builtin_popcountll(
                       cur & bit4blocks[j * pattern_blocks + k]);
                 }
@@ -108,13 +116,15 @@ void search(Searcher* searcher,
     memcpy(*match_result, searcher->out_buf, out_count * sizeof(Match));
     *num_matches = out_count;
 }
-void free_searcher(Searcher** sptr) {
+void free_searcher(Searcher** sptr)
+{
     free((*sptr)->out_buf);
     free((*sptr)->bit4blocks);
     delete *sptr;
     *sptr = nullptr;
 }
-void free_search_factory(SearchFactory** fact) {
+void free_search_factory(SearchFactory** fact)
+{
     delete *fact;
     *fact = nullptr;
 }

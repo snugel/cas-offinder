@@ -61,6 +61,8 @@ void oclGetDeviceInfo(cl_device_id device,
 
 void oclReleaseKernel(cl_kernel kernel);
 
+void oclReleaseProgram(cl_program program);
+
 void oclReleaseCommandQueue(cl_command_queue command_queue);
 
 void oclReleaseContext(cl_context context);
@@ -101,3 +103,5 @@ void oclEnqueueReadBuffer(cl_command_queue command_queue,
                           cl_uint num_events_in_wait_list,
                           const cl_event* event_wait_list,
                           cl_event* event);
+
+void oclReleaseMemObject(cl_mem buf);

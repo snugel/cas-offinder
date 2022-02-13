@@ -20,6 +20,7 @@ struct Blockifier
 constexpr size_t DEF_BUF_SIZE = 3;
 static Block new_block(Blockifier* gen)
 {
+    gen->meta_buf_cap = DEF_BUF_SIZE;
     return Block{
         .buf = (uint8_t*)(malloc(gen->b_size + gen->b_padding)),
         .end = 0,
@@ -27,7 +28,8 @@ static Block new_block(Blockifier* gen)
         .num_chunks = 0,
         .chunk_poses = (size_t*)malloc(sizeof(size_t) * DEF_BUF_SIZE),
         .metadatas = malloc(gen->metadata_size * DEF_BUF_SIZE),
-//        .metadata_bytes = gen->metadata_size,
+        .metadata_bytes = gen->metadata_size,
+        .buf_size = gen->b_size,
     };
 }
 Blockifier* create_blockifier(size_t block_size,
@@ -114,17 +116,18 @@ void free_blockifier(Blockifier**) {}
 //{
 //     return b->end > bidx && bidx < 0;
 // }
-ChunkInfo get_chunk_info(const Blockifier * gen, const Block* b, size_t bidx)
+ChunkInfo get_chunk_info(const Block* b, size_t bidx)
 {
-    if(bidx>= b->end || bidx >= gen->b_size){
-        return ChunkInfo{.dataidx=size_t(-1), .metadata=0};
+    if (bidx >= b->end || bidx >= b->buf_size) {
+        return ChunkInfo{ .dataidx = size_t(-1), .metadata = 0 };
     }
     size_t midx =
       (std::upper_bound(b->chunk_poses, b->chunk_poses + b->num_chunks, bidx) -
-      b->chunk_poses) - 1;
+       b->chunk_poses) -
+      1;
     size_t dataidx =
       midx == 0 ? b->start_chunk_loc + bidx : bidx - b->chunk_poses[midx];
-    void* metadata = (char*)(b->metadatas) + (midx * gen->metadata_size);
+    void* metadata = (char*)(b->metadatas) + (midx * b->metadata_bytes);
 
     return ChunkInfo{ .dataidx = dataidx, .metadata = metadata };
 }

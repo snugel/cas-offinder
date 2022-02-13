@@ -10,7 +10,8 @@ struct Block
     size_t num_chunks;
     size_t* chunk_poses;
     void* metadatas;
-//    size_t metadata_bytes;
+    size_t metadata_bytes;
+    size_t buf_size;
 };
 struct Chunk
 {
@@ -33,4 +34,4 @@ struct ChunkInfo
     size_t dataidx;
     void* metadata;
 };
-ChunkInfo get_chunk_info(const Blockifier * gen, const Block* b, size_t bidx);
+ChunkInfo get_chunk_info(const Block* b, size_t bidx);

@@ -11,6 +11,7 @@ constexpr uint8_t G = 0x8;
 static std::array<uint8_t, 256> makebit4patternmap()
 {
     std::array<uint8_t, 256> arr;
+    std::fill(arr.begin(), arr.end(), 0);
     arr['G'] = G;
     arr['C'] = C;
     arr['A'] = A;
@@ -83,16 +84,11 @@ char bit42chr(uint8_t v)
 {
     // currently no support for patterns, as it is not needed
     switch (v) {
-        case C:
-            return 'C';
-        case G:
-            return 'G';
-        case T:
-            return 'T';
-        case A:
-            return 'A';
-        default:
-            return 'N'; // to capture weird values
+        case C: return 'C';
+        case G: return 'G';
+        case T: return 'T';
+        case A: return 'A';
+        default: return 'N'; // to capture weird values
     }
 }
 void bit42str(char* dest,
@@ -173,6 +169,7 @@ bool is_mixedbase(const char* src, uint64_t n_chrs)
     }
     return true;
 }
-bool is_match(char nucl, char pattern){
+bool is_match(char nucl, char pattern)
+{
     return 0 != (tobit4map[uint8_t(nucl)] & tobit4patternmap[uint8_t(pattern)]);
 }

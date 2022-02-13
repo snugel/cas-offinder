@@ -67,13 +67,14 @@ TEST(test_blockify_small_blocks)
     uint8_t expected_c[][5]{
         { 0x41, 0x21, 0x01, 0x89, 0x72 },
         { 0x01, 0x89, 0x72, 0x49, 0 },
-        { 0x72, 0x49, 0,0,0},
+        { 0x72, 0x49, 0, 0, 0 },
         { 0x41, 0x21, 0x01, 0x89, 0x72 },
         { 0x01, 0x89, 0x72, 0x49, 0x29 },
         { 0x72, 0x49, 0x29, 0, 0 },
-        { 0x29, 0, 0 , 0, 0},
+        { 0x29, 0, 0, 0, 0 },
     };
-    constexpr size_t expected_blocks = sizeof(expected_c)/sizeof(expected_c[0]);
+    constexpr size_t expected_blocks =
+      sizeof(expected_c) / sizeof(expected_c[0]);
     t_assert(actual_l.size() == expected_blocks);
     for (size_t i : range(expected_blocks)) {
         //        for (size_t j : range(5)) {
@@ -100,31 +101,31 @@ TEST(test_blockify_small_blocks)
     return true;
 }
 
-TEST(get_chunk_info){
+TEST(get_chunk_info)
+{
     uint8_t data[] = { 0x41, 0x21, 0x01, 0x89, 0x72, 0x49, 0x29 };
     int metadata1 = 42;
     int metadata2 = 91;
     Chunk c1{ .data = data, .size = 3, .metadata = &metadata1 };
-    Chunk c2{ .data = data+1, .size = 6, .metadata = &metadata2 };
+    Chunk c2{ .data = data + 1, .size = 6, .metadata = &metadata2 };
 
-    Blockifier* gen =
-      create_blockifier(4, 3, sizeof(metadata1));
+    Blockifier* gen = create_blockifier(4, 3, sizeof(metadata1));
 
     add_chunk(gen, &c1);
     add_chunk(gen, &c2);
     {
-    Block b = pop_block(gen);
-    t_check(*(int*)(get_chunk_info(gen, &b, 2).metadata) == metadata1);
-    t_check(*(int*)(get_chunk_info(gen, &b, 3).metadata) == metadata2);
-    t_check(get_chunk_info(gen, &b, 4).metadata == nullptr);
-    t_check(get_chunk_info(gen, &b, 2).dataidx == 2);
-    t_check(get_chunk_info(gen, &b, 3).dataidx == 0);
+        Block b = pop_block(gen);
+        t_check(*(int*)(get_chunk_info(&b, 2).metadata) == metadata1);
+        t_check(*(int*)(get_chunk_info(&b, 3).metadata) == metadata2);
+        t_check(get_chunk_info(&b, 4).metadata == nullptr);
+        t_check(get_chunk_info(&b, 2).dataidx == 2);
+        t_check(get_chunk_info(&b, 3).dataidx == 0);
     }
     {
-    Block b = pop_block(gen);
-    t_check(*(int*)(get_chunk_info(gen, &b, 1).metadata) == metadata2);
-    t_check(get_chunk_info(gen, &b, b.end).metadata == nullptr);
-    t_check(get_chunk_info(gen, &b, 1).dataidx == 2);
+        Block b = pop_block(gen);
+        t_check(*(int*)(get_chunk_info(&b, 1).metadata) == metadata2);
+        t_check(get_chunk_info(&b, b.end).metadata == nullptr);
+        t_check(get_chunk_info(&b, 1).dataidx == 2);
     }
     return true;
 }

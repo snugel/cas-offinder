@@ -35,4 +35,3 @@ std::vector<bulge_pair> augment_patterns_with_bulges(
 std::string reverse_compliment(std::string s);
 
 void indicate_mismatches_dna(std::string& dna_match, std::string& rna_match);
-

@@ -36,6 +36,8 @@ set (HEADERS
     headers/blockify.h
     headers/async_search.h
     headers/bulge_logic.h
+    headers/opencl_executor.h
+    headers/channel.h
     oclkernels.h
 )
 set(SOURCES
@@ -75,12 +77,16 @@ add_executable (test
     test/bulge_logic.cpp
     ${NODEP_SOURCES} ${HEADERS}
 )
-add_executable (test_script
-    test/test_script.cpp
+add_executable (cas-offinder-2
+    src/main_v2.cpp
+    ${NODEP_SOURCES} ${HEADERS}
+)
+add_executable (cas-offinder-2-nocl
+    src/main_v2.cpp
     ${NODEP_SOURCES} ${HEADERS}
 )
 
-#target_link_libraries(test PUBLIC OpenCL)
+#target_link_libraries(cas-offinder-2 PUBLIC OpenCL)
 
 target_compile_options(test PRIVATE -Wall -Wextra)
 

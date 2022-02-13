@@ -40,11 +40,13 @@ static std::array<uint8_t, 256> makebit4map()
     arr['T'] = T;
     return arr;
 }
-static std::array<uint8_t, 256*256> doublebit4map(std::array<uint8_t, 256> basemap){
-    std::array<uint8_t, 256*256> res;
-    for(size_t i = 0; i < 256; i++){
-        for(size_t j = 0; j < 256; j++){
-            res[i*256+j] = basemap[j] | (basemap[i] << 4);
+static std::array<uint8_t, 256 * 256> doublebit4map(
+  std::array<uint8_t, 256> basemap)
+{
+    std::array<uint8_t, 256 * 256> res;
+    for (size_t i = 0; i < 256; i++) {
+        for (size_t j = 0; j < 256; j++) {
+            res[i * 256 + j] = basemap[j] | (basemap[i] << 4);
         }
     }
     return res;
@@ -52,8 +54,10 @@ static std::array<uint8_t, 256*256> doublebit4map(std::array<uint8_t, 256> basem
 static std::array<uint8_t, 256> tobit4patternmap = makebit4patternmap();
 static std::array<uint8_t, 256> tobit4map = makebit4map();
 
-static std::array<uint8_t, 256*256> tobit4patternmapdouble = doublebit4map(tobit4patternmap);
-static std::array<uint8_t, 256*256> tobit4mapdouble = doublebit4map(tobit4map);
+static std::array<uint8_t, 256 * 256> tobit4patternmapdouble =
+  doublebit4map(tobit4patternmap);
+static std::array<uint8_t, 256 * 256> tobit4mapdouble =
+  doublebit4map(tobit4map);
 
 void str2bit4_impl(uint8_t* dest,
                    const char* src,
@@ -70,7 +74,7 @@ void str2bit4_impl(uint8_t* dest,
         src += 1;
         n_chrs -= 1;
     }
-    uint16_t * dsrc = (uint16_t *)src;
+    uint16_t* dsrc = (uint16_t*)src;
     for (size_t i = 0; i < n_chrs / 2; i++) {
         dest[i] = doublearrdata[dsrc[i]];
     }
@@ -84,14 +88,20 @@ void str2bit4pattern(uint8_t* dest,
                      int64_t write_offset,
                      uint64_t n_chrs)
 {
-    str2bit4_impl(dest, src, write_offset, n_chrs, &tobit4patternmap[0], &tobit4patternmapdouble[0]);
+    str2bit4_impl(dest,
+                  src,
+                  write_offset,
+                  n_chrs,
+                  &tobit4patternmap[0],
+                  &tobit4patternmapdouble[0]);
 }
 void str2bit4(uint8_t* dest,
               const char* src,
               int64_t write_offset,
               uint64_t n_chrs)
 {
-    str2bit4_impl(dest, src, write_offset, n_chrs, &tobit4map[0], &tobit4mapdouble[0]);
+    str2bit4_impl(
+      dest, src, write_offset, n_chrs, &tobit4map[0], &tobit4mapdouble[0]);
 }
 char bit42chr(uint8_t v)
 {

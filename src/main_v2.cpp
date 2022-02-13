@@ -6,9 +6,9 @@
 #include "ceildiv.h"
 #include "parse_input.h"
 #include "search.h"
+#include <chrono>
 #include <cstring>
 #include <fstream>
-#include <chrono>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -70,20 +70,19 @@ static void async_callback(const GenomeMatch* gm)
 
 int main(int argc, char** argv)
 {
-    if(argc != 4){
-        cerr <<  "requires 3 CLI arguments, in_file, device, out_file\n";
+    if (argc != 4) {
+        cerr << "requires 3 CLI arguments, in_file, device, out_file\n";
         return 1;
     }
     const char* in_fname = argv[1];
-    if(strlen(argv[2]) != 1){
-        cerr <<  "device should be 'C','G', or 'A'\n";
+    if (strlen(argv[2]) != 1) {
+        cerr << "device should be 'C','G', or 'A'\n";
         return 1;
     }
     char device_chr = argv[2][0];
     const char* out_fname = argv[3];
 
     auto start = std::chrono::system_clock::now();
-
 
     input = read_file(in_fname);
     DeviceType device_ty = get_dev_ty(device_chr);
@@ -117,7 +116,9 @@ int main(int argc, char** argv)
 
     auto end = std::chrono::system_clock::now();
     auto duration = (end - start);
-    auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration);
-    cerr << "successfully finished in: " << micros.count()/double(1000000) << " seconds\n";
+    auto micros =
+      std::chrono::duration_cast<std::chrono::microseconds>(duration);
+    cerr << "successfully finished in: " << micros.count() / double(1000000)
+         << " seconds\n";
     return 0;
 }

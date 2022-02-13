@@ -131,10 +131,10 @@ bool notify_check_failure(const char* message)
     // return value shouldn't really matter...
     return true;
 }
-bool _throw_assert(const char * message){
+bool _throw_assert(const char* message)
+{
     throw message;
 }
-
 
 //#define TESTTEST
 

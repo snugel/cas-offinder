@@ -17,7 +17,8 @@ struct TwoBitReader
     uint64_t chrcnt;
     uint64_t chridx;
 };
-void sfread(char * ptr, size_t dsize, size_t dcount, FILE* file){
+void sfread(char* ptr, size_t dsize, size_t dcount, FILE* file)
+{
     size_t readlen = fread(ptr, dsize, dcount, file);
     if (readlen != dcount)
         throw runtime_error("invalid 2bit file");
@@ -94,12 +95,12 @@ ChromData read_next_2bit(TwoBitReader* reader)
     vector<uint8_t> raw_buf(rawlen);
     sfread((char*)raw_buf.data(), 1, rawlen, input);
 
-    uint8_t* data = (uint8_t*)malloc(roundup(chrlen, 4)/2);
+    uint8_t* data = (uint8_t*)malloc(roundup(chrlen, 4) / 2);
     twobit2bit4(data, raw_buf.data(), roundup(chrlen, 4));
     memsetbit4(data, 0, chrlen, roundup(chrlen, 4));
 
     for (j = 0; j < nblockcnt; j++) {
-        memsetbit4(data,0,nblockstarts[j],nblockstarts[j]+nblocksizes[j]);
+        memsetbit4(data, 0, nblockstarts[j], nblockstarts[j] + nblocksizes[j]);
     }
     string s = reader->chrnames.at(reader->chridx);
     char* name = (char*)malloc(s.size() + 1);

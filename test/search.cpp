@@ -137,7 +137,7 @@ TEST(test_search_against_gold)
         genome[i] = genome_chars[rand() % sizeof(genome_chars)];
     }
     constexpr size_t genome_blocks = cdiv(genome_size, 2);
-    uint8_t genome_data[genome_blocks+1] = { 0 };
+    uint8_t genome_data[genome_blocks + 1] = { 0 };
     str2bit4(genome_data, genome, 0, genome_size);
     constexpr size_t num_patterns = 8;
     constexpr size_t pattern_size = 91;
@@ -187,12 +187,15 @@ TEST(test_search_against_gold)
     num_actual_results = num_bounded_results;
     std::cerr << num_gold_results << "\t" << num_actual_results << "\n";
     t_assert(num_gold_results == num_actual_results);
-    t_check(!memcmp(
-            gold_result, actual_result, num_gold_results * sizeof(Match)));
-    for (int i : range(num_gold_results-num_actual_results,num_gold_results)) {
-        if(true || !!memcmp(gold_result+i, actual_result+i, sizeof(Match))){
-            std::cerr << gold_result[i].loc << "\t" << gold_result[i].pattern_idx
-                      << "\t" << gold_result[i].mismatches << "\t";
+    t_check(
+      !memcmp(gold_result, actual_result, num_gold_results * sizeof(Match)));
+    for (int i :
+         range(num_gold_results - num_actual_results, num_gold_results)) {
+        if (true ||
+            !!memcmp(gold_result + i, actual_result + i, sizeof(Match))) {
+            std::cerr << gold_result[i].loc << "\t"
+                      << gold_result[i].pattern_idx << "\t"
+                      << gold_result[i].mismatches << "\t";
             std::cerr << actual_result[i].loc << "\t"
                       << actual_result[i].pattern_idx << "\t"
                       << actual_result[i].mismatches << "\n";

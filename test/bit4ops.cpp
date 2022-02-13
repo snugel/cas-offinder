@@ -87,7 +87,6 @@ TEST(test_memsetbit4_edge)
     return !memcmp(input, expected, sizeof(expected));
 }
 
-
 TEST(test_memsetbit4_chnk)
 {
     uint8_t input[] = { 0x24, 0x81, 0x42, 0x02 };

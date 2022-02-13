@@ -27,9 +27,9 @@ __kernel void find_matches(__global block_ty* genome,
 {
     size_t genome_idx = get_global_id(0);
     size_t pattern_block_idx = get_global_id(1);
-    block_ty shifted_blocks[blocks_per_pattern+1];
-    for(size_t i = 0; i < blocks_per_pattern+1; i++){
-        shifted_blocks[i] = genome[genome_idx+i];
+    block_ty shifted_blocks[blocks_per_pattern + 1];
+    for (size_t i = 0; i < blocks_per_pattern + 1; i++) {
+        shifted_blocks[i] = genome[genome_idx + i];
     }
     // genome is expected to be at least BIGGER than the genome_size
     for (size_t k = 0; k < blocks_avail; k++) {
@@ -40,8 +40,9 @@ __kernel void find_matches(__global block_ty* genome,
               cur & pattern_blocks[pattern_block_idx * blocks_per_pattern + l]);
         }
         for (size_t l = 0; l < blocks_per_pattern; l++) {
-            shifted_blocks[l] >>= 4;
-            shifted_blocks[l] |= shifted_blocks[l+1] << ((blocks_avail-1)*4);
+            shifted_blocks[l] =
+              (shifted_blocks[l] >> 4) |
+              (shifted_blocks[l + 1] << ((blocks_avail - 1) * 4));
         }
         shifted_blocks[blocks_per_pattern] >>= 4;
         int mismatches = max_matches - count;

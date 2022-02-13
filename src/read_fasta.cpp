@@ -54,7 +54,9 @@ ChromData read_next_fasta(FastaReader* reader)
     size_t widx = 0;
     for (; reader->idx < reader->size && reader->data[reader->idx] != '>';
          reader->idx++) {
-        for (; reader->idx < reader->size && reader->data[reader->idx] != '\n';
+        for (;
+             reader->idx < reader->size && reader->data[reader->idx] != '\n' &&
+             reader->data[reader->idx] != '\r';
              reader->idx++, widx++) {
             reader->data[widx] = to_upper(reader->data[reader->idx]);
         }

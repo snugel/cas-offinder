@@ -226,7 +226,8 @@ void oclReleaseKernel(cl_kernel kernel)
     }
 }
 
-void oclReleaseProgram(cl_program program){
+void oclReleaseProgram(cl_program program)
+{
     if (program != 0) {
         CheckError(clReleaseProgram(program));
     }

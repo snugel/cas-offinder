@@ -1,8 +1,8 @@
-#include <cassert>
-#include <string>
-#include <memory>
-#include <vector>
 #include "oclfunctions.h"
+#include <cassert>
+#include <memory>
+#include <string>
+#include <vector>
 
 #define CL_TARGET_OPENCL_VERSION 120
 
@@ -18,9 +18,9 @@ class CLKernelArg
       , ptr(in_ptr)
     {}
     template<class baseval>
-    CLKernelArg(baseval val):
-        size(sizeof(val)),
-        ptr(new char[sizeof(val)])
+    CLKernelArg(baseval val)
+      : size(sizeof(val))
+      , ptr(new char[sizeof(val)])
     {
         *reinterpret_cast<baseval*>(ptr.get()) = val;
     }
@@ -45,7 +45,7 @@ class CLBuffer
 
         buf = oclCreateBuffer(context, CL_MEM_READ_WRITE, bytes(), nullptr);
     }
-    CLBuffer(){}
+    CLBuffer() {}
 
     void write_buffer(std::vector<item_ty>& data)
     {
@@ -56,14 +56,14 @@ class CLBuffer
     {
         assert(size <= bufsize);
         oclEnqueueWriteBuffer(myqueue,
-                                        buf,
-                                        CL_TRUE,
-                                        0,
-                                        size * sizeof(item_ty),
-                                        ptr,
-                                        0,
-                                        nullptr,
-                                        nullptr);
+                              buf,
+                              CL_TRUE,
+                              0,
+                              size * sizeof(item_ty),
+                              ptr,
+                              0,
+                              nullptr,
+                              nullptr);
         oclFinish(myqueue);
     }
     void read_buffer(std::vector<item_ty>& read_into)
@@ -76,14 +76,14 @@ class CLBuffer
         assert(size <= bufsize);
         clFinish(myqueue);
         clEnqueueReadBuffer(myqueue,
-                                       buf,
-                                       CL_TRUE,
-                                       0,
-                                       size * sizeof(item_ty),
-                                       ptr,
-                                       0,
-                                       nullptr,
-                                       nullptr);
+                            buf,
+                            CL_TRUE,
+                            0,
+                            size * sizeof(item_ty),
+                            ptr,
+                            0,
+                            nullptr,
+                            nullptr);
         clFinish(myqueue);
     }
     CLKernelArg k_arg() { return CLKernelArg(buf); }
@@ -102,14 +102,14 @@ class CLBuffer
     {
         int zero = 0;
         clEnqueueFillBuffer(myqueue,
-                                       buf,
-                                       &zero,
-                                       1,
-                                       0,
-                                       bufsize * sizeof(item_ty),
-                                       0,
-                                       nullptr,
-                                       nullptr);
+                            buf,
+                            &zero,
+                            1,
+                            0,
+                            bufsize * sizeof(item_ty),
+                            0,
+                            nullptr,
+                            nullptr);
         clFinish(myqueue);
     }
 };
@@ -183,14 +183,15 @@ class CLKernel
         kern = oclCreateKernel(program, kern_name);
         set_args(args);
     }
-    void set_args(std::vector<CLKernelArg> args){
+    void set_args(std::vector<CLKernelArg> args)
+    {
         int idx = 0;
         for (CLKernelArg& b_info : args) {
             oclSetKernelArg(kern, idx, b_info.size, b_info.ptr.get());
             idx++;
         }
     }
-    CLKernel(){}
+    CLKernel() {}
     void run(CL_NDRange run_range,
              CL_NDRange group_range,
              CL_NDRange exec_range)
@@ -209,15 +210,15 @@ class CLKernel
                     CL_NDRange global_offset(
                       x * glob_range.x, y * glob_range.y, z * glob_range.z);
 
-                      oclEnqueueNDRangeKernel(myqueue,
-                                             kern,
-                                             run_range.dim(),
-                                             global_offset.array_view(),
-                                             glob_range.array_view(),
-                                             group_range.array_view(),
-                                             0,
-                                             nullptr,
-                                             nullptr);
+                    oclEnqueueNDRangeKernel(myqueue,
+                                            kern,
+                                            run_range.dim(),
+                                            global_offset.array_view(),
+                                            glob_range.array_view(),
+                                            group_range.array_view(),
+                                            0,
+                                            nullptr,
+                                            nullptr);
                 }
             }
         }
@@ -248,20 +249,20 @@ class OpenCLExecutor
         arguments = in_arguments;
         build_program();
     }
-    OpenCLExecutor(){}
-//    ~OpenCLExecutor()
-//    {
-//        oclReleaseProgram(program);
-//        oclReleaseContext(context);
-//        oclReleaseCommandQueue(queue);
-//    }
+    OpenCLExecutor() {}
+    //    ~OpenCLExecutor()
+    //    {
+    //        oclReleaseProgram(program);
+    //        oclReleaseContext(context);
+    //        oclReleaseCommandQueue(queue);
+    //    }
     template<typename item_ty>
     CLBuffer<item_ty> new_clbuffer(size_t size)
     {
         return CLBuffer<item_ty>(context, queue, size);
     }
     CLKernel new_clkernel(const char* kern_name,
-                          std::vector<CLKernelArg> buflist={})
+                          std::vector<CLKernelArg> buflist = {})
     {
         return CLKernel(program, queue, kern_name, buflist);
     }
@@ -277,8 +278,8 @@ class OpenCLExecutor
             0
         };
 
-        this->context = oclCreateContext(
-          contextProperties, 1, &device, nullptr, nullptr);
+        this->context =
+          oclCreateContext(contextProperties, 1, &device, nullptr, nullptr);
     }
     void create_queue()
     {
@@ -307,12 +308,15 @@ class OpenCLExecutor
     }
 };
 
-struct ExecutorTemplate{
+struct ExecutorTemplate
+{
     cl_platform_id plat;
     cl_device_id device;
 };
 
-inline std::vector<ExecutorTemplate> get_executor_templates(cl_device_type device_ty=CL_DEVICE_TYPE_DEFAULT){
+inline std::vector<ExecutorTemplate> get_executor_templates(
+  cl_device_type device_ty = CL_DEVICE_TYPE_DEFAULT)
+{
     std::vector<ExecutorTemplate> templates;
 
     constexpr size_t MAX_PLATFORM_NUM = 50;
@@ -325,17 +329,19 @@ inline std::vector<ExecutorTemplate> get_executor_templates(cl_device_type devic
     cl_device_id devices[MAX_DEVICE_NUM];
     cl_uint device_cnt;
     for (size_t i = 0; i < platform_cnt; i++) {
-        oclGetDeviceIDs(platforms[i], device_ty, MAX_DEVICE_NUM, devices, &device_cnt);
-        for(size_t j = 0; j < device_cnt; j++){
+        oclGetDeviceIDs(
+          platforms[i], device_ty, MAX_DEVICE_NUM, devices, &device_cnt);
+        for (size_t j = 0; j < device_cnt; j++) {
             templates.push_back(ExecutorTemplate{
-                                    .plat=platforms[i],
-                                    .device=devices[j],
-                                });
+              .plat = platforms[i],
+              .device = devices[j],
+            });
         }
     }
     return templates;
 }
-inline std::string get_template_info(ExecutorTemplate temp){
+inline std::string get_template_info(ExecutorTemplate temp)
+{
     std::string full_result;
 
     size_t size = 0;
@@ -343,19 +349,21 @@ inline std::string get_template_info(ExecutorTemplate temp){
     std::string result;
     result.resize(size);
     oclGetPlatformInfo(temp.plat,
-                      CL_PLATFORM_NAME,
-                      size,
-                      const_cast<char*>(result.data()),
-                      nullptr);
+                       CL_PLATFORM_NAME,
+                       size,
+                       const_cast<char*>(result.data()),
+                       nullptr);
     full_result = "Platform: '" + result + "',  ";
 
     clGetDeviceInfo(temp.device, CL_DEVICE_NAME, 0, nullptr, &size);
 
     result.resize(size);
-    clGetDeviceInfo(
-      temp.device, CL_DEVICE_NAME, size, const_cast<char*>(result.data()), nullptr);
+    clGetDeviceInfo(temp.device,
+                    CL_DEVICE_NAME,
+                    size,
+                    const_cast<char*>(result.data()),
+                    nullptr);
 
     full_result += "Device: " + result;
     return full_result;
 }
-

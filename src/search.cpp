@@ -46,9 +46,9 @@ SearchFactory* create_search_factory(DeviceType device_ty)
 {
 
     SearchFactory* fact = new SearchFactory();
-    fact->executor_templates = get_executor_templates(device_ty);
+    fact->executor_templates = get_executor_templates(to_dev_ty(device_ty));
     cerr << "Using devices:\n";
-    for(ExecutorTemplate temp : fact->executor_templates){
+    for (ExecutorTemplate temp : fact->executor_templates) {
         cerr << get_template_info(temp) << "\n";
     }
     return fact;
@@ -81,15 +81,15 @@ Searcher* create_searcher(SearchFactory* fact,
     const size_t src_len = strlen(program_src);
     string defs = "-Dpattern_size=" + to_string(pattern_size);
     bool is_cpu = true;
-    if(is_cpu){
+    if (is_cpu) {
         searcher->block_size = 4;
         defs += " -Dblock_ty=uint32_t";
-    }
-    else{
+    } else {
         searcher->block_size = 8;
         defs += " -Dblock_ty=uint64_t";
     }
-    searcher->executor = OpenCLExecutor(program_src, temp.plat, temp.device,defs);
+    searcher->executor =
+      OpenCLExecutor(program_src, temp.plat, temp.device, defs);
 
     int old_pattern_size = cdiv(pattern_size, 2);
     int new_pattern_size = num_bytes(searcher, pattern_size);
@@ -102,8 +102,9 @@ Searcher* create_searcher(SearchFactory* fact,
     }
 
     searcher->genome_buf = searcher->executor.new_clbuffer<uint8_t>(
-                                           num_bytes(searcher, max_genome_size) + searcher->block_size*2);
-    searcher->pattern_buf = searcher->executor.new_clbuffer<uint8_t>(padded_patterns.size());
+      num_bytes(searcher, max_genome_size) + searcher->block_size * 2);
+    searcher->pattern_buf =
+      searcher->executor.new_clbuffer<uint8_t>(padded_patterns.size());
     searcher->match_buf = searcher->executor.new_clbuffer<Match>(max_matches);
     searcher->count_buf = searcher->executor.new_clbuffer<uint32_t>(1);
     searcher->search = searcher->executor.new_clkernel("find_matches");
@@ -120,22 +121,23 @@ void search(Searcher* searcher,
             uint64_t* num_matches)
 {
     searcher->search.set_args({
-                                  searcher->genome_buf.k_arg(),
-                                  searcher->pattern_buf.k_arg(),
-                                  CLKernelArg(cl_int(max_mismatches)),
-                                  CLKernelArg(cl_int(searcher->pattern_size)),
-                                  searcher->match_buf.k_arg(),
-                                  searcher->count_buf.k_arg(),
-                              });
-    //searcher->genome_buf.clear_buffer();
-    searcher->genome_buf.write_buffer(bit4genome,cdiv(genome_size, 2));
+      searcher->genome_buf.k_arg(),
+      searcher->pattern_buf.k_arg(),
+      CLKernelArg(cl_int(max_mismatches)),
+      CLKernelArg(cl_int(searcher->pattern_size)),
+      searcher->match_buf.k_arg(),
+      searcher->count_buf.k_arg(),
+    });
+    // searcher->genome_buf.clear_buffer();
+    searcher->genome_buf.write_buffer(bit4genome, cdiv(genome_size, 2));
     searcher->count_buf.clear_buffer();
     size_t num_pattern_blocks = num_blocks(searcher, searcher->pattern_size);
     size_t num_genome_blocks =
       num_blocks(searcher, genome_size) + 1 - num_pattern_blocks;
     size_t num_patterns = searcher->num_patterns;
     size_t work_sizes[] = { num_genome_blocks, num_patterns };
-    searcher->search.run(CL_NDRange(num_genome_blocks,num_patterns),CL_NDRange(), CL_NDRange());
+    searcher->search.run(
+      CL_NDRange(num_genome_blocks, num_patterns), CL_NDRange(), CL_NDRange());
     cl_uint count;
     searcher->count_buf.read_buffer(&count, 1);
     if (count > 0) {

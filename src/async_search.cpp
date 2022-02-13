@@ -3,9 +3,9 @@
 #include "bit4ops.h"
 #include "blockify.h"
 #include "ceildiv.h"
+#include "channel.h"
 #include "parse_input.h"
 #include "read_genome.h"
-#include "channel.h"
 #include "search.h"
 #include <cassert>
 #include <cstring>
@@ -25,13 +25,18 @@ struct Metadata
     size_t chromsize;
 };
 
-struct BlockOutput{
+struct BlockOutput
+{
     Block b;
-    Match * matches;
+    Match* matches;
     size_t num_matches;
 };
 
-void reader_thread(const char* genome_path, Channel<Block> * block_stream, size_t CHUNK_BYTES, size_t CHUNK_PAD_BYTES){
+void reader_thread(const char* genome_path,
+                   Channel<Block>* block_stream,
+                   size_t CHUNK_BYTES,
+                   size_t CHUNK_PAD_BYTES)
+{
     FolderReader* reader = create_folder_reader(genome_path);
     if (!reader) {
         throw runtime_error(
@@ -41,7 +46,7 @@ void reader_thread(const char* genome_path, Channel<Block> * block_stream, size_
     Blockifier* gen =
       create_blockifier(CHUNK_BYTES, CHUNK_PAD_BYTES, sizeof(Metadata));
 
-    Chunk prevc;
+    Chunk prevc{};
     while (data.name) {
         Metadata m{
             .name = data.name,
@@ -56,7 +61,7 @@ void reader_thread(const char* genome_path, Channel<Block> * block_stream, size_
         while (is_block_ready(gen)) {
             block_stream->send(pop_block(gen));
         }
-        if(prevc.data){
+        if (prevc.data) {
             free(prevc.data);
         }
         prevc = c;
@@ -68,37 +73,41 @@ void reader_thread(const char* genome_path, Channel<Block> * block_stream, size_
     }
     block_stream->terminate();
 }
-void searcher_thread(
-        SearchFactory* fact,
-        Channel<Block> * block_in_stream,
-        Channel<BlockOutput> *block_out_stream,
-        size_t device_idx,
-        size_t OUT_CHUNK_SIZE,
-        size_t PADDED_CHUNK_BYTES,
-        uint8_t * patterns_bit4,
-        size_t num_patterns,
-        size_t pattern_size,
-        size_t mismatches
-        ){
+void searcher_thread(SearchFactory* fact,
+                     Channel<Block>* block_in_stream,
+                     Channel<BlockOutput>* block_out_stream,
+                     size_t device_idx,
+                     size_t OUT_CHUNK_SIZE,
+                     size_t PADDED_CHUNK_BYTES,
+                     uint8_t* patterns_bit4,
+                     size_t num_patterns,
+                     size_t pattern_size,
+                     size_t mismatches)
+{
 
     Searcher* searcher = create_searcher(fact,
-                                          device_idx,
-                                          OUT_CHUNK_SIZE,
-                                          PADDED_CHUNK_BYTES * 2,
-                                          patterns_bit4,
-                                          num_patterns,
+                                         device_idx,
+                                         OUT_CHUNK_SIZE,
+                                         PADDED_CHUNK_BYTES * 2,
+                                         patterns_bit4,
+                                         num_patterns,
                                          pattern_size);
     Block input;
-    while(block_in_stream->receive(input)){
+    while (block_in_stream->receive(input)) {
         assert(input.end <= PADDED_CHUNK_BYTES);
-        Match * matches;
+        Match* matches;
         size_t num_matches;
-        search(searcher, input.buf, input.end * 2, mismatches, &matches, &num_matches);
+        search(searcher,
+               input.buf,
+               input.end * 2,
+               mismatches,
+               &matches,
+               &num_matches);
         block_out_stream->send(BlockOutput{
-                                   .b=input,
-                                   .matches=matches,
-                                   .num_matches=num_matches,
-                               });
+          .b = input,
+          .matches = matches,
+          .num_matches = num_matches,
+        });
     }
     block_out_stream->terminate();
 }
@@ -123,7 +132,8 @@ void async_search(const char* genome_path,
     const size_t PADDED_CHUNK_BYTES = CHUNK_BYTES + CHUNK_PAD_BYTES;
 
     Channel<Block> block_channel(8);
-    std::thread reader_thread_obj(reader_thread,genome_path, &block_channel,CHUNK_BYTES, CHUNK_PAD_BYTES);
+    std::thread reader_thread_obj(
+      reader_thread, genome_path, &block_channel, CHUNK_BYTES, CHUNK_PAD_BYTES);
 
     size_t pattern_bytes = cdiv(pattern_size, 2);
     uint8_t* patterns_bit4 = (uint8_t*)malloc(pattern_bytes * num_patterns);
@@ -135,29 +145,28 @@ void async_search(const char* genome_path,
     }
     SearchFactory* fact = create_search_factory(device_ty);
     int num_searchers = num_searchers_avaliable(fact);
-    if(num_searchers == 0){
-        throw std::runtime_error("no opencl devices found, please use -nodep version insead\n");
+    if (num_searchers == 0) {
+        throw std::runtime_error(
+          "no opencl devices found, please use -nodep version insead\n");
     }
     vector<thread> searcher_threads;
-    Channel<BlockOutput> output_stream(num_searchers*2+4, num_searchers);
-    for(size_t i : range(num_searchers)){
-        searcher_threads.emplace_back(
-                    searcher_thread,
-            fact,
-            &block_channel,
-                &output_stream,
-                i,
-                OUT_CHUNK_SIZE,
-                PADDED_CHUNK_BYTES,
-                patterns_bit4,
-                num_patterns,
-                pattern_size,
-                mismatches
-                );
+    Channel<BlockOutput> output_stream(num_searchers * 2 + 4, num_searchers);
+    for (size_t i : range(num_searchers)) {
+        searcher_threads.emplace_back(searcher_thread,
+                                      fact,
+                                      &block_channel,
+                                      &output_stream,
+                                      i,
+                                      OUT_CHUNK_SIZE,
+                                      PADDED_CHUNK_BYTES,
+                                      patterns_bit4,
+                                      num_patterns,
+                                      pattern_size,
+                                      mismatches);
     }
     vector<char> dna_match_buf(pattern_size + 1);
     BlockOutput output;
-    while(output_stream.receive(output)){
+    while (output_stream.receive(output)) {
         Match* result = output.matches;
         uint64_t num_result = output.num_matches;
         Block b = output.b;
@@ -185,7 +194,7 @@ void async_search(const char* genome_path,
         free(output.b.buf);
     }
     reader_thread_obj.join();
-    for(thread & t : searcher_threads){
+    for (thread& t : searcher_threads) {
         t.join();
     }
 }

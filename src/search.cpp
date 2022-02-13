@@ -47,6 +47,7 @@ SearchFactory* create_search_factory(DeviceType device_ty)
 
     SearchFactory* fact = new SearchFactory();
     fact->executor_templates = get_executor_templates(device_ty);
+    cerr << "Using devices:\n";
     for(ExecutorTemplate temp : fact->executor_templates){
         cerr << get_template_info(temp) << "\n";
     }
@@ -78,9 +79,16 @@ Searcher* create_searcher(SearchFactory* fact,
     searcher->num_patterns = num_patterns;
 
     const size_t src_len = strlen(program_src);
-    searcher->block_size = 4;
-    string defs =
-      "-Dpattern_size=" + to_string(pattern_size) + " -Dblock_ty=unsigned";
+    string defs = "-Dpattern_size=" + to_string(pattern_size);
+    bool is_cpu = true;
+    if(is_cpu){
+        searcher->block_size = 4;
+        defs += " -Dblock_ty=uint32_t";
+    }
+    else{
+        searcher->block_size = 8;
+        defs += " -Dblock_ty=uint64_t";
+    }
     searcher->executor = OpenCLExecutor(program_src, temp.plat, temp.device,defs);
 
     int old_pattern_size = cdiv(pattern_size, 2);

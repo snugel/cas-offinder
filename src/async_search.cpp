@@ -58,7 +58,7 @@ void reader_thread(const char* genome_path, Channel<Block> * block_stream, size_
         data = read_next_folder(reader);
     }
     Block last_block = pop_block(gen);
-    if (last_block.end == 0) {
+    if (last_block.end > 0) {
         block_stream->send(last_block);
     }
     block_stream->terminate();
@@ -83,13 +83,17 @@ void searcher_thread(
                                           patterns_bit4,
                                           num_patterns,
                                          pattern_size);
-    BlockOutput output;
     Block input;
     while(block_in_stream->receive(input)){
         assert(input.end <= PADDED_CHUNK_BYTES);
-        output.b = input;
-        search(searcher, input.buf, input.end * 2, mismatches, &output.matches, &output.num_matches);
-        block_out_stream->send(output);
+        Match * matches;
+        size_t num_matches;
+        search(searcher, input.buf, input.end * 2, mismatches, &matches, &num_matches);
+        block_out_stream->send(BlockOutput{
+                                   .b=input,
+                                   .matches=matches,
+                                   .num_matches=num_matches,
+                               });
     }
     block_out_stream->terminate();
 }

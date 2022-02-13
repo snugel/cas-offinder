@@ -87,6 +87,9 @@ add_executable (cas-offinder-2-nocl
 )
 
 #target_link_libraries(cas-offinder-2 PUBLIC OpenCL)
+target_link_libraries(cas-offinder-2 PUBLIC Threads::Threads)
+target_link_libraries(test PUBLIC Threads::Threads)
+target_link_libraries(cas-offinder-2-nocl PUBLIC Threads::Threads)
 
 target_compile_options(test PRIVATE -Wall -Wextra)
 

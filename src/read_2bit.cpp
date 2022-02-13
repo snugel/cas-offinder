@@ -17,14 +17,15 @@ struct TwoBitReader
     uint64_t chrcnt;
     uint64_t chridx;
 };
-
+void sfread(char * ptr, size_t dsize, size_t dcount, FILE* file){
+    size_t readlen = fread(ptr, dsize, dcount, file);
+    if (readlen != dcount)
+        throw runtime_error("invalid 2bit file");
+}
 static unsigned int read_uint(FILE* input)
 {
     unsigned int num = 0;
-    size_t readlen = fread((char*)&num, 4, 1, input);
-    if (readlen != 1)
-        throw runtime_error("invalid 2bit file");
-
+    sfread((char*)&num, 4, 1, input);
     return num;
 }
 TwoBitReader* create_2bit_reader(const char* path)
@@ -53,8 +54,8 @@ TwoBitReader* create_2bit_reader(const char* path)
     fseek(input, 4, SEEK_CUR); // Reserved
 
     for (i = 0; i < chrcnt; i++) {
-        readsize = fread(&len_chrname, 1, 1, input);
-        readsize = fread(chrname, 1, len_chrname, input);
+        sfread(&len_chrname, 1, 1, input);
+        sfread(chrname, 1, len_chrname, input);
         chrname[int(len_chrname)] = 0;
         chrnames.push_back(string(chrname));
         fseek(input, 4, SEEK_CUR); // Absolute position of each sequence
@@ -82,49 +83,29 @@ ChromData read_next_2bit(TwoBitReader* reader)
 
     unsigned int j, k, chrlen, nblockcnt, maskblockcnt, rawlen, rem;
     int jj;
-    vector<unsigned int> nblockstarts;
-    vector<unsigned int> nblocksizes;
-
-    size_t readsize;
 
     chrlen = read_uint(input);
     nblockcnt = read_uint(input);
-    for (j = 0; j < nblockcnt; j++)
-        nblockstarts.push_back(read_uint(input));
-    for (j = 0; j < nblockcnt; j++)
-        nblocksizes.push_back(read_uint(input));
+
+    vector<unsigned int> nblockstarts(nblockcnt);
+    vector<unsigned int> nblocksizes(nblockcnt);
+    sfread((char*)&nblockstarts[0], sizeof(nblockstarts[0]), nblockcnt, input);
+    sfread((char*)&nblocksizes[0], sizeof(nblocksizes[0]), nblockcnt, input);
+
     maskblockcnt = read_uint(input);
     fseek(input, maskblockcnt * 8 + 4, SEEK_CUR);
 
-    rem = chrlen & 3;
-    rawlen = chrlen / 4 + (rem == 0 ? 0 : 1);
-    char* chrbuf = new char[chrlen + 1];
-    chrbuf[chrlen] = 0;
-    char* raw_chrbuf = new char[rawlen + 1];
-    readsize = fread(raw_chrbuf, 1, rawlen, input);
+    rawlen = cdiv(chrlen, 4);
+    vector<uint8_t> raw_buf(rawlen);
+    sfread((char*)raw_buf.data(), 1, rawlen, input);
 
-    for (jj = 0; jj < (int)chrlen / 4; jj++) {
-        for (k = 0; k < 4; k++) {
-            chrbuf[jj * 4 + k] =
-              bit_to_seq((raw_chrbuf[jj] >> ((3 - k) * 2)) & 0x3);
-        }
-    }
-
-    if (rem) {
-        for (j = 0; j < rem; j++)
-            chrbuf[chrlen - rem + j] =
-              bit_to_seq((raw_chrbuf[rawlen - 1] >> ((3 - j) * 2)) & 0x3);
-    }
+    uint8_t* data = (uint8_t*)malloc(roundup(chrlen, 4)/2);
+    twobit2bit4(data, raw_buf.data(), roundup(chrlen, 4));
+    memsetbit4(data, 0, chrlen, roundup(chrlen, 4));
 
     for (j = 0; j < nblockcnt; j++) {
-        memset(chrbuf + nblockstarts[j], 'N', nblocksizes[j]);
+        memsetbit4(data,0,nblockstarts[j],nblockstarts[j]+nblocksizes[j]);
     }
-    uint8_t* data = (uint8_t*)calloc(cdiv(chrlen, 2), 1);
-    str2bit4(data, chrbuf, 0, chrlen);
-    delete[] chrbuf;
-    nblockstarts.clear();
-    nblocksizes.clear();
-
     string s = reader->chrnames.at(reader->chridx);
     char* name = (char*)malloc(s.size() + 1);
     strcpy(name, s.c_str());

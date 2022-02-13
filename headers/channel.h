@@ -40,7 +40,7 @@ public:
     }
     bool receive(ItemTy & item){
         std::unique_lock<std::mutex> lck(lock);
-        while(count_until_done && !queue.size()){
+        while(count_until_done > 0 && !queue.size()){
             can_rec.wait(lck);
         }
         if(!queue.size()){

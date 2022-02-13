@@ -112,7 +112,7 @@ void search(Searcher* searcher,
             }
             for (size_t k : range(pattern_blocks)) {
                 shifted_data[k] >>= 4;
-                shifted_data[k] |= (shifted_data[k+1] & 0xf) << (4*(block_size-1));
+                shifted_data[k] |= shifted_data[k+1] << (4*(block_size-1));
             }
             shifted_data[pattern_blocks] >>= 4;
         }

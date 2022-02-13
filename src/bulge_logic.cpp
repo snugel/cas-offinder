@@ -23,6 +23,7 @@ int num_leading_ns(bulge_augment& augment, int dna_bulges)
         case BULGE_RNA: return dna_bulges + augment.bulge_size;
         case BULGE_NONE: return dna_bulges;
     }
+    throw std::runtime_error("invalid bulge type");
 }
 std::string get_rna_match(std::string base_rna_match, bulge_augment augment)
 {
@@ -34,6 +35,7 @@ std::string get_rna_match(std::string base_rna_match, bulge_augment augment)
         case BULGE_RNA: return base_rna_match;
         case BULGE_NONE: return base_rna_match;
     }
+    throw std::runtime_error("invalid bulge type");
 }
 
 std::string get_dna_match(std::string base_dna_match, bulge_augment augment)
@@ -46,6 +48,7 @@ std::string get_dna_match(std::string base_dna_match, bulge_augment augment)
                    base_dna_match.substr(augment.bulge_pos);
         case BULGE_NONE: return base_dna_match;
     }
+    throw std::runtime_error("invalid bulge type");
 }
 
 void indicate_mismatches_dna(std::string& dna_match, std::string& rna_match)

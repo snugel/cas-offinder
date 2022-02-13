@@ -15,10 +15,11 @@ include_directories(headers/)
 
 set (CMAKE_CXX_STANDARD 17)
 
-
-
+if(WIN32)
+    link_directories(${PROJECT_SOURCE_DIR}/bin)
+else()
 link_directories(/usr/lib/x86_64-linux-gnu/)
-    
+endif()
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 #execute_process(COMMAND ${CMAKE_COMMAND} "-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}" -P "${CMAKE_MODULE_PATH}/CopyKernels.cmake")
@@ -75,7 +76,7 @@ add_executable (test
     test/parse_input.cpp
     test/blockify.cpp
     test/bulge_logic.cpp
-    ${NODEP_SOURCES} ${HEADERS}
+    ${SOURCES} ${HEADERS}
 )
 add_executable (cas-offinder-2
     src/main_v2.cpp
@@ -87,6 +88,7 @@ add_executable (cas-offinder-2-nocl
 )
 
 target_link_libraries(cas-offinder-2 PUBLIC OpenCL)
+target_link_libraries(test PUBLIC OpenCL)
 target_link_libraries(cas-offinder-2 PUBLIC Threads::Threads)
 target_link_libraries(test PUBLIC Threads::Threads)
 target_link_libraries(cas-offinder-2-nocl PUBLIC Threads::Threads)

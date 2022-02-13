@@ -137,7 +137,7 @@ TEST(test_search_against_gold)
         genome[i] = genome_chars[rand() % sizeof(genome_chars)];
     }
     constexpr size_t genome_blocks = cdiv(genome_size, 2);
-    uint8_t genome_data[genome_blocks] = { 0 };
+    uint8_t genome_data[genome_blocks+1] = { 0 };
     str2bit4(genome_data, genome, 0, genome_size);
     constexpr size_t num_patterns = 8;
     constexpr size_t pattern_size = 91;
@@ -166,7 +166,7 @@ TEST(test_search_against_gold)
                 max_mismatches,
                 &gold_result,
                 &num_gold_results);
-    SearchFactory* fact = create_search_factory(CPU);
+    SearchFactory* fact = create_search_factory(GPU);
     int dev_idx = 0;
     Searcher* searcher = create_searcher(
       fact, dev_idx, 100000, 1000000, pattern_data, num_patterns, pattern_size);
@@ -186,14 +186,17 @@ TEST(test_search_against_gold)
         ;
     num_actual_results = num_bounded_results;
     std::cerr << num_gold_results << "\t" << num_actual_results << "\n";
-    for (int i : range(10)) {
-        std::cerr << gold_result[i].loc << "\t" << gold_result[i].pattern_idx
-                  << "\t" << gold_result[i].mismatches << "\t";
-        std::cerr << actual_result[i].loc << "\t"
-                  << actual_result[i].pattern_idx << "\t"
-                  << actual_result[i].mismatches << "\n";
+    t_assert(num_gold_results == num_actual_results);
+    t_check(!memcmp(
+            gold_result, actual_result, num_gold_results * sizeof(Match)));
+    for (int i : range(num_gold_results-num_actual_results,num_gold_results)) {
+        if(true || !!memcmp(gold_result+i, actual_result+i, sizeof(Match))){
+            std::cerr << gold_result[i].loc << "\t" << gold_result[i].pattern_idx
+                      << "\t" << gold_result[i].mismatches << "\t";
+            std::cerr << actual_result[i].loc << "\t"
+                      << actual_result[i].pattern_idx << "\t"
+                      << actual_result[i].mismatches << "\n";
+        }
     }
-    return num_gold_results == num_actual_results &&
-           !memcmp(
-             gold_result, actual_result, num_gold_results * sizeof(Match));
+    return true;
 }

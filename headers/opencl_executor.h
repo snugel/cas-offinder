@@ -88,6 +88,7 @@ class CLBuffer
     }
     CLKernelArg k_arg() { return CLKernelArg(buf); }
     size_t bytes() { return bufsize * sizeof(item_ty); }
+    size_t size() { return bufsize; }
     void copy_buffer(CLBuffer<item_ty> src_buf)
     {
         assert(src_buf.bufsize == this->bufsize);
@@ -125,9 +126,6 @@ class CL_NDRange
         y = in_y;
         z = in_z;
         ndim = 3;
-         assert(in_x != 0);
-         assert(in_y != 0);
-         assert(in_z != 0);
     }
     CL_NDRange(size_t in_x, size_t in_y)
     {
@@ -135,8 +133,6 @@ class CL_NDRange
         y = in_y;
         z = -1;
         ndim = 2;
-         assert(in_x != 0);
-         assert(in_y != 0);
     }
     CL_NDRange(size_t in_x)
     {
@@ -144,7 +140,6 @@ class CL_NDRange
         y = -1;
         z = -1;
         ndim = 1;
-         assert(in_x != 0);
     }
     CL_NDRange()
     {
@@ -254,12 +249,12 @@ class OpenCLExecutor
         build_program();
     }
     OpenCLExecutor(){}
-    ~OpenCLExecutor()
-    {
-        oclReleaseProgram(program);
-        oclReleaseContext(context);
-        oclReleaseCommandQueue(queue);
-    }
+//    ~OpenCLExecutor()
+//    {
+//        oclReleaseProgram(program);
+//        oclReleaseContext(context);
+//        oclReleaseCommandQueue(queue);
+//    }
     template<typename item_ty>
     CLBuffer<item_ty> new_clbuffer(size_t size)
     {

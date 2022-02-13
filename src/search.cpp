@@ -94,7 +94,7 @@ Searcher* create_searcher(SearchFactory* fact,
     }
 
     searcher->genome_buf = searcher->executor.new_clbuffer<uint8_t>(
-                                           num_bytes(searcher, max_genome_size));
+                                           num_bytes(searcher, max_genome_size) + searcher->block_size*2);
     searcher->pattern_buf = searcher->executor.new_clbuffer<uint8_t>(padded_patterns.size());
     searcher->match_buf = searcher->executor.new_clbuffer<Match>(max_matches);
     searcher->count_buf = searcher->executor.new_clbuffer<uint32_t>(1);
@@ -114,11 +114,12 @@ void search(Searcher* searcher,
     searcher->search.set_args({
                                   searcher->genome_buf.k_arg(),
                                   searcher->pattern_buf.k_arg(),
-                                  CLKernelArg(cl_int(searcher->pattern_size)),
                                   CLKernelArg(cl_int(max_mismatches)),
+                                  CLKernelArg(cl_int(searcher->pattern_size)),
                                   searcher->match_buf.k_arg(),
                                   searcher->count_buf.k_arg(),
                               });
+    //searcher->genome_buf.clear_buffer();
     searcher->genome_buf.write_buffer(bit4genome,cdiv(genome_size, 2));
     searcher->count_buf.clear_buffer();
     size_t num_pattern_blocks = num_blocks(searcher, searcher->pattern_size);

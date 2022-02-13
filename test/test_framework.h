@@ -3,7 +3,8 @@
 typedef bool (*test_fn)();
 bool add_test(test_fn test, const char* func_name);
 void run_all_tests();
-void notify_check_failure(const char* message);
+bool notify_check_failure(const char* message);
+bool _throw_assert(const char * message);
 
 // make sure asserts are kept in code
 #undef NDEBUG
@@ -25,10 +26,9 @@ void notify_check_failure(const char* message);
 //#ifdef RUN_TESTS
 #define MAX_NUM_TESTS 10000
 #define t_assert(expr)                                                         \
-    if (!(expr))                                                               \
-    throw("At line: " STRINGIZE(__LINE__) " test assertion: '" #expr           \
+    !!(expr) || _throw_assert("At line: " STRINGIZE(__LINE__) " test assertion: '" #expr           \
                                           "' failed.")
 #define t_check(expr)                                                          \
-    if (!(expr))                                                               \
+    !!(expr) ||                                                                \
     notify_check_failure(                                                      \
       "At line: " STRINGIZE(__LINE__) " test check: '" #expr "' failed.")

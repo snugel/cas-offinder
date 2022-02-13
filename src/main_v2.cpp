@@ -8,6 +8,7 @@
 #include "search.h"
 #include <cstring>
 #include <fstream>
+#include <chrono>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -81,6 +82,9 @@ int main(int argc, char** argv)
     char device_chr = argv[2][0];
     const char* out_fname = argv[3];
 
+    auto start = std::chrono::system_clock::now();
+
+
     input = read_file(in_fname);
     DeviceType device_ty = get_dev_ty(device_chr);
     ofstream out_file;
@@ -111,6 +115,9 @@ int main(int argc, char** argv)
                  input.mismatches,
                  async_callback);
 
-    cerr << "successfully finished\n";
+    auto end = std::chrono::system_clock::now();
+    auto duration = (end - start);
+    auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration);
+    cerr << "successfully finished in: " << micros.count()/double(1000000) << " seconds\n";
     return 0;
 }

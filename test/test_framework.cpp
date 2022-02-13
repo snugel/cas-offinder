@@ -125,10 +125,16 @@ bool add_test(test_fn test, const char* func_name)
     return true;
 }
 
-void notify_check_failure(const char* message)
+bool notify_check_failure(const char* message)
 {
     cur_t_check_messages.push_back(message);
+    // return value shouldn't really matter...
+    return true;
 }
+bool _throw_assert(const char * message){
+    throw message;
+}
+
 
 //#define TESTTEST
 

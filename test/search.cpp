@@ -166,7 +166,7 @@ TEST(test_search_against_gold)
                 max_mismatches,
                 &gold_result,
                 &num_gold_results);
-    SearchFactory* fact = create_search_factory(GPU);
+    SearchFactory* fact = create_search_factory(CPU);
     int dev_idx = 0;
     Searcher* searcher = create_searcher(
       fact, dev_idx, 100000, 1000000, pattern_data, num_patterns, pattern_size);
@@ -191,7 +191,7 @@ TEST(test_search_against_gold)
       !memcmp(gold_result, actual_result, num_gold_results * sizeof(Match)));
     for (int i :
          range(num_gold_results - num_actual_results, num_gold_results)) {
-        if (true ||
+        if (
             !!memcmp(gold_result + i, actual_result + i, sizeof(Match))) {
             std::cerr << gold_result[i].loc << "\t"
                       << gold_result[i].pattern_idx << "\t"

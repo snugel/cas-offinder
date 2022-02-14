@@ -111,6 +111,11 @@ void searcher_thread(SearchFactory* fact,
     }
     block_out_stream->terminate();
 }
+const BlockConfig default_config{
+    .OUT_CHUNK_SIZE = 1 << 22,
+    .MIN_CMPS_PER_OUT = 1 << 14,
+    .DEFAULT_CHUNK_BYTES=1 << 24,
+};
 
 void async_search(const char* genome_path,
                   DeviceType device_ty,
@@ -118,14 +123,20 @@ void async_search(const char* genome_path,
                   size_t pattern_size,
                   size_t num_patterns,
                   uint32_t mismatches,
+                  const BlockConfig * config,
                   async_match_callback callback)
 {
-    const size_t OUT_CHUNK_SIZE = 1 << 22;
-    const size_t MIN_CMPS_PER_OUT = 1 << 14;
+    if(!config){
+        // provide default configuration
+        config = &default_config;
+    }
+    const size_t OUT_CHUNK_SIZE = config->OUT_CHUNK_SIZE;
+    const size_t MIN_CMPS_PER_OUT = config->MIN_CMPS_PER_OUT;
+    const size_t DEFAULT_CHUNK_BYTES = config->DEFAULT_CHUNK_BYTES;
     const size_t MAX_BLOCK_SIZE = 2 * 8 * 4;
     const size_t MIN_CHUNK_BYTES = roundup(
       (OUT_CHUNK_SIZE * MIN_CMPS_PER_OUT) / (num_patterns * 2), MAX_BLOCK_SIZE);
-    const size_t CHUNK_BYTES = min(size_t(1 << 24), MIN_CHUNK_BYTES);
+    const size_t CHUNK_BYTES = min(DEFAULT_CHUNK_BYTES, MIN_CHUNK_BYTES);
     // 2 nucl per byte, 8 bytes per 64 bit word, 4 64 bit words per vector?
     const size_t CHUNK_PAD_BYTES =
       roundup(cdiv(pattern_size, 2), MAX_BLOCK_SIZE);

@@ -112,6 +112,7 @@ int main(int argc, char** argv)
                  input.pattern_size,
                  input.num_patterns * 2,
                  input.mismatches,
+                 nullptr,
                  async_callback);
 
     auto end = std::chrono::system_clock::now();

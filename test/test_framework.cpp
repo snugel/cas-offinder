@@ -52,10 +52,10 @@ void run_all_tests()
         cout.clear();
         bool ret_val;
         cur_t_check_messages.clear();
-        const char* stdout_red = "_tmp_redirect_stdout.txt";
-        const char* stderr_red = "_tmp_redirect_stderr.txt";
-        freopen(stdout_red, "w+", stdout);
-        freopen(stderr_red, "w+", stderr);
+        //const char* stdout_red = "_tmp_redirect_stdout.txt";
+        //const char* stderr_red = "_tmp_redirect_stderr.txt";
+        //freopen(stdout_red, "w+", stdout);
+        //freopen(stderr_red, "w+", stderr);
         string exception_msg = "";
         bool asserted = false;
         bool passed = false;
@@ -73,14 +73,14 @@ void run_all_tests()
         } catch (...) {
             exception_msg = "unknown exception";
         }
-        fflush(stdout);
-        fflush(stderr);
-        string stdout_str = read_file(stdout_red);
-        string stderr_str = read_file(stderr_red);
-        fclose(stdout);
-        fclose(stderr);
-        freopen(STDOUT_REFRESH, "w", stderr);
-        freopen(STDOUT_REFRESH, "w", stdout);
+        //fflush(stdout);
+        //fflush(stderr);
+        string stdout_str;// = read_file(stdout_red);
+        string stderr_str;// = read_file(stderr_red);
+        //fclose(stdout);
+        //fclose(stderr);
+        //freopen(STDOUT_REFRESH, "w", stderr);
+        //freopen(STDOUT_REFRESH, "w", stdout);
         if (!passed) {
             cerr << "========test '" << test.name << "'========\n";
             if (cur_t_check_messages.size()) {

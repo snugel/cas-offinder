@@ -36,6 +36,7 @@ set (HEADERS
     headers/parse_input.h
     headers/blockify.h
     headers/async_search.h
+    headers/bidirect_search.h
     headers/bulge_logic.h
     headers/opencl_executor.h
     headers/channel.h
@@ -51,6 +52,7 @@ set(SOURCES
     src/parse_input.cpp
     src/blockify.cpp
     src/async_search.cpp
+    src/bidirect_search.cpp
     src/bulge_logic.cpp
 )
 
@@ -63,6 +65,7 @@ set(NODEP_SOURCES
     src/parse_input.cpp
     src/blockify.cpp
     src/async_search.cpp
+    src/bidirect_search.cpp
     src/bulge_logic.cpp
 )
 
@@ -76,7 +79,9 @@ add_executable (test
     test/parse_input.cpp
     test/blockify.cpp
     test/bulge_logic.cpp
-    ${SOURCES} ${HEADERS}
+    test/async_search.cpp
+    test/bidirect_search.cpp
+    ${NODEP_SOURCES} ${HEADERS}
 )
 add_executable (cas-offinder-2
     src/main_v2.cpp

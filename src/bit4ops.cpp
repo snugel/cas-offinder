@@ -1,14 +1,16 @@
 #include "bit4ops.h"
-#include "RangeIterator.h"
-#include <algorithm>
-#include <iostream>
+#include <array>
+#include <cassert>
+#include <cstring>
+#include <stddef.h>
 
-inline std::array<char, 256> make4bitmap(){
-    constexpr char T = 0x1;
-    constexpr char C = 0x2;
-    constexpr char A = 0x4;
-    constexpr char G = 0x8;
-    std::array<char, 256> arr;
+constexpr uint8_t T = 0x1;
+constexpr uint8_t C = 0x2;
+constexpr uint8_t A = 0x4;
+constexpr uint8_t G = 0x8;
+static std::array<uint8_t, 256> makebit4patternmap()
+{
+    std::array<uint8_t, 256> arr;
     std::fill(arr.begin(), arr.end(), 0);
     arr['G'] = G;
     arr['C'] = C;
@@ -27,84 +29,170 @@ inline std::array<char, 256> make4bitmap(){
     arr['N'] = A | C | G | T;
     return arr;
 }
-std::array<char, 256> to4bitmap = make4bitmap();
-void clean_bogus(std::string & genome){
-    for(char & c : genome){
-        if(c == 'N' || c == ';'){
-            c = 0;
-        }
-    }
-}
-
-template<typename int_ty>
-std::vector<int_ty> make4bitpackedint_generic(const std::string & genome)
+static std::array<uint8_t, 256> makebit4map()
 {
-    constexpr size_t bit4_c = sizeof(int_ty) * 8 / 4;
-    std::vector<int_ty> result((genome.size() + bit4_c - 1) / bit4_c);
-    
-    for (size_t i = 0; i < genome.size() / bit4_c; i++)
-    {
-        for(size_t j = 0; j < bit4_c; j++){
-            int shift = bit4_c - 1 - j;
-            result[i] |= int_ty(to4bit(genome[i*bit4_c+j])) << (shift * 4);
+    std::array<uint8_t, 256> arr;
+    // all other values, including 'N' mapped to 0
+    std::fill(arr.begin(), arr.end(), 0);
+    arr['G'] = G;
+    arr['C'] = C;
+    arr['A'] = A;
+    arr['T'] = T;
+    return arr;
+}
+static std::array<uint8_t, 256 * 256> doublebit4map(
+  std::array<uint8_t, 256> basemap)
+{
+    std::array<uint8_t, 256 * 256> res;
+    for (size_t i = 0; i < 256; i++) {
+        for (size_t j = 0; j < 256; j++) {
+            res[i * 256 + j] = basemap[j] | (basemap[i] << 4);
         }
     }
-    size_t i = genome.size() / bit4_c;
-    for(size_t j = 0; j < genome.size() - i*bit4_c; j++){
-        int shift = bit4_c - 1 - j;
-        result[i] |= int_ty(to4bit(genome[i*bit4_c+j])) << (shift * 4);
-    }
-    return result;
+    return res;
 }
-std::vector<uint64_t> make4bitpackedint64(const std::string & genome){
-    return make4bitpackedint_generic<uint64_t>(genome);
-}
-std::vector<uint32_t> make4bitpackedint32(const std::string & genome){
-    return make4bitpackedint_generic<uint32_t>(genome);
-}
-std::vector<uint64_t> bit64tobit32(const std::vector<uint32_t> & bit32){   
-    std::vector<uint64_t> bit64((bit32.size()+1)/2);
-    uint32_t * newb64 = reinterpret_cast<uint32_t*>(&bit64[0]);
-    for(size_t i = 0; i < bit64.size() - bit32.size()%2; i++){
-        newb64[i*2] = bit32[i*2+1];
-    
-        newb64[i*2+1] = bit32[i*2];
+static std::array<uint8_t, 256> tobit4patternmap = makebit4patternmap();
+static std::array<uint8_t, 256> tobit4map = makebit4map();
 
-    } 
-    if(bit32.size()%2){
-        bit64.back() = uint64_t(bit32.back()) << 32;
+static std::array<uint8_t, 256 * 256> tobit4patternmapdouble =
+  doublebit4map(tobit4patternmap);
+static std::array<uint8_t, 256 * 256> tobit4mapdouble =
+  doublebit4map(tobit4map);
+
+void str2bit4_impl(uint8_t* dest,
+                   const char* src,
+                   int64_t write_offset,
+                   uint64_t n_chrs,
+                   uint8_t* arrdata,
+                   uint8_t* doublearrdata)
+{
+    dest += write_offset / 2;
+    write_offset %= 2;
+    if (write_offset && n_chrs > 0) {
+        dest[0] |= arrdata[uint8_t(src[0])] << 4;
+        dest += 1;
+        src += 1;
+        n_chrs -= 1;
     }
-    return bit64; 
+    uint16_t* dsrc = (uint16_t*)src;
+    for (size_t i = 0; i < n_chrs / 2; i++) {
+        dest[i] = doublearrdata[dsrc[i]];
+    }
+    if (n_chrs % 2) {
+        dest[n_chrs / 2] |= arrdata[uint8_t(src[n_chrs - 1])];
+    }
 }
-char to4bitN0(char c){
-    return c == 'N' ? 0 : to4bit(c);
+
+void str2bit4pattern(uint8_t* dest,
+                     const char* src,
+                     int64_t write_offset,
+                     uint64_t n_chrs)
+{
+    str2bit4_impl(dest,
+                  src,
+                  write_offset,
+                  n_chrs,
+                  &tobit4patternmap[0],
+                  &tobit4patternmapdouble[0]);
 }
-inline std::array<std::array<char, 2>, 256> make_bit4_data(){
-    std::array<std::array<char, 2>, 256> data;
-    char arr[] = {'A','T','C','G','N'};
-    for(char c1 : arr){
-        for(char c2 : arr){
-            data[(to4bitN0(c1) << 4) | to4bitN0(c2)] = {c1,c2};
+void str2bit4(uint8_t* dest,
+              const char* src,
+              int64_t write_offset,
+              uint64_t n_chrs)
+{
+    str2bit4_impl(
+      dest, src, write_offset, n_chrs, &tobit4map[0], &tobit4mapdouble[0]);
+}
+char bit42chr(uint8_t v)
+{
+    // currently no support for patterns, as it is not needed
+    switch (v) {
+        case C: return 'C';
+        case G: return 'G';
+        case T: return 'T';
+        case A: return 'A';
+        default: return 'N'; // to capture weird values
+    }
+}
+void bit42str(char* dest,
+              const uint8_t* src,
+              int64_t read_offset,
+              uint64_t n_chrs)
+{
+    src += read_offset / 2;
+    read_offset %= 2;
+    if (read_offset && n_chrs > 0) {
+        dest[0] = bit42chr(src[0] >> 4);
+        dest += 1;
+        src += 1;
+        n_chrs -= 1;
+    }
+    for (size_t i = 0; i < n_chrs / 2; i++) {
+        dest[i * 2] = bit42chr(src[i] & 0xf);
+        dest[i * 2 + 1] = bit42chr(src[i] >> 4);
+    }
+    if (n_chrs % 2) {
+        dest[n_chrs - 1] = bit42chr(src[n_chrs / 2] & 0xf);
+    }
+}
+
+void memsetbit4(uint8_t* dest, uint8_t bit4val, uint64_t start, uint64_t end)
+{
+    assert(bit4val <= 0xf);
+    if (start < end && start % 2) {
+        dest[start / 2] &= 0xf;
+        dest[start / 2] |= bit4val << 4;
+        start += 1;
+    }
+    if (start < end && end % 2) {
+        dest[end / 2] &= 0xf0;
+        dest[end / 2] |= bit4val;
+        end -= 1;
+    }
+    if (start < end) {
+        size_t bstart = start / 2;
+        size_t bend = end / 2;
+        uint8_t bval = bit4val | (bit4val << 4);
+        memset(dest + bstart, bval, bend - bstart);
+    }
+}
+char base_mapping[] = { 'T', 'C', 'A', 'G' };
+static std::array<uint16_t, 256> create_block_map()
+{
+    std::array<uint16_t, 256> arr;
+    for (size_t i = 0; i < 256; i++) {
+        uint16_t val = 0;
+        for (size_t j = 0; j < 4; j++) {
+            val |= tobit4map[base_mapping[((i >> ((4 - j - 1) * 2)) & 0x3)]]
+                   << (j * 4);
+        }
+        arr[i] = val;
+    }
+    return arr;
+}
+static std::array<uint16_t, 256> adv_mapping = create_block_map();
+
+void twobit2bit4(uint8_t* dest, const uint8_t* src, uint64_t n_chrs)
+{
+    assert(n_chrs % 4 == 0 && "twobit2bit4 only support block of 4 writes");
+    assert(reinterpret_cast<size_t>(dest) % 2 == 0 &&
+           "dest must be alligned to 2 byte boundaries");
+    uint16_t* blkdest = reinterpret_cast<uint16_t*>(dest);
+    uint64_t n_blks = n_chrs / 4;
+    for (size_t i = 0; i < n_blks; i++) {
+        blkdest[i] = adv_mapping[src[i]];
+    }
+}
+bool is_mixedbase(const char* src, uint64_t n_chrs)
+{
+    for (size_t i = 0; i < n_chrs; i++) {
+        if (!tobit4patternmap[src[i]]) {
+            return false;
         }
     }
-    return data;
+    return true;
 }
-std::array<std::array<char, 2>, 256> bit4_data = make_bit4_data();
-void bit32tostr(uint32_t x, std::string & result){
-    uint8_t * arr = (uint8_t*)(&x);
-    for(size_t i : range(3,-1,-1)){
-        auto data = bit4_data[arr[i]];
-        result.push_back(data[0]);
-        result.push_back(data[1]);
-    }
-}
-std::string bit4tostr(const uint32_t * bit32, size_t start, size_t end){
-    std::string result;
-    size_t start_idx = start/8;
-    size_t end_idx = (end+7)/8;
-    result.reserve((end_idx - start_idx)*8);
-    for(size_t i : range(start_idx, end_idx)){
-        bit32tostr(bit32[i], result);
-    }
-    return result.substr(start-start_idx*8, (end-start));
+bool is_match(char nucl, char pattern)
+{
+    return 0 != (tobit4map[uint8_t(nucl)] & tobit4patternmap[uint8_t(pattern)]);
 }

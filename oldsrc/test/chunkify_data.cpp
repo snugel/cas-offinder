@@ -9,6 +9,12 @@ using namespace std;
 
 constexpr size_t bit4_c = sizeof(uint32_t)*2;
 
+static FileChunk to_chunk(string nextchunk){
+    std::shared_ptr<char[]> arr(new char[nextchunk.size()]);
+    std::copy(nextchunk.begin(), nextchunk.end(), arr.get()); 
+    return FileChunk{.data=arr, .size=nextchunk.size()};
+}
+
 
 TEST(test_chunkify_data){
     std::vector<std::string> input_strings = {
@@ -29,11 +35,11 @@ TEST(test_chunkify_data){
         make4bitpackedint32(concat_data.substr(2*chunk_size)),
     };
     vector<uint32_t> posses = {0, 32, 64};
-    Channel<std::string> input_channel;
+    Channel<FileChunk> input_channel;
     Channel<GenomeInput> out_channel;
     thread chunkfy_t(chunkify_data, &input_channel, &out_channel, pattern_size, chunk_size);
     for(string s : input_strings){
-        input_channel.send(s);
+        input_channel.send(to_chunk(s));
     }
     input_channel.terminate();
     chunkfy_t.join();

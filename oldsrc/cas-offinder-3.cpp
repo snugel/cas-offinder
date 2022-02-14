@@ -63,7 +63,8 @@ int main(int argc, char *argv[]) {
 	std::thread reader_thread(read_genome, data_folder, patterns.at(0).size(), &data_input_channel);
 	std::thread searcher_thread(search_genome, patterns, chrom_locs, mismatches, &data_input_channel, &data_output_channel);
 
-    //GGCCGACCTGTCGCTGACGCNNN chr8    517739       GcCCtgCaTGTgGCTGACGCAGG +       5
+    //#Bulge type   crRNA   DNA Chromosome  Position    Direction   Mismatches  Bulge Size
+    //DNA   CAGCAACTCCAGGGGGCC-GCNGG    CgGCAACcCCAGGGGGCCTGgAGG    chr8    19084837    -   3   1
 
     std::cout << "RNA\tChromosome\tLocation\tDNA\tDirection\tMismatches\n";
 

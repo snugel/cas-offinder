@@ -96,7 +96,6 @@ void find_matches_device_worker(
 
         genome_buf.clear_buffer();// TODO: check if removing this improves performance 
         output_count.clear_buffer();
-        std::cerr << input.size - blocks_per_pattern << std::endl;
         genome_buf.write_buffer(input.data.get(),input.size);
         compute_results.run(
             CL_NDRange(input.size - blocks_per_pattern, num_pattern_blocks),
@@ -106,6 +105,7 @@ void find_matches_device_worker(
         int out_count;
         output_count.read_buffer(&out_count, 1);
         
+        std::cerr << input.size - blocks_per_pattern << std::endl;
         if(out_count > 0){
             std::shared_ptr<match> out_matches(new match[out_count]);
             output_buf.read_buffer(out_matches.get(), out_count);

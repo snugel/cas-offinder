@@ -9,3 +9,6 @@ oclkernels.h
 .vscode
 build
 data
+*.swp
+*.swo
+CL

@@ -15,7 +15,7 @@
 
 using namespace std;
 
-void read_folder_t(std::string * filepath,  std::vector<std::string> * chrnames, Channel<std::string> * content, std::vector<uint64_t> * chrpos){
+void read_folder_t(std::string * filepath,  std::vector<std::string> * chrnames, Channel<FileChunk> * content, std::vector<uint64_t> * chrpos){
     
 	if (read_folder(*filepath, *chrnames, *content, *chrpos)) {
         cerr << "Non-acceptable file/folder: " << *filepath << endl;
@@ -32,7 +32,7 @@ void search_genome(
 ){  
     size_t pattern_size = patterns.at(0).size();
     
-    Channel<string> file_read_data;
+    Channel<FileChunk> file_read_data;
     std::vector<std::string> chrnames;
     std::vector<uint64_t>  chrpos;
     thread file_read_thread(read_folder_t, &path, &chrnames, &file_read_data, &chrpos); 

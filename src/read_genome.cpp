@@ -1,41 +1,105 @@
 #include "read_genome.h"
+
+#include <cstdlib>
 #include <iostream>
-#include <fstream>
-#include <thread>
-#include <cassert>
+#include <sys/stat.h>
+#ifdef WIN32
+#include "ext/dirent.h"
+#else
+#include <dirent.h>
+#endif
 
-using namespace std;
+struct FolderReader
+{
+    TwoBitReader* r2bit = nullptr;
+    FastaReader* rfasta = nullptr;
+    std::string filepath;
+    DIR* dir = nullptr;
+};
 
-void read_genome(std::string data_folder, size_t pattern_size, Channel<GenomeInput> * data_output_p){
-	std::cerr << "Reading genome..." << std::endl;
-	constexpr size_t block_size = 1<<24;
-	size_t buffer_padding = (pattern_size+7)/8 + 1;
-
-
-	ifstream bit4_file(data_folder + "genome.4bit", ios::binary);
-	const auto begin = bit4_file.tellg();
-	bit4_file.seekg (0, ios::end);
-	const auto end = bit4_file.tellg();
-	const auto fsize = (end-begin);
-	bit4_file.seekg (0, ios::beg);
-
-	std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-    std::cerr << "Aprox genome size: " << fsize*2 << std::endl;
-
-	assert(fsize % 4 == 0);
-	uint64_t num_blocks = fsize/4;
-	std::vector<uint32_t> prev_padding(buffer_padding);
-	bit4_file.read((char*)prev_padding.data(), buffer_padding*sizeof(uint32_t));
-
-	for(size_t i = 0; i < num_blocks; i += block_size){
-		size_t this_block_size = std::min(block_size, num_blocks-i);
-		size_t padded_size = this_block_size + buffer_padding;
-		std::shared_ptr<uint32_t> data(new uint32_t[padded_size]());
-		std::copy(prev_padding.begin(), prev_padding.end(), data.get());	
-		bit4_file.read((char*)data.get() + buffer_padding, this_block_size*sizeof(uint32_t));
-		data_output_p->send(GenomeInput{.data=data,.size=this_block_size,.idx=i});
-		std::copy(data.get()+this_block_size, data.get() + padded_size, prev_padding.begin());	
-	}
-	data_output_p->terminate();
+static int check_file(const char* filename)
+{
+    struct stat file_stat;
+    return (stat(filename, &file_stat) == 0);
+}
+static void get_new_file(FolderReader* reader, const char* filepath)
+{
+    TwoBitReader* twobit_file = create_2bit_reader(filepath);
+    if (twobit_file) {
+        reader->r2bit = twobit_file;
+        reader->rfasta = nullptr;
+        return;
+    }
+    FastaReader* fasta_file = create_fasta_reader(filepath);
+    if (fasta_file) {
+        reader->r2bit = nullptr;
+        reader->rfasta = fasta_file;
+        return;
+    }
+    reader->r2bit = nullptr;
+    reader->rfasta = nullptr;
+}
+FolderReader* create_folder_reader(const char* path)
+{
+    FolderReader* reader = new FolderReader();
+    reader->filepath = std::string(path);
+    if ((reader->dir = opendir(path)) == NULL) {
+        if (check_file(path)) {
+            get_new_file(reader, path);
+        } else {
+            return nullptr;
+        }
+    }
+    return reader;
+}
+ChromData read_next_folder(FolderReader* reader)
+{
+    ChromData data{
+        .name = nullptr,
+        .bit4data = nullptr,
+        .n_nucl = 0,
+    };
+    if (reader->r2bit) {
+        data = read_next_2bit(reader->r2bit);
+        if (!data.name) {
+            free_2bit_reader(&reader->r2bit);
+            reader->r2bit = nullptr;
+        }
+    }
+    if (!data.name && reader->rfasta) {
+        data = read_next_fasta(reader->rfasta);
+        if (!data.name) {
+            free_fasta_reader(&reader->rfasta);
+            reader->rfasta = nullptr;
+        }
+    }
+    if (!data.name && reader->dir) {
+        dirent* ent;
+        std::string filepath = reader->filepath;
+        while ((ent = readdir(reader->dir)) != NULL) {
+            if (ent->d_type == DT_REG || ent->d_type == DT_LNK) {
+                if (filepath.back() == '/') {
+                    filepath.pop_back();
+                }
+                filepath = filepath + "/" + ent->d_name;
+                get_new_file(reader, filepath.c_str());
+                data = read_next_folder(reader);
+                break;
+            }
+        }
+    }
+    return data;
+}
+void free_folder_reader(FolderReader** fptr)
+{
+    FolderReader* reader = *fptr;
+    if (reader->r2bit) {
+        free_2bit_reader(&reader->r2bit);
+    }
+    if (reader->rfasta) {
+        free_fasta_reader(&reader->rfasta);
+    }
+    closedir(reader->dir);
+    delete reader;
+    *fptr = nullptr;
 }

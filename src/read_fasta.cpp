@@ -1,79 +1,78 @@
 #include "bit4ops.h"
 #include "ceildiv.h"
 #include "read_genome.h"
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
-#include <fstream>
 
+constexpr size_t MAX_LINE_LEN = 1 << 10;
 struct FastaReader
 {
-    char* data;
-    size_t size;
-    size_t idx;
+    FILE* file;
+    char linedata[MAX_LINE_LEN];
 };
 
 FastaReader* create_fasta_reader(const char* path)
 {
-    std::ifstream is(path);
-    if (!is) {
+    FILE* file = fopen(path, "r");
+    if (!file) {
         return nullptr;
     }
-    // Determine the file length
-    is.seekg(0, std::ios_base::end);
-    std::size_t size = is.tellg();
-    is.seekg(0, std::ios_base::beg);
-    // Create a vector to store the data
-    char* data = new char[size];
-    // Load the data
-    is.read(data, size);
-    if (data[0] != '>') {
-        delete[] data;
-        return nullptr;
-    }
-    return new FastaReader{
-        .data = data,
-        .size = size,
-        .idx = 0,
+    FastaReader* reader = new FastaReader{
+        .file = file,
     };
+    // file needs to start with a chromosome name
+    fgets(reader->linedata, MAX_LINE_LEN, reader->file);
+    if (reader->linedata[0] != '>') {
+        fclose(file);
+        return nullptr;
+    }
+    return reader;
 }
 ChromData read_next_fasta(FastaReader* reader)
 {
-    char chrname[1 << 10] = { 0 };
-    reader->idx++; // skip >
-    if (reader->idx >= reader->size) {
+    // if file is empty:
+    if (feof(reader->file)) {
         return ChromData{
             .name = nullptr,
             .bit4data = nullptr,
             .n_nucl = 0,
         };
     }
-    size_t namepos = 0;
-    for (; reader->idx < reader->size && reader->data[reader->idx] != '\n';
-         reader->idx++, namepos++) {
-        chrname[namepos] = reader->data[reader->idx];
-    }
-    size_t widx = 0;
-    for (; reader->idx < reader->size && reader->data[reader->idx] != '>';
-         reader->idx++) {
-        for (;
-             reader->idx < reader->size && reader->data[reader->idx] != '\n' &&
-             reader->data[reader->idx] != '\r';
-             reader->idx++, widx++) {
-            reader->data[widx] = to_upper(reader->data[reader->idx]);
+    char* linedata = reader->linedata;
+    FILE* file = reader->file;
+    int namelen = strlen(linedata + 1);
+    char* name = (char*)malloc(namelen + 1);
+    memcpy(name, linedata + 1, namelen + 1);
+
+    int data_size = 1 << 16;
+    uint8_t* outdata = (uint8_t*)malloc(data_size);
+    int chromsize = 0;
+    while (fgets(linedata, MAX_LINE_LEN, reader->file) && linedata[0] != '>') {
+        int linelen = strlen(linedata);
+        for (; linelen > 0 &&
+               (linedata[linelen - 1] == '\r' || linedata[linelen - 1] == '\n');
+             linelen--)
+            ;
+        if (linelen + chromsize > data_size * 2) {
+            data_size *= 2;
+            outdata = (uint8_t*)realloc(outdata, data_size);
         }
+        for (size_t i = 0; i < linelen; i++) {
+            linedata[i] = to_upper(linedata[i]);
+        }
+        str2bit4(outdata, linedata, chromsize, linelen);
+        chromsize += linelen;
     }
-    uint8_t* outdata = new uint8_t[cdiv(widx, 2)]();
-    str2bit4(outdata, reader->data, 0, widx);
-    char* name = (char*)malloc(namepos + 1);
-    memcpy(name, chrname, namepos + 1);
     return ChromData{
         .name = name,
         .bit4data = outdata,
-        .n_nucl = widx,
+        .n_nucl = chromsize,
     };
 }
 void free_fasta_reader(FastaReader** rptr)
 {
-    delete[](*rptr)->data;
+    fclose((*rptr)->file);
     delete *rptr;
     *rptr = nullptr;
 }

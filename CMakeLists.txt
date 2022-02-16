@@ -70,17 +70,17 @@ set(NODEP_SOURCES
 )
 
 add_executable (test
-    test/test.cpp
-    test/test_framework.cpp
-    test/test_framework.h
-    test/bit4ops.cpp
-    test/search.cpp
-    test/read_file.cpp
-    test/parse_input.cpp
-    test/blockify.cpp
-    test/bulge_logic.cpp
-    test/async_search.cpp
-    test/bidirect_search.cpp
+    src/test/test.cpp
+    src/test/test_framework.cpp
+    src/test/test_framework.h
+    src/test/bit4ops.cpp
+    src/test/search.cpp
+    src/test/read_file.cpp
+    src/test/parse_input.cpp
+    src/test/blockify.cpp
+    src/test/bulge_logic.cpp
+    src/test/async_search.cpp
+    src/test/bidirect_search.cpp
     ${NODEP_SOURCES} ${HEADERS}
 )
 add_executable (cas-offinder-2

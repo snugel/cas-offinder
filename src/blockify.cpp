@@ -110,12 +110,11 @@ Block pop_block(Blockifier* gen)
     populate_block(gen);
     return next_b;
 }
-void free_blockifier(Blockifier**) {}
+void free_blockifier(Blockifier** pgen) {
+    delete *pgen;
+    *pgen = 0;
+}
 
-// bool in_chunk(const Blockifier* gen, const Block* b, size_t bidx)
-//{
-//     return b->end > bidx && bidx < 0;
-// }
 ChunkInfo get_chunk_info(const Block* b, size_t bidx)
 {
     if (bidx >= b->end || bidx >= b->buf_size) {

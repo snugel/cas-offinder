@@ -64,8 +64,12 @@ static void async_callback(const GenomeMatch* gm)
     }
     indicate_mismatches_dna(dna, rna);
     (*out_str_ptr) << rna << '\t' << gm->chrom_name << '\t' << gm->chrom_loc
-                   << '\t' << dna << '\t' << dir << '\t' << gm->mismatches
-                   << '\n';
+                   << '\t' << dna << '\t' << dir << '\t' << gm->mismatches;
+    if (input.ids) {
+        const char* idstr = input.ids[gm->pattern_idx / 2];
+        (*out_str_ptr) << '\t' << idstr;
+    }
+    (*out_str_ptr) << '\n';
 }
 
 int main(int argc, char** argv)
@@ -104,7 +108,7 @@ int main(int argc, char** argv)
         out_str_ptr = &out_file;
     }
     //    *out_str_ptr <<
-    //    "RNA\tChromosome\tLocation\tDNA\tDirection\tMismatches\n";
+    //    "RNA\tChromosome\tLocation\tDNA\tDirection\tMismatches\tID\n";
 
     async_search(input.genome_path,
                  device_ty,
@@ -119,7 +123,7 @@ int main(int argc, char** argv)
     auto duration = (end - start);
     auto micros =
       std::chrono::duration_cast<std::chrono::microseconds>(duration);
-    cerr << "successfully finished in: " << micros.count() / double(1000000)
+    cerr << "successfully finished in: " << micros.count() / 1000000.
          << " seconds\n";
     return 0;
 }

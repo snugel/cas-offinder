@@ -59,11 +59,10 @@ TEST(test_async_search)
     stringstream ref_data;
     ref_data << ref_file.rdbuf();
     stringstream act_data;
-    //    for(GenomeMatch gm : async_search_results){
-    //        act_data << gm.pattern_idx <<'\t'  << gm.chrom_name<<'\t' <<
-    //        gm.chrom_loc<<'\t'<< gm.dna_match<<'\t'<< gm.mismatches << '\n';
-    //    }
-    // ref_file.flush();
+        for(GenomeMatch gm : async_search_results){
+            act_data << gm.pattern_idx <<'\t'  << gm.chrom_name<<'\t' <<
+            gm.chrom_loc<<'\t'<< gm.dna_match<<'\t'<< gm.mismatches << '\n';
+        }
     string act_data_str = act_data.str();
     string ref_data_str = ref_data.str();
     return act_data_str == ref_data_str;

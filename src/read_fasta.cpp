@@ -39,12 +39,16 @@ ChromData read_next_fasta(FastaReader* reader)
             .n_nucl = 0,
         };
     }
-    char* linedata = reader->linedata;
+    //strip off '>' charachter
+    char* namedata = reader->linedata + 1;
     FILE* file = reader->file;
-    int namelen = strlen(linedata + 1);
+    int namelen = strlen(namedata);
+    for(; namelen > 0 && (namedata[namelen-1] == '\n' || namedata[namelen-1] == '\r'); namelen--);
     char* name = (char*)malloc(namelen + 1);
-    memcpy(name, linedata + 1, namelen + 1);
+    memcpy(name, namedata, namelen);
+    name[namelen] = 0;
 
+    char* linedata = reader->linedata;
     int data_size = 1 << 16;
     uint8_t* outdata = (uint8_t*)malloc(data_size);
     int chromsize = 0;

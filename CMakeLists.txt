@@ -42,32 +42,32 @@ set (HEADERS
     headers/channel.h
     oclkernels.h
 )
-set(SOURCES
+add_library(genome_base_lib STATIC
     src/bit4ops.cpp
+    src/read_genome.cpp
+    src/bidirect_search.cpp
+    src/read_fasta.cpp
+    src/read_2bit.cpp
+    src/parse_input.cpp
+    src/blockify.cpp
+    src/bidirect_search.cpp
+    src/bulge_logic.cpp
+    )
+target_link_libraries(genome_base_lib PUBLIC Threads::Threads)
+
+add_library(genome_search_lib STATIC
+    src/async_search.cpp
     src/search.cpp
     src/oclfunctions.cpp
-    src/read_genome.cpp
-    src/read_fasta.cpp
-    src/read_2bit.cpp
-    src/parse_input.cpp
-    src/blockify.cpp
-    src/async_search.cpp
-    src/bidirect_search.cpp
-    src/bulge_logic.cpp
-)
+    )
+target_link_libraries(genome_search_lib PUBLIC OpenCL)
+target_link_libraries(genome_search_lib PUBLIC genome_base_lib)
 
-set(NODEP_SOURCES
-    src/bit4ops.cpp
-    src/search_nodep.cpp
-    src/read_genome.cpp
-    src/read_fasta.cpp
-    src/read_2bit.cpp
-    src/parse_input.cpp
-    src/blockify.cpp
+add_library(genome_nocl_search_lib STATIC
     src/async_search.cpp
-    src/bidirect_search.cpp
-    src/bulge_logic.cpp
-)
+    src/search_nodep.cpp
+    )
+target_link_libraries(genome_nocl_search_lib PUBLIC genome_base_lib)
 
 add_executable (test
     src/test/test.cpp
@@ -81,22 +81,26 @@ add_executable (test
     src/test/bulge_logic.cpp
     src/test/async_search.cpp
     src/test/bidirect_search.cpp
-    ${NODEP_SOURCES} ${HEADERS}
+    ${HEADERS}
 )
+target_link_libraries(test PUBLIC genome_nocl_search_lib )
+
 add_executable (cas-offinder-2
     src/main_v2.cpp
-    ${SOURCES} ${HEADERS}
+    ${HEADERS}
 )
+target_link_libraries(cas-offinder-2 PUBLIC genome_search_lib )
+
 add_executable (cas-offinder-2-nocl
     src/main_v2.cpp
     ${NODEP_SOURCES} ${HEADERS}
 )
+target_link_libraries(cas-offinder-2-nocl PUBLIC genome_nocl_search_lib )
+add_executable (cas-offinder-3-nocl
+    src/main_v3.cpp
+    ${NODEP_SOURCES} ${HEADERS}
+)
+target_link_libraries(cas-offinder-3-nocl PUBLIC genome_nocl_search_lib )
 
-target_link_libraries(cas-offinder-2 PUBLIC OpenCL)
-target_link_libraries(test PUBLIC OpenCL)
-target_link_libraries(cas-offinder-2 PUBLIC Threads::Threads)
-target_link_libraries(test PUBLIC Threads::Threads)
-target_link_libraries(cas-offinder-2-nocl PUBLIC Threads::Threads)
-
-target_compile_options(test PRIVATE -Wall -Wextra)
+target_compile_options(genome_base_lib PUBLIC -Wall -Wextra)
 

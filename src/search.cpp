@@ -77,11 +77,14 @@ Searcher* create_searcher(SearchFactory* fact,
     Searcher* searcher = new Searcher();
     searcher->pattern_size = pattern_size;
     searcher->num_patterns = num_patterns;
+    cl_device_type dev_type;
+    oclGetDeviceInfo(
+      temp.device, CL_DEVICE_TYPE, sizeof(dev_type), &dev_type, NULL);
+    bool is_cpu = dev_type == CL_DEVICE_TYPE_CPU;
 
     const size_t src_len = strlen(program_src);
     string defs = "-Dpattern_size=" + to_string(pattern_size);
-    bool is_cpu = true;
-    if (is_cpu) {
+    if (!is_cpu) {
         searcher->block_size = 4;
         defs += " -Dblock_ty=uint32_t";
     } else {

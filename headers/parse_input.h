@@ -9,6 +9,8 @@ struct InFileInfo
     char* compares;
     size_t pattern_size;
     size_t num_patterns;
+    int dna_bulges;
+    int rna_bulges;
     char** ids;
     uint32_t mismatches;
 };

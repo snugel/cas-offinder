@@ -17,7 +17,7 @@ struct BlockConfig{
     size_t DEFAULT_CHUNK_BYTES;
 };
 
-typedef void async_match_callback(const GenomeMatch*);
+typedef void async_match_callback(const GenomeMatch*, void *);
 void async_search(const char* genome_path,
                   DeviceType device_ty,
                   const char* compares,
@@ -25,4 +25,5 @@ void async_search(const char* genome_path,
                   size_t num_patterns,
                   uint32_t mismatches,
                   const BlockConfig * config,
+                  void * user_data,
                   async_match_callback callback);

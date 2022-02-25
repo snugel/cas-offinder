@@ -1,4 +1,5 @@
 #include "bit4ops.h"
+#include "RangeIterator.h"
 #include <array>
 #include <cassert>
 #include <cstring>
@@ -40,6 +41,13 @@ static std::array<uint8_t, 256> makebit4map()
     arr['T'] = T;
     return arr;
 }
+static std::array<uint8_t, 256> apply_lower(std::array<uint8_t, 256> arr)
+{
+    for (size_t i : range(1, 26 + 1)) {
+        arr[i + 96] = arr[i + 64];
+    }
+    return arr;
+}
 static std::array<uint8_t, 256 * 256> doublebit4map(
   std::array<uint8_t, 256> basemap)
 {
@@ -51,8 +59,9 @@ static std::array<uint8_t, 256 * 256> doublebit4map(
     }
     return res;
 }
-static std::array<uint8_t, 256> tobit4patternmap = makebit4patternmap();
-static std::array<uint8_t, 256> tobit4map = makebit4map();
+static std::array<uint8_t, 256> tobit4patternmap =
+  apply_lower(makebit4patternmap());
+static std::array<uint8_t, 256> tobit4map = apply_lower(makebit4map());
 
 static std::array<uint8_t, 256 * 256> tobit4patternmapdouble =
   doublebit4map(tobit4patternmap);

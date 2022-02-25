@@ -27,13 +27,6 @@ static inline bool parseLine(istream& input,
     return true;
 }
 
-static void to_upper_s(string& s)
-{
-    for (char& c : s) {
-        c = to_upper(c);
-    }
-}
-
 static char* to_chararr(string s)
 {
     char* a = (char*)malloc(s.size() + 1);
@@ -53,15 +46,29 @@ static vector<string> split(string const& input)
 static InFileInfo parse_input(istream& input)
 {
     string genomedir;
+    string pattern_line;
     string pattern;
     string line;
     vector<string> sline;
     string compares;
+    int dna_bulges = 0;
+    int rna_bulges = 0;
     vector<string> m_ids;
     vector<int> m_thresholds;
     parseLine(input, genomedir);
-    parseLine(input, pattern);
-    to_upper_s(pattern);
+    parseLine(input, pattern_line);
+    sline = split(pattern_line);
+    pattern = sline.at(0);
+    if(sline.size() > 1){
+        dna_bulges = stoi(sline[1]);
+    }
+    if(sline.size() > 2){
+        rna_bulges = stoi(sline[2]);
+    }
+    if(sline.size() > 3){
+        throw runtime_error(
+          "Second line of input file can have at most 3 elements: pattern, dna_bulges, rna_bulges");
+    }
 
     try {
         size_t entrycnt = 0;
@@ -80,7 +87,6 @@ static InFileInfo parse_input(istream& input)
                   "The length of target sequences should match with the length "
                   "of pattern sequence.");
             }
-            to_upper_s(sline[0]);
             compares += sline[0];
             m_thresholds.push_back(atoi(sline[1].c_str()));
             if (entrycnt == 0) {
@@ -124,6 +130,8 @@ static InFileInfo parse_input(istream& input)
         .compares = to_chararr(compares),
         .pattern_size = pattern.size(),
         .num_patterns = m_thresholds.size(),
+                .dna_bulges=dna_bulges,
+                .rna_bulges=rna_bulges,
         .ids = ids,
         .mismatches = uint32_t(m_thresholds.back()),
     };

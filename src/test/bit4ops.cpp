@@ -4,7 +4,7 @@
 
 TEST(test_str2bit4)
 {
-    char inpt_arr[] = "ACTGC";
+    char inpt_arr[] = "ACtGc";
     uint8_t expected_out[] = { 0x24, 0x81, 0x02 };
     uint8_t actual_out[sizeof(expected_out)] = { 0 };
     str2bit4(actual_out, inpt_arr, 0, sizeof(inpt_arr));
@@ -116,14 +116,4 @@ TEST(test_is_mixedbase_false)
 {
     char data[] = "ACTNRVQG";
     return !is_mixedbase(data, sizeof(data) - 1);
-}
-
-TEST(test_to_upper)
-{
-    char data[] = "acao\0TRd";
-    char expected[] = "ACAO\0TRD";
-    for (size_t i = 0; i < sizeof(data); i++) {
-        data[i] = to_upper(data[i]);
-    }
-    return !memcmp(data, expected, sizeof(data));
 }

@@ -111,10 +111,45 @@ void searcher_thread(SearchFactory* fact,
     }
     block_out_stream->terminate();
 }
+void start_writer_thread(Channel<BlockOutput>* output_stream,
+                         size_t pattern_size,
+                         void* user_data,
+                         async_match_callback callback)
+{
+
+    vector<char> dna_match_buf(pattern_size + 1);
+    BlockOutput output;
+    while (output_stream->receive(output)) {
+        Match* result = output.matches;
+        uint64_t num_result = output.num_matches;
+        Block b = output.b;
+        for (Match m : each(result, result + num_result)) {
+            size_t byte_loc = m.loc / 2;
+            size_t byte_offset = m.loc % 2;
+            ChunkInfo cinfo = get_chunk_info(&b, byte_loc);
+            if (cinfo.metadata) {
+                Metadata metainfo = *((Metadata*)cinfo.metadata);
+                size_t actual_loc = cinfo.dataidx * 2 + byte_offset;
+                if (actual_loc <= metainfo.chromsize - pattern_size) {
+                    bit42str(dna_match_buf.data(), b.buf, m.loc, pattern_size);
+                    GenomeMatch gm{
+                        .dna_match = dna_match_buf.data(),
+                        .chrom_name = metainfo.name,
+                        .chrom_loc = actual_loc,
+                        .pattern_idx = m.pattern_idx,
+                        .mismatches = m.mismatches,
+                    };
+                    callback(&gm, user_data);
+                }
+            }
+        }
+        free(output.b.buf);
+    }
+}
 const BlockConfig default_config{
-    .OUT_CHUNK_SIZE = 1 << 22,
+    .OUT_CHUNK_SIZE = 1 << 24,
     .MIN_CMPS_PER_OUT = 1 << 14,
-    .DEFAULT_CHUNK_BYTES=1 << 24,
+    .DEFAULT_CHUNK_BYTES = 1 << 26,
 };
 
 void async_search(const char* genome_path,
@@ -123,10 +158,11 @@ void async_search(const char* genome_path,
                   size_t pattern_size,
                   size_t num_patterns,
                   uint32_t mismatches,
-                  const BlockConfig * config,
+                  const BlockConfig* config,
+                  void* user_data,
                   async_match_callback callback)
 {
-    if(!config){
+    if (!config) {
         // provide default configuration
         config = &default_config;
     }
@@ -147,7 +183,7 @@ void async_search(const char* genome_path,
       reader_thread, genome_path, &block_channel, CHUNK_BYTES, CHUNK_PAD_BYTES);
 
     size_t pattern_bytes = cdiv(pattern_size, 2);
-    uint8_t* patterns_bit4 = (uint8_t*)malloc(pattern_bytes * num_patterns);
+    uint8_t* patterns_bit4 = (uint8_t*)calloc(1, pattern_bytes * num_patterns);
     for (size_t i : range(num_patterns)) {
         str2bit4pattern(patterns_bit4 + i * pattern_bytes,
                         compares + pattern_size * i,
@@ -175,37 +211,21 @@ void async_search(const char* genome_path,
                                       pattern_size,
                                       mismatches);
     }
-    vector<char> dna_match_buf(pattern_size + 1);
-    BlockOutput output;
-    while (output_stream.receive(output)) {
-        Match* result = output.matches;
-        uint64_t num_result = output.num_matches;
-        Block b = output.b;
-        assert(b.end <= PADDED_CHUNK_BYTES);
-        for (Match m : each(result, result + num_result)) {
-            size_t byte_loc = m.loc / 2;
-            size_t byte_offset = m.loc % 2;
-            ChunkInfo cinfo = get_chunk_info(&b, byte_loc);
-            if (cinfo.metadata) {
-                Metadata metainfo = *((Metadata*)cinfo.metadata);
-                size_t actual_loc = cinfo.dataidx * 2 + byte_offset;
-                if (actual_loc <= metainfo.chromsize - pattern_size) {
-                    bit42str(dna_match_buf.data(), b.buf, m.loc, pattern_size);
-                    GenomeMatch gm{
-                        .dna_match = dna_match_buf.data(),
-                        .chrom_name = metainfo.name,
-                        .chrom_loc = actual_loc,
-                        .pattern_idx = m.pattern_idx,
-                        .mismatches = m.mismatches,
-                    };
-                    callback(&gm);
-                }
-            }
-        }
-        free(output.b.buf);
+    // more writers is slower for some reason
+    int num_writers = 1;
+    vector<thread> writer_threads;
+    for (size_t i : range(num_writers)) {
+        writer_threads.emplace_back(start_writer_thread,
+                                    &output_stream,
+                                    pattern_size,
+                                    user_data,
+                                    callback);
     }
     reader_thread_obj.join();
     for (thread& t : searcher_threads) {
+        t.join();
+    }
+    for (thread& t : writer_threads) {
         t.join();
     }
 }

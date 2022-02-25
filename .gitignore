@@ -12,3 +12,4 @@ data
 *.swp
 *.swo
 CL
+_test_data

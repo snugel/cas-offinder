@@ -93,14 +93,19 @@ target_link_libraries(cas-offinder-2 PUBLIC genome_search_lib )
 
 add_executable (cas-offinder-2-nocl
     src/main_v2.cpp
-    ${NODEP_SOURCES} ${HEADERS}
+    ${HEADERS}
 )
 target_link_libraries(cas-offinder-2-nocl PUBLIC genome_nocl_search_lib )
 add_executable (cas-offinder-3-nocl
-    src/main_v3.cpp
-    ${NODEP_SOURCES} ${HEADERS}
-)
+ src/main_v3.cpp
+   ${HEADERS}
+   )
 target_link_libraries(cas-offinder-3-nocl PUBLIC genome_nocl_search_lib )
+add_executable (cas-offinder-3
+ src/main_v3.cpp
+   ${HEADERS}
+   )
+target_link_libraries(cas-offinder-3 PUBLIC genome_search_lib )
 
 target_compile_options(genome_base_lib PUBLIC -Wall -Wextra)
 

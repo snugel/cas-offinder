@@ -62,9 +62,6 @@ ChromData read_next_fasta(FastaReader* reader)
             data_size *= 2;
             outdata = (uint8_t*)realloc(outdata, data_size);
         }
-        for (size_t i = 0; i < linelen; i++) {
-            linedata[i] = to_upper(linedata[i]);
-        }
         str2bit4(outdata, linedata, chromsize, linelen);
         chromsize += linelen;
     }

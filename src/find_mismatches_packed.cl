@@ -36,10 +36,10 @@ __kernel void find_matches(__global block_ty* genome,
         uint32_t count = 0;
         for (size_t l = 0; l < blocks_per_pattern; l++) {
             block_ty cur = shifted_blocks[l];
-            count += popcount(
+           count += popcount(
               cur & pattern_blocks[pattern_block_idx * blocks_per_pattern + l]);
-        }
-        for (size_t l = 0; l < blocks_per_pattern; l++) {
+        //}
+        //for (size_t l = 0; l < blocks_per_pattern; l++) {
             shifted_blocks[l] =
               (shifted_blocks[l] >> 4) |
               (shifted_blocks[l + 1] << ((blocks_avail - 1) * 4));

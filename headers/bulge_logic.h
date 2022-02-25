@@ -19,6 +19,7 @@ struct bulge_augment
     int bulge_pos;
     int bulge_size;
     BulgeType bulge_type;
+    std::string removed_part="";
 };
 using bulge_pair = std::pair<std::string, bulge_augment>;
 std::string get_bulge_type_name(BulgeType type);
@@ -28,6 +29,7 @@ bulge_info get_bulge_info(std::string base_dna_match,
                           int orig_loc,
                           int dna_bulges,
                           int rna_bulges);
+size_t get_num_augments(int pattern_size, int dna_bulges, int rna_bulges);
 std::vector<bulge_pair> augment_patterns_with_bulges(
   std::vector<std::string> patterns,
   int dna_bulges,

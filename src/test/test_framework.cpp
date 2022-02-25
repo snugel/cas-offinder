@@ -56,8 +56,13 @@ int run_all_tests(bool capture_stdout)
         cout.clear();
         bool ret_val;
         cur_t_check_messages.clear();
-        FILE * stdout_file = tmpfile();//fopen("_tmp_stdout.txt","w+");
-        FILE * stderr_file = tmpfile();//fopen("_tmp_stderr.txt","w+");
+#ifdef WIN32
+        FILE * stdout_file = fopen("_tmp_stdout.txt","w+");
+        FILE * stderr_file = fopen("_tmp_stderr.txt","w+");
+#else
+        FILE * stdout_file = tmpfile();
+        FILE * stderr_file = tmpfile();
+#endif
         int stdout_fno = fileno(stdout_file);
         int stderr_fno = fileno(stderr_file);
         if(capture_stdout){

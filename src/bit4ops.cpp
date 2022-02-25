@@ -1,5 +1,6 @@
 #include "bit4ops.h"
 #include "RangeIterator.h"
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstring>
@@ -112,16 +113,20 @@ void str2bit4(uint8_t* dest,
     str2bit4_impl(
       dest, src, write_offset, n_chrs, &tobit4map[0], &tobit4mapdouble[0]);
 }
+static std::array<uint8_t, 256> makebit42chrmap()
+{
+    std::array<uint8_t, 256> arr;
+    std::fill(arr.begin(), arr.end(), 0);
+    for (char i : range('A', 'Z' + 1)) {
+        arr[tobit4patternmap[i]] = i;
+    }
+    return arr;
+}
+static std::array<uint8_t, 256> bit42map = makebit42chrmap();
 char bit42chr(uint8_t v)
 {
-    // currently no support for patterns, as it is not needed
-    switch (v) {
-        case C: return 'C';
-        case G: return 'G';
-        case T: return 'T';
-        case A: return 'A';
-        default: return 'N'; // to capture weird values
-    }
+    // supports patterns as well
+    return bit42map[v];
 }
 void bit42str(char* dest,
               const uint8_t* src,
@@ -204,4 +209,23 @@ bool is_mixedbase(const char* src, uint64_t n_chrs)
 bool is_match(char nucl, char pattern)
 {
     return 0 != (tobit4map[uint8_t(nucl)] & tobit4patternmap[uint8_t(pattern)]);
+}
+static uint8_t complimentb4(uint8_t v)
+{
+    // only operates on the first 4 bits
+    return ((v << 2) | (v >> 2)) & 0xf;
+}
+static bool is_letter(char c)
+{
+    c = to_upper(c);
+    return c >= 64 + 1 && c < 64 + 1 + 26;
+}
+void i_reverse_compliment(char* seq, size_t size)
+{
+    for (size_t i : range(size)) {
+        seq[i] = !is_letter(seq[i])
+                   ? seq[i]
+                   : bit42map[complimentb4(tobit4patternmap[uint8_t(seq[i])])];
+    }
+    std::reverse(seq, seq + size);
 }

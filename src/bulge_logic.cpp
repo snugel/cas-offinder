@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <array>
 
 std::string get_bulge_type_name(BulgeType type)
 {
@@ -69,34 +70,7 @@ void indicate_mismatches_dna(std::string& dna_match, std::string& rna_match)
 }
 std::string reverse_compliment(std::string seq)
 {
-    for (size_t i : range(seq.size())) {
-        char c = to_upper(seq[i]);
-        if (c == 'A')
-            seq[i] = 'T';
-        else if (c == 'T')
-            seq[i] = 'A';
-        else if (c == 'G')
-            seq[i] = 'C';
-        else if (c == 'C')
-            seq[i] = 'G';
-        else if (c == 'R')
-            seq[i] = 'Y';
-        else if (c == 'Y')
-            seq[i] = 'R';
-        else if (c == 'M')
-            seq[i] = 'K';
-        else if (c == 'K')
-            seq[i] = 'M';
-        else if (c == 'H')
-            seq[i] = 'D';
-        else if (c == 'D')
-            seq[i] = 'H';
-        else if (c == 'B')
-            seq[i] = 'V';
-        else if (c == 'V')
-            seq[i] = 'B';
-    }
-    std::reverse(seq.begin(), seq.end());
+    i_reverse_compliment(seq.data(), seq.size());
     return seq;
 }
 

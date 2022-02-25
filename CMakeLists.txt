@@ -52,6 +52,7 @@ add_library(genome_base_lib STATIC
     src/blockify.cpp
     src/bidirect_search.cpp
     src/bulge_logic.cpp
+    ${HEADERS}
     )
 target_link_libraries(genome_base_lib PUBLIC Threads::Threads)
 
@@ -59,6 +60,7 @@ add_library(genome_search_lib STATIC
     src/async_search.cpp
     src/search.cpp
     src/oclfunctions.cpp
+    ${HEADERS}
     )
 target_link_libraries(genome_search_lib PUBLIC OpenCL)
 target_link_libraries(genome_search_lib PUBLIC genome_base_lib)
@@ -66,6 +68,7 @@ target_link_libraries(genome_search_lib PUBLIC genome_base_lib)
 add_library(genome_nocl_search_lib STATIC
     src/async_search.cpp
     src/search_nodep.cpp
+    ${HEADERS}
     )
 target_link_libraries(genome_nocl_search_lib PUBLIC genome_base_lib)
 

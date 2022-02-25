@@ -1,5 +1,6 @@
 #pragma once
 #include <inttypes.h>
+#include <stddef.h>
 
 void str2bit4(uint8_t* dest,
               const char* src,
@@ -17,6 +18,7 @@ void twobit2bit4(uint8_t* dest, const uint8_t* src, uint64_t n_chrs);
 void memsetbit4(uint8_t* dest, uint8_t bit4val, uint64_t start, uint64_t end);
 bool is_mixedbase(const char* src, uint64_t n_chrs);
 bool is_match(char nucl, char pattern);
+void i_reverse_compliment(char* seq, size_t size);
 
 inline uint8_t to_upper(uint8_t c)
 {

@@ -6,14 +6,9 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <unistd.h>
 
 using namespace std;
-
-#ifdef WIN32
-const char* STDOUT_REFRESH = "CON";
-#else
-const char* STDOUT_REFRESH = "/dev/tty";
-#endif
 
 struct TestPair
 {
@@ -36,26 +31,39 @@ struct TestResult
     string stdout_s;
     string stderr_s;
 };
-string read_file(const char* fname)
+string read_file(FILE * file)
 {
-    ifstream file(fname);
-    stringstream ss;
-    ss << file.rdbuf();
-    return ss.str();
+    fseek(file, 0L, SEEK_END);
+    int size = ftell(file);
+    if(size == -1){
+        cerr << "something went wrong in test framework!\n";
+    }
+    fseek(file, 0, SEEK_SET);
+    string contents(size,' ');
+    fread(contents.data(),1,size,file);
+    return contents;
 }
 
-void run_all_tests()
+int run_all_tests(bool capture_stdout)
 {
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+    int old_stdout = dup(STDOUT_FILENO);
+    int old_stderr = dup(STDERR_FILENO);
     int num_passed = 0;
     for (size_t i = 0; i < cur_n_tests; i++) {
         TestPair test = tests[i];
         cout.clear();
         bool ret_val;
         cur_t_check_messages.clear();
-        //const char* stdout_red = "_tmp_redirect_stdout.txt";
-        //const char* stderr_red = "_tmp_redirect_stderr.txt";
-        //freopen(stdout_red, "w+", stdout);
-        //freopen(stderr_red, "w+", stderr);
+        FILE * stdout_file = tmpfile();//fopen("_tmp_stdout.txt","w+");
+        FILE * stderr_file = tmpfile();//fopen("_tmp_stderr.txt","w+");
+        int stdout_fno = fileno(stdout_file);
+        int stderr_fno = fileno(stderr_file);
+        if(capture_stdout){
+            dup2(stdout_fno,STDOUT_FILENO);
+            dup2(stderr_fno,STDERR_FILENO);
+        }
         string exception_msg = "";
         bool asserted = false;
         bool passed = false;
@@ -73,14 +81,17 @@ void run_all_tests()
         } catch (...) {
             exception_msg = "unknown exception";
         }
-        //fflush(stdout);
-        //fflush(stderr);
-        string stdout_str;// = read_file(stdout_red);
-        string stderr_str;// = read_file(stderr_red);
-        //fclose(stdout);
-        //fclose(stderr);
-        //freopen(STDOUT_REFRESH, "w", stderr);
-        //freopen(STDOUT_REFRESH, "w", stdout);
+        string stdout_str;
+        string stderr_str;
+        if(capture_stdout){
+            stdout_str = read_file(stdout_file);
+            stderr_str = read_file(stderr_file);
+            dup2(old_stdout,STDOUT_FILENO);
+            dup2(old_stderr,STDERR_FILENO);
+        }
+        fclose(stdout_file);
+        fclose(stderr_file);
+
         if (!passed) {
             cerr << "========test '" << test.name << "'========\n";
             if (cur_t_check_messages.size()) {
@@ -112,9 +123,11 @@ void run_all_tests()
     int n_failures = cur_n_tests - num_passed;
     if (n_failures) {
         cerr << "\n " << n_failures << " TESTS FAILED \n " << num_passed
-             << " TESTS PASSED" << endl;
+                 << " TESTS PASSED" << endl;
+        return 1;
     } else {
         cerr << "\n\nALL " << num_passed << " TESTS PASSED.\n" << endl;
+        return 0;
     }
 }
 

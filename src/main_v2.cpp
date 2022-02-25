@@ -11,6 +11,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -42,11 +43,19 @@ static void async_callback(const GenomeMatch* gm, void* user_data)
     if (!fits_pattern(gm, data->pattern_str.data(), data->input.pattern_size)) {
         return;
     }
-    char dir = get_dir(gm);
-    auto pair = get_dna_rna_match(
-      data->all_compares.data(), data->input.pattern_size, gm);
-    std::string dna = pair.first;
-    std::string rna = pair.second;
+    const char* compares = data->all_compares.data();
+    size_t pattern_size = data->input.pattern_size;
+    char dir = gm->pattern_idx % 2 ? '-' : '+';
+    std::string rna =
+      std::string(compares + gm->pattern_idx * pattern_size,
+                  compares + (gm->pattern_idx + 1) * pattern_size);
+    std::string dna(gm->dna_match);
+
+    if (gm->pattern_idx % 2 == 1) {
+        i_reverse_compliment(rna.data(), rna.size());
+        i_reverse_compliment(dna.data(), dna.size());
+    }
+    indicate_mismatches_dna(dna, rna);
     outs << rna << '\t' << gm->chrom_name << '\t' << gm->chrom_loc << '\t'
          << dna << '\t' << dir << '\t' << gm->mismatches;
     if (data->input.ids) {

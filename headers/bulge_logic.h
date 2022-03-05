@@ -27,8 +27,7 @@ bulge_info get_bulge_info(std::string base_dna_match,
                           std::string base_rna_match,
                           bulge_augment augment,
                           int orig_loc,
-                          int dna_bulges,
-                          int rna_bulges);
+                          int dna_bulges);
 size_t get_num_augments(int pattern_size, int dna_bulges, int rna_bulges);
 std::vector<bulge_pair> augment_patterns_with_bulges(
   std::vector<std::string> patterns,

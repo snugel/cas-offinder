@@ -20,6 +20,7 @@ FastaReader* create_fasta_reader(const char* path)
     }
     FastaReader* reader = new FastaReader{
         .file = file,
+        .linedata={0},
     };
     // file needs to start with a chromosome name
     fgets(reader->linedata, MAX_LINE_LEN, reader->file);
@@ -41,7 +42,6 @@ ChromData read_next_fasta(FastaReader* reader)
     }
     //strip off '>' charachter
     char* namedata = reader->linedata + 1;
-    FILE* file = reader->file;
     int namelen = strlen(namedata);
     for(; namelen > 0 && (namedata[namelen-1] == '\n' || namedata[namelen-1] == '\r'); namelen--);
     char* name = (char*)malloc(namelen + 1);
@@ -49,9 +49,9 @@ ChromData read_next_fasta(FastaReader* reader)
     name[namelen] = 0;
 
     char* linedata = reader->linedata;
-    int data_size = 1 << 16;
+    uint64_t data_size = 1 << 16;
     uint8_t* outdata = (uint8_t*)malloc(data_size);
-    int chromsize = 0;
+    uint64_t chromsize = 0;
     while (fgets(linedata, MAX_LINE_LEN, reader->file) && linedata[0] != '>') {
         int linelen = strlen(linedata);
         for (; linelen > 0 &&

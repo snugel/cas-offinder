@@ -82,7 +82,6 @@ Searcher* create_searcher(SearchFactory* fact,
       temp.device, CL_DEVICE_TYPE, sizeof(dev_type), &dev_type, NULL);
     bool is_cpu = dev_type == CL_DEVICE_TYPE_CPU;
 
-    const size_t src_len = strlen(program_src);
     string defs = "-Dpattern_size=" + to_string(pattern_size);
     if (!is_cpu) {
         searcher->block_size = 4;
@@ -138,7 +137,6 @@ void search(Searcher* searcher,
     size_t num_genome_blocks =
       num_blocks(searcher, genome_size) + 1 - num_pattern_blocks;
     size_t num_patterns = searcher->num_patterns;
-    size_t work_sizes[] = { num_genome_blocks, num_patterns };
     searcher->search.run(
       CL_NDRange(num_genome_blocks, num_patterns), CL_NDRange(), CL_NDRange());
     cl_uint count;

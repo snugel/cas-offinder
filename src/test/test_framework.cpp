@@ -54,7 +54,7 @@ int run_all_tests(bool capture_stdout)
     for (size_t i = 0; i < cur_n_tests; i++) {
         TestPair test = tests[i];
         cout.clear();
-        bool ret_val;
+        bool ret_val = true;
         cur_t_check_messages.clear();
 #ifdef WIN32
         FILE * stdout_file = fopen("_tmp_stdout.txt","w+");

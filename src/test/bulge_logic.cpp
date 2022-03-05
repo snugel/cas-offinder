@@ -24,31 +24,31 @@ static bool equal(bulge_info b1, bulge_info b2)
 constexpr int orig_off = 3;
 TEST(test_get_bulge_info1)
 {
-    return equal(bulge_info{ .dna = "TCA", .rna = "ACT", .loc = 2 + orig_off }, get_bulge_info("AGTCA", "NNACT", bulge_augment{ .bulge_pos = 0, .bulge_size = 0, .bulge_type = BULGE_NONE }, orig_off, 2, 2));
+    return equal(bulge_info{ .dna = "TCA", .rna = "ACT", .loc = 2 + orig_off }, get_bulge_info("AGTCA", "NNACT", bulge_augment{ .bulge_pos = 0, .bulge_size = 0, .bulge_type = BULGE_NONE }, orig_off, 2));
 }
 TEST(test_get_bulge_info2)
 {
-    return equal(bulge_info{ .dna = "GTCA", .rna = "A-CT", .loc = 1 + orig_off }, get_bulge_info("AGTCA", "NANCT", bulge_augment{ .bulge_pos = 1, .bulge_size = 1, .bulge_type = BULGE_DNA }, orig_off, 2, 2));
+    return equal(bulge_info{ .dna = "GTCA", .rna = "A-CT", .loc = 1 + orig_off }, get_bulge_info("AGTCA", "NANCT", bulge_augment{ .bulge_pos = 1, .bulge_size = 1, .bulge_type = BULGE_DNA }, orig_off, 2));
 }
 TEST(test_get_bulge_info3)
 {
-    return equal(bulge_info{ .dna = "AGTCA", .rna = "AC--T", .loc = 0 + orig_off }, get_bulge_info("AGTCA", "ACNNT", bulge_augment{ .bulge_pos = 2, .bulge_size = 2, .bulge_type = BULGE_DNA }, orig_off, 2, 2));
+    return equal(bulge_info{ .dna = "AGTCA", .rna = "AC--T", .loc = 0 + orig_off }, get_bulge_info("AGTCA", "ACNNT", bulge_augment{ .bulge_pos = 2, .bulge_size = 2, .bulge_type = BULGE_DNA }, orig_off, 2));
 }
 TEST(test_get_bulge_info4)
 {
-    return equal(bulge_info{ .dna = "-CA", .rna = "ACT", .loc = 3 + orig_off }, get_bulge_info("AGTCA", "NNNCT", bulge_augment{ .bulge_pos = 0, .bulge_size = 1, .bulge_type = BULGE_RNA, .removed_part="A" }, orig_off, 2, 2));
+    return equal(bulge_info{ .dna = "-CA", .rna = "ACT", .loc = 3 + orig_off }, get_bulge_info("AGTCA", "NNNCT", bulge_augment{ .bulge_pos = 0, .bulge_size = 1, .bulge_type = BULGE_RNA, .removed_part="A" }, orig_off, 2));
 }
 TEST(test_get_bulge_info5)
 {
-    return equal(bulge_info{ .dna = "C-A", .rna = "ACT", .loc = 3 + orig_off }, get_bulge_info("AGTCA", "NNNAT", bulge_augment{ .bulge_pos = 1, .bulge_size = 1, .bulge_type = BULGE_RNA, .removed_part="C" }, orig_off, 2, 2));
+    return equal(bulge_info{ .dna = "C-A", .rna = "ACT", .loc = 3 + orig_off }, get_bulge_info("AGTCA", "NNNAT", bulge_augment{ .bulge_pos = 1, .bulge_size = 1, .bulge_type = BULGE_RNA, .removed_part="C" }, orig_off, 2));
 }
 TEST(test_get_bulge_info6)
 {
-    return equal(bulge_info{ .dna = "--A", .rna = "ACT", .loc = 4 + orig_off }, get_bulge_info("AGTCA", "NNNNT", bulge_augment{ .bulge_pos = 0, .bulge_size = 2, .bulge_type = BULGE_RNA, .removed_part="AC" }, orig_off, 2, 2));
+    return equal(bulge_info{ .dna = "--A", .rna = "ACT", .loc = 4 + orig_off }, get_bulge_info("AGTCA", "NNNNT", bulge_augment{ .bulge_pos = 0, .bulge_size = 2, .bulge_type = BULGE_RNA, .removed_part="AC" }, orig_off, 2));
 }
 TEST(test_get_bulge_info7)
 {
-    return equal(bulge_info{ .dna = "A--", .rna = "ACT", .loc = 4 + orig_off }, get_bulge_info("AGTCA", "NNNNA", bulge_augment{ .bulge_pos = 1, .bulge_size = 2, .bulge_type = BULGE_RNA, .removed_part="CT" }, orig_off, 2, 2));
+    return equal(bulge_info{ .dna = "A--", .rna = "ACT", .loc = 4 + orig_off }, get_bulge_info("AGTCA", "NNNNA", bulge_augment{ .bulge_pos = 1, .bulge_size = 2, .bulge_type = BULGE_RNA, .removed_part="CT" }, orig_off, 2));
 }
 
 

@@ -110,5 +110,7 @@ add_executable (cas-offinder-3
    )
 target_link_libraries(cas-offinder-3 PUBLIC genome_search_lib )
 
-target_compile_options(genome_base_lib PUBLIC -Wall -Wextra)
-
+if(WIN32)
+else()
+    target_compile_options(genome_base_lib PUBLIC -Wall -Wextra -Werror)
+endif()

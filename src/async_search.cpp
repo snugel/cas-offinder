@@ -212,9 +212,9 @@ void async_search(const char* genome_path,
                                       mismatches);
     }
     // more writers is slower for some reason
-    int num_writers = 1;
+    size_t num_writers = 1;
     vector<thread> writer_threads;
-    for (size_t i : range(num_writers)) {
+    for (size_t i = 0; i < num_writers; i++) {
         writer_threads.emplace_back(start_writer_thread,
                                     &output_stream,
                                     pattern_size,

@@ -47,16 +47,8 @@ static void async_callback(const GenomeMatch* gm, void* user_data)
 {
     OutDatav3* data = (OutDatav3*)(user_data);
     ostream& outs = *data->out_str_ptr;
-    size_t pattern_size = data->aug_size;
-    const char* compares = data->mirrored_all_cmps.data();
     size_t n_augs =
       data->augmented_patterns.size() / (data->input.num_patterns * 2);
-    // size_t n_augs_alt = (get_num_augments(data->input.pattern_size,
-    //                                       data->input.dna_bulges,
-    //                                      data->input.rna_bulges));
-    // assert(n_augs == n_augs_alt);
-    //  auto pair =
-    //   get_dna_rna_match(data->mirrored_all_cmps.data(), data->aug_size, gm);
     bool is_mirrored = (gm->pattern_idx / n_augs) % 2;
     size_t orig_pidx = (gm->pattern_idx / n_augs) / 2;
     std::string dna(gm->dna_match);
@@ -66,8 +58,7 @@ static void async_callback(const GenomeMatch* gm, void* user_data)
                                    rna,
                                    augment,
                                    gm->chrom_loc,
-                                   data->input.dna_bulges,
-                                   data->input.rna_bulges);
+                                   data->input.dna_bulges);
 
     size_t psize = data->clipped_pattern.size();
     if ((!is_mirrored &&
@@ -187,6 +178,7 @@ int main(int argc, char** argv)
         .clipped_pattern = clipped_pattern,
         .rev_clipped_pattern = reverse_compliment(clipped_pattern),
         .reversed_pam = is_reversed_pam,
+                .lock=std::mutex()
     };
     async_search(input.genome_path,
                  device_ty,

@@ -48,7 +48,6 @@ TwoBitReader* create_2bit_reader(const char* path)
     vector<string> chrnames;
     unsigned int i, chrcnt;
 
-    size_t readsize;
     char len_chrname;
     char chrname[256];
     chrcnt = read_uint(input);
@@ -77,8 +76,7 @@ ChromData read_next_2bit(TwoBitReader* reader)
     }
     FILE* input = reader->file;
 
-    unsigned int j, k, chrlen, nblockcnt, maskblockcnt, rawlen, rem;
-    int jj;
+    unsigned int j, chrlen, nblockcnt, maskblockcnt, rawlen;
 
     chrlen = read_uint(input);
     nblockcnt = read_uint(input);

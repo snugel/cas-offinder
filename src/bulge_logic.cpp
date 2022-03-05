@@ -44,8 +44,7 @@ std::string get_rna_match(std::string base_rna_match, bulge_augment augment)
 }
 
 static std::string get_dna_match(std::string base_dna_match,
-                                 bulge_augment augment,
-                                 int dna_bulges)
+                                 bulge_augment augment)
 {
     switch (augment.bulge_type) {
         case BULGE_DNA: return base_dna_match;
@@ -78,13 +77,12 @@ bulge_info get_bulge_info(std::string base_dna_match,
                           std::string base_rna_match,
                           bulge_augment augment,
                           int orig_loc,
-                          int dna_bulges,
-                          int rna_bulges)
+                          int dna_bulges)
 {
     int leading_ns = num_leading_ns(augment, dna_bulges);
     base_dna_match = base_dna_match.substr(leading_ns);
     base_rna_match = base_rna_match.substr(leading_ns);
-    base_dna_match = get_dna_match(base_dna_match, augment, dna_bulges);
+    base_dna_match = get_dna_match(base_dna_match, augment);
     base_rna_match = get_rna_match(base_rna_match, augment);
 
     return bulge_info{ .dna = base_dna_match,

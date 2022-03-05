@@ -112,5 +112,5 @@ target_link_libraries(cas-offinder-3 PUBLIC genome_search_lib )
 
 if(WIN32)
 else()
-    target_compile_options(genome_base_lib PUBLIC -Wall -Wextra -Werror)
+    target_compile_options(genome_base_lib PUBLIC -Wall -Wextra)
 endif()

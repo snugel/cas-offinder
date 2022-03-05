@@ -23,8 +23,8 @@ FastaReader* create_fasta_reader(const char* path)
         .linedata={0},
     };
     // file needs to start with a chromosome name
-    fgets(reader->linedata, MAX_LINE_LEN, reader->file);
-    if (reader->linedata[0] != '>') {
+    char * result = fgets(reader->linedata, MAX_LINE_LEN, reader->file);
+    if (!result || reader->linedata[0] != '>') {
         fclose(file);
         return nullptr;
     }

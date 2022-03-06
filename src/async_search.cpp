@@ -96,7 +96,7 @@ void searcher_thread(SearchFactory* fact,
     while (block_in_stream->receive(input)) {
         assert(input.end <= PADDED_CHUNK_BYTES);
         Match* matches;
-        size_t num_matches;
+        uint64_t num_matches;
         search(searcher,
                input.buf,
                input.end * 2,

@@ -10,8 +10,7 @@ include_directories(
 
 
 find_package(Threads REQUIRED)
-include_directories(.)
-include_directories(headers/)
+include_directories(. ./headers)
 
 set (CMAKE_CXX_STANDARD 20)
 

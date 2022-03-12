@@ -2,7 +2,13 @@
 #define CL_TARGET_OPENCL_VERSION 120
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 
-#include <CL/cl.h>
+#ifdef __APPLE__
+#   include <OpenCL/cl.h>
+#   define CL_CALLBACK
+#else
+#   include <CL/cl.h>
+#endif
+
 
 cl_mem oclCreateBuffer(cl_context context,
                        cl_mem_flags flags,

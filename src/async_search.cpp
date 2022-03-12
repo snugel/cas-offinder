@@ -196,6 +196,8 @@ void async_search(const char* genome_path,
         throw std::runtime_error(
           "no opencl devices found, please use -nodep version insead\n");
     }
+    cerr << "using devices:\n";
+    print_device_information(fact);
     vector<thread> searcher_threads;
     Channel<BlockOutput> output_stream(num_searchers * 2 + 4, num_searchers);
     for (size_t i : range(num_searchers)) {

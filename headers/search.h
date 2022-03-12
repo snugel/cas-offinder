@@ -12,10 +12,12 @@ enum DeviceType
 {
     CPU,
     GPU,
-    ACCEL
+    ACCEL,
+    ANY_DEV
 };
 SearchFactory* create_search_factory(DeviceType device);
 int num_searchers_avaliable(SearchFactory* fact);
+void print_device_information(SearchFactory* fact);
 Searcher* create_searcher(SearchFactory* factory,
                           int searcher_idx,
                           uint64_t max_genome_size,

@@ -7,6 +7,7 @@
 #include "ceildiv.h"
 #include "parse_input.h"
 #include "search.h"
+#include "usage.h"
 #include <cassert>
 #include <chrono>
 #include <cstring>
@@ -19,6 +20,8 @@
 #include <vector>
 
 using namespace std;
+
+#define CAS_OFFINDER_VERSION "3.1.0"
 
 static DeviceType get_dev_ty(char c)
 {
@@ -96,9 +99,39 @@ static void async_callback(const GenomeMatch* gm, void* user_data)
     outs << ss.str();
     data->lock.unlock();
 }
+static const char usage_str[] = \
+        "Cas-OFFinder " CAS_OFFINDER_VERSION "\n"\
+        "\n"\
+        "Copyright (c) 2021 Jeongbin Park and Sangsu Bae"  "\n"\
+        "Website: "  CAS_OFFINDER_HOMEPAGE_URL  "\n"\
+        "\n"\
+        "Usage: cas-offinder [options] {input_filename|-} "\
+          "{C|G|A}[device_id(s)] {output_filename|-}"\
+        "\n"\
+        "(C: using CPUs, G: using GPUs, A: using accelerators)"  "\n"\
+        "\n"\
+        "Options"  "\n"\
+        "  --summary <file>        Print summary table to the specified file."\
+        "\n"\
+        "\n"\
+        "Example input file (DNA bulge 2, RNA bulge 1):"  "\n"\
+        "/var/chromosomes/human_grch38"  "\n"\
+        "NNNNNNNNNNNNNNNNNNNNNRG 2 1"  "\n"\
+        "GGCCGACCTGTCGCTGACGCNNN 5"  "\n"\
+        "CGCCAGCGTCAGCGACAGGTNNN 5"  "\n"\
+        "ACGGCGCCAGCGTCAGCGACNNN 5"  "\n"\
+        "GTCGCTGACGCTGGCGCCGTNNN 5"  "\n"\
+        "\n"\
+        "Available device list:"  "\n";
 
 int main(int argc, char** argv)
 {
+    if (argc != 4) {
+        cerr << usage_str;
+        SearchFactory* fact = create_search_factory(ANY_DEV);
+        print_device_information(fact);
+        return 1;
+    }
     if (argc != 4) {
         cerr << "requires 3 CLI arguments, in_file, device, out_file\n";
         return 1;

@@ -29,7 +29,7 @@ struct Searcher
 
 SearchFactory* create_search_factory(DeviceType device_ty)
 {
-    if (device_ty != CPU) {
+    if (device_ty != CPU && device_ty != ANY_DEV) {
         cerr << "Nodep search only supports CPU!\n";
         exit(1);
     }
@@ -43,6 +43,10 @@ int num_searchers_avaliable(SearchFactory* fact)
 {
     return fact->num_threads;
 }
+void print_device_information(SearchFactory* fact){
+    cerr << "Platform: 'C++ native thread executor'. Device: 'CPU with " << fact->num_threads << " threads'\n";
+}
+
 Searcher* create_searcher(SearchFactory*,
                           int,
                           uint64_t max_matches,

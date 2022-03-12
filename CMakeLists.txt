@@ -39,6 +39,7 @@ set (HEADERS
     headers/bulge_logic.h
     headers/opencl_executor.h
     headers/channel.h
+    headers/usage.h
     oclkernels.h
 )
 add_library(genome_base_lib STATIC

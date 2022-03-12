@@ -37,6 +37,7 @@ cl_device_type to_dev_ty(DeviceType ty)
         case GPU: return CL_DEVICE_TYPE_GPU;
         case CPU: return CL_DEVICE_TYPE_CPU;
         case ACCEL: return CL_DEVICE_TYPE_ACCELERATOR;
+        case ANY_DEV: return CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_ACCELERATOR;
     }
     throw "err";
     return CL_DEVICE_TYPE_CPU;
@@ -47,11 +48,12 @@ SearchFactory* create_search_factory(DeviceType device_ty)
 
     SearchFactory* fact = new SearchFactory();
     fact->executor_templates = get_executor_templates(to_dev_ty(device_ty));
-    cerr << "Using devices:\n";
+    return fact;
+}
+void print_device_information(SearchFactory* fact){
     for (ExecutorTemplate temp : fact->executor_templates) {
         cerr << get_template_info(temp) << "\n";
     }
-    return fact;
 }
 int num_searchers_avaliable(SearchFactory* fact)
 {

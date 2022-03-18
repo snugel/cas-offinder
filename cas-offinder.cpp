@@ -113,7 +113,7 @@ void Cas_OFFinder::initOpenCLDevices(vector<unsigned int> dev_ids) {
 		m_contexts.push_back(context);
 		program = oclCreateProgramWithSource(context, 1, &program_src, &src_len);
 		oclBuildProgram(program, 1, &devices[i], "", 0, 0);
-        if (m_devtype == CL_DEVICE_TYPE_CPU) {
+				if (m_devtype == CL_DEVICE_TYPE_CPU) {
 		m_finderkernels.push_back(oclCreateKernel(program, "finder_cpu"));
 		m_comparerkernels.push_back(oclCreateKernel(program, "comparer_cpu"));
 	} else {
@@ -404,7 +404,11 @@ void Cas_OFFinder::compareAll(const char* outfilename, bool issummary) {
 									is_reversed_pam = true;
 									bulge_index = -bi.second;
 								} else {
-									is_reversed_pam = false;
+									if (m_directions[dev_index][i] == '-') {
+										is_reversed_pam = true;
+									} else {
+										is_reversed_pam = false;
+									}
 									bulge_index = bi.second;
 								}
 								if (isnumeric(bi.first)) {
@@ -479,7 +483,7 @@ void Cas_OFFinder::writeSummaryTable(const char* summaryfilename) {
 		fo = new ofstream(summaryfilename, ios::out);
 		isfile = true;
 	}
-    for (const auto& kv : m_summarytable) {
+		for (const auto& kv : m_summarytable) {
 		cnt = 0;
 		key = string(kv.first);
 		(*fo) << "##";
@@ -489,8 +493,8 @@ void Cas_OFFinder::writeSummaryTable(const char* summaryfilename) {
 			key.erase(0, pos + 1);
 		}
 		(*fo) << summaryheaders[cnt++] << "=" << key << ";";
-        (*fo) << "Number of Found Targets=" << kv.second << endl;
-    }
+				(*fo) << "Number of Found Targets=" << kv.second << endl;
+		}
 	if (isfile)
 		((ofstream *)fo)->close();
 }
@@ -525,7 +529,7 @@ void Cas_OFFinder::print_usage() {
 		"(C: using CPUs, G: using GPUs, A: using accelerators)" << endl
 		<< endl <<
 		"Options" << endl <<
-		"  --summary <file>        Print summary table to the specified file." << endl
+		"  --summary <file>				 Print summary table to the specified file." << endl
 		<< endl <<
 		"Example input file (DNA bulge 2, RNA bulge 1):" << endl <<
 		"/var/chromosomes/human_grch38" << endl <<

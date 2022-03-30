@@ -53,7 +53,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
       - name: Install APT packages
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install -y cmake opencl-headers ocl-icd-opencl-dev
+        run: sudo apt-get update -y; sudo apt-get install -y cmake opencl-headers ocl-icd-opencl-dev
       - name: Create Build Environment
         run: mkdir build
       - name: Build (Linux/macOS)

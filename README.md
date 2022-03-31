@@ -18,6 +18,9 @@ Cas-OFFinder has been tested on the platforms below:
 - GNU/Linux (CentOS, OpenSUSE, Debian, Ubuntu/Elementary OS)
 - Mac OS X (Mavericks)
 
+There is a hosted interface of the latest _development_ version of Cas-OFFinder on
+the LatchBio platform free for academic use. Access it [here](https://console.latch.bio/se/cas-offinder).
+
 Download
 --------
 

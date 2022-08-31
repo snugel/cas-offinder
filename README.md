@@ -1,3 +1,5 @@
+# WARNING: Cas-OFFinder 3 is not production ready yet, it is known that the result can be different from that of Cas-OFFinder 2. For production use please use the latest Cas-OFFinder 2 instead.
+
 Cas-OFFinder
 ==================================
 
